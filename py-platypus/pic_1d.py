@@ -14,24 +14,24 @@ class PIC_1D:
         # TODO verify it's a valid params set
 
         # domain parameters 
-        self.dx = params["length"]/params["cells"]
+        self.dx = params["dx"]
         self.dt = params["timestep"]
-        self.steps = params["runtime"]/params["timestep"] # time steps to run for
-        self.cells = params["cells"]                    # number of cells
+        self.steps = params["steps"]              # time steps to run for
+        self.cells = params["cells"]              # number of cells
         self.nodes = params["cells"] + 1
-        self.n_particles = params["nppc"]            # total number of particles
+        self.n_particles = params["n_particles"]  # total number of particles
         self.xmax = self.dx * self.cells
         
-        self.particle_weight = 1/(self.particles/self.cells)  # density/particles per cell
+        self.particle_weight = 1/(self.n_particles/self.cells)  # density/particles per cell
         
         # state information
-        self.electron_x = np.zeros(self.particles) # electron positions
-        self.electron_v = np.zeros(self.particles) # electron velocities
-        self.electron_e = np.zeros(self.particles) # e-field at particles
+        self.electron_x = np.zeros(self.n_particles) # electron positions
+        self.electron_v = np.zeros(self.n_particles) # electron velocities
+        self.electron_e = np.zeros(self.n_particles) # e-field at particles
         
-        self.ion_x = np.zeros(self.particles)      # ion positions
-        self.ion_v = np.zeros(self.particles)      # ion velocities
-        self.ion_e = np.zeros(self.particles)      # e-field at particles
+        self.ion_x = np.zeros(self.n_particles)      # ion positions
+        self.ion_v = np.zeros(self.n_particles)      # ion velocities
+        self.ion_e = np.zeros(self.n_particles)      # e-field at particles
         
         self.ne = np.zeros(self.cells)             # electron number density at each cell
         self.ni = np.zeros(self.cells)             # electron number density at each cell
