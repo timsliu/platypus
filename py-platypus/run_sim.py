@@ -3,132 +3,66 @@ import pickle
 from pic_1d import *
 import os
 
-def save_pickle(name, data):
-    '''save some data to a pickle file'''
-    file_name = name + ".p" 
-    pickle.dump(data, open(file_name, "wb"))
-    return
+PRINT_EVERY = 20    # print step number
+SAVE_EVERY = 100    # save simulation info
 
-def plot_line(filename, x_axis, y_axis, title):
-    '''plot a histogram of some data'''
+def run_simulation(steps, pic, arg_str, sim_str):
+    '''helper function for running a simulation and saving the outputs
+    inputs: steps - number of steps to run simulation for
+            pic - initialized PIC_1D object instance
+            arg_str - string describing the arguments to be appended to pickle
+            sim_str - string with name of simulation'''
 
-    # load data from pickle
-    data = pickle.load(open(filename, "rb"))
-    
-    plt.figure()
-    plt.plot(data)
-    plt.title(title)
-    plt.xlabel(x_axis)
-    plt.ylabel(y_axis)
-    plt.grid(True)
-    #plt.yscale("log")
-    plt.savefig(filename.replace(".p", ".png"), dpi=800)
-
-    return
-
-def plot_histograms(filenames, x_axis, y_axis, title, fig_name):
-    '''plot a histogram of some data'''
-    rows = 2
-    cols = 3
-    # load data from pickle
-    fig, axs = plt.subplots(2, 3, constrained_layout=True)
-    timesteps = [0, 200, 400, 600, 800, 999] 
-
-    for i, filename in enumerate(filenames):
-        print(filename)
-        data = pickle.load(open(filename, "rb"))
-        col = i % cols
-        row = int(np.floor(i/cols))
-        print(row, col)
+    for step in range(steps):
+        if step % PRINT_EVERY == 0:
+            print("Step {}".format(step))
         
-        axs[row, col].hist(data, bins=20)
-        axs[row, col].set_title("Timestep: {}".format(timesteps[i]))
-        axs[row, col].set_ylim(0, 850)
-        axs[row, col].grid(True)
-    
-    # set the axis labels
-    for ax in axs.flat:
-        ax.set(xlabel = x_axis, ylabel = y_axis)
+        pic.step()                       # step the simulatioin
+        pic.calc_electrostatic_energy()  # calc the total electrostatic energy
+        pic.calc_kinetic_energy()        # calc the total kinetic energy
 
-    # only have axis titles on the outer edge
-    for ax in axs.flat:
-        ax.label_outer()
-    
-    plt.savefig(fig_name, dpi=800)
+        # save simulation information
+        if step % SAVE_EVERY == 0 or step == steps - 1:
+            save_pickle("{}_step_{}__ev".format(sim_str, step, arg_str), pic.electron_v)
+            save_pickle("{}_step_{}__ex".format(sim_str, step, arg_str), pic.electron_x)
+            save_pickle("{}_step_{}__ne".format(sim_str, step, arg_str), pic.ne)
+            save_pickle( "{}_step_{}__e".format(sim_str, step, arg_str), pic.e)
 
-
-    return
-
-def plot_histogram(filename, x_axis, y_axis, title):
-    '''plot a histogram of some data'''
-
-    # load data from pickle
-    data = pickle.load(open(filename, "rb"))
-    
-    plt.figure()
-    plt.hist(data, bins=20)
-    plt.title(title)
-    plt.xlabel(x_axis)
-    plt.ylabel(y_axis)
-    plt.yscale("log")
-    plt.grid(True)
-    plt.savefig(filename.replace(".p", ".png"), dpi=800)
+    # get the saved quantities and save to pickle
+    ee = pic.output["electrostatic_energy"]
+    ke = pic.output["kinetic_energy"]
+    save_pickle("{}_{}_ee".format(sim_str, arg_str), ee)
+    save_pickle("{}_{}_ke".format(sim_str, arg_str), ke)
 
     return
 
-def plot_scatter(x_file, y_file, x_axis, y_axis, title):
-    '''plot a histogram of some data'''
+def two_stream(name, vpos, vneg, params={}):
+    '''set up and run a two stream instability
+    inputs: name - name of simulation
+            vpos - velocity of positive stream
+            vneg - velocity of negative stream
+            params - optional dictionary of simulation parameters'''
 
-    # load data from pickle
-    x_data = pickle.load(open(x_file, "rb"))
-    y_data = pickle.load(open(y_file, "rb"))
-    
-    plt.figure()
-    plt.scatter(x_data, y_data, s=1)
-    plt.title(title)
-    plt.xlabel(x_axis)
-    plt.ylabel(y_axis)
-    plt.grid(True)
-    plt.savefig(title.replace(" ", "_") + ".png", dpi=800)
-
-    return
-
-####### Functions for running simulation #######
-
-def two_stream(vpos, vneg, nppc):
-    '''set up and run a two stream instability'''
-    length = 2 * np.pi
-    cells = 32
-    timestep = 0.04
-    runtime = 30
-    steps = int(runtime/timestep)
+    # create a simulation object for holding simulation parameters
+    sim_params = Simulation()
+    sim_params.set("name", name)
+    sim_params.set("vpos", vpos)
+    sim_params.set("vneg", vneg)
+    sim_params.set_from_dict(params)
 
     # initialize x randomly and two streams
-    pic = PIC(cells, length/cells, timestep, cells * nppc, steps)
+    pic = PIC_1D(sim_params)
     pic.init_x_random()
     pic.init_v_two_beams(vpos, vneg)
     
     vpos_str = str(vpos).replace(".", "dot")
     vneg_str = str(vneg).replace(".", "dot")
+    sim_str = "two_stream"
+    arg_str = 
 
-    # step through the simulation
-    for step in range(steps):
-        print("Step {}".format(step))
-        pic.step()                       # update particle positions
-        pic.calc_electrostatic_energy()  # save the total electrostatic energy
-        pic.calc_kinetic_energy()        # save the total kinetic energy
 
-        if step % 200 == 0 or step == steps - 1:
-            save_pickle("two_stream_npcc_{}_step_{}_v_pos_{}_v_neg_{}_ev".format(nppc, step, vpos_str, vneg_str), pic.electron_v)
-            save_pickle("two_stream_npcc_{}_step_{}_v_pos_{}_v_neg_{}_ex".format(nppc, step, vpos_str, vneg_str), pic.electron_x)
-            save_pickle("two_stream_npcc_{}_step_{}_v_pos_{}_v_neg_{}_ne".format(nppc, step, vpos_str, vneg_str), pic.ne)
-            save_pickle("two_stream_npcc_{}_step_{}_v_pos_{}_v_neg_{}_e".format(nppc, step, vpos_str, vneg_str), pic.e)
+    run_simulation(steps, pic, arg_str, sim_str)
 
-    ee = pic.output["electrostatic_energy"]
-    ke = pic.output["kinetic_energy"]
-    save_pickle("two_stream_npcc_{}_v_pos_{}_v_neg_{}_ee".format(nppc, vpos_str, vneg_str), ee)
-    save_pickle("two_stream_npcc_{}_v_pos_{}_v_neg_{}_ke".format(nppc, vpos_str, vneg_str), ke)
-    
     return
 
 def single_stream(nppc):
@@ -141,7 +75,7 @@ def single_stream(nppc):
     steps = int(runtime/timestep)
     
     # initialize x randomly and two streams
-    pic = PIC(cells, length/cells, timestep, cells * nppc, steps)
+    pic = PIC_1D(cells, length/cells, timestep, cells * nppc, steps)
     pic.init_x_random()
     pic.init_v_maxwellian()
     pic.init_v_single_stream(0.1, 1.5) 
@@ -179,7 +113,7 @@ def landau(nppc, amplitude):
     steps = int(runtime/timestep)
 
     # initialize x randomly and two streams
-    pic = PIC(cells, length/cells, timestep, cells * nppc, steps)
+    pic = PIC_1D(cells, length/cells, timestep, cells * nppc, steps)
     pic.init_x_random()
     pic.init_v_maxwellian()
     pic.density_perturbation(amplitude, 1)
@@ -203,17 +137,6 @@ def landau(nppc, amplitude):
 
     return
 
-def test_n():
-    length = 2 * np.pi
-    cells = 32
-    timestep = 0.04
-    runtime = 30
-    nppc = 50
-    steps = int(runtime/timestep)
-
-    # initialize x randomly and two streams
-    pic = PIC(cells, length/cells, timestep, cells * nppc, steps)
-    pic.test_n()
 
 def plot_many():
     vel_files = [

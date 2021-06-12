@@ -9,34 +9,34 @@ import matplotlib.pyplot as plt
 
 MIN_J = 1e-8    # minimum value for index J when building k array
 
-class PIC:
-    def __init__(self, cells, dx, dt, particles, steps):
+class PIC_1D:
+    def __init__(self, params):
+        # TODO verify it's a valid params set
+
         # domain parameters 
-        self.dx = dx
-        self.dt = dt
-        self.steps = steps                    # time steps to run for
-        self.cells = cells                    # number of cells
-        self.nodes = cells + 1
-        self.n_particles = particles            # total number of particles
-        self.xmax = dx * cells
+        self.dx = params["length"]/params["cells"]
+        self.dt = params["timestep"]
+        self.steps = params["runtime"]/params["timestep"] # time steps to run for
+        self.cells = params["cells"]                    # number of cells
+        self.nodes = params["cells"] + 1
+        self.n_particles = params["nppc"]            # total number of particles
+        self.xmax = self.dx * self.cells
         
-        self.particle_weight = 1/(particles/cells)  # density/particles per cell
-        self.particle_mass = None
-        self.particle_charge = None
+        self.particle_weight = 1/(self.particles/self.cells)  # density/particles per cell
         
         # state information
-        self.electron_x = np.zeros(particles) # electron positions
-        self.electron_v = np.zeros(particles) # electron velocities
-        self.electron_e = np.zeros(particles) # e-field at particles
+        self.electron_x = np.zeros(self.particles) # electron positions
+        self.electron_v = np.zeros(self.particles) # electron velocities
+        self.electron_e = np.zeros(self.particles) # e-field at particles
         
-        self.ion_x = np.zeros(particles)      # ion positions
-        self.ion_v = np.zeros(particles)      # ion velocities
-        self.ion_e = np.zeros(particles)      # e-field at particles
+        self.ion_x = np.zeros(self.particles)      # ion positions
+        self.ion_v = np.zeros(self.particles)      # ion velocities
+        self.ion_e = np.zeros(self.particles)      # e-field at particles
         
-        self.ne = np.zeros(cells)             # electron number density at each cell
-        self.ni = np.zeros(cells)             # electron number density at each cell
-        self.rho = np.zeros(cells)            # charge density at each cell center
-        self.phi = np.zeros(cells)            # potential at cell centers
+        self.ne = np.zeros(self.cells)             # electron number density at each cell
+        self.ni = np.zeros(self.cells)             # electron number density at each cell
+        self.rho = np.zeros(self.cells)            # charge density at each cell center
+        self.phi = np.zeros(self.cells)            # potential at cell centers
         self.batch = []                       # batch of particles to follow
 
         # field quantities on nodes 
@@ -303,27 +303,6 @@ class PIC:
         self.output["batch_ke"].append(ke_energy) 
         return
 
-    def spectate(self):
-        '''print velocity, position, electric field of a particle'''
-
-        print("x: {:.3f}, v: {:.3f}, e_left: {:.3f}, e_right: {:.3f}".format(
-            float(self.electron_x[10]), 
-            float(self.electron_v[10]),
-            float(self.e[int(np.floor(self.electron_x[10]/self.dx))]),
-            float(self.e[int(np.ceil(self.electron_x[10]/self.dx))])))
-    
-
-    def test_n(self):
-        '''test how charge density is calculated'''
-
-        self.electron_x = np.zeros(self.n_particles) - 1
-        self.ion_x = np.zeros(self.n_particles) - 1
-
-        self.electron_x[0] = (self.cells - 0.25) * self.dx
-        self.update_ne()
-        print(self.ne)
-
-        return
     def step(self):
         '''run the simulation for a single step, updating all parameters;
            methods for saving outputs must be called separately'''
@@ -340,4 +319,15 @@ class PIC:
         #print("Electric field: ", self.e)
         self.update_v()         # calculate velocity of each particle
         self.update_x()         # update positions
-       
+
+
+    def spectate(self):
+        '''print velocity, position, electric field of a particle'''
+
+        print("x: {:.3f}, v: {:.3f}, e_left: {:.3f}, e_right: {:.3f}".format(
+            float(self.electron_x[10]), 
+            float(self.electron_v[10]),
+            float(self.e[int(np.floor(self.electron_x[10]/self.dx))]),
+            float(self.e[int(np.ceil(self.electron_x[10]/self.dx))])))
+    
+
