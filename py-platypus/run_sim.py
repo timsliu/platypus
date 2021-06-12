@@ -6,12 +6,13 @@ import os
 PRINT_EVERY = 20    # print step number
 SAVE_EVERY = 100    # save simulation info
 
-def run_simulation(steps, pic, arg_str, sim_str):
+def run_simulation(pic, params):
     '''helper function for running a simulation and saving the outputs
-    inputs: steps - number of steps to run simulation for
-            pic - initialized PIC_1D object instance
-            arg_str - string describing the arguments to be appended to pickle
-            sim_str - string with name of simulation'''
+    inputs: pic - initialized PIC_1D object instance
+            params - parameter class''' 
+
+    # initialize the pickle output directory
+    params.init_output()
 
     for step in range(steps):
         if step % PRINT_EVERY == 0:
@@ -23,16 +24,17 @@ def run_simulation(steps, pic, arg_str, sim_str):
 
         # save simulation information
         if step % SAVE_EVERY == 0 or step == steps - 1:
-            save_pickle("{}_step_{}__ev".format(sim_str, step, arg_str), pic.electron_v)
-            save_pickle("{}_step_{}__ex".format(sim_str, step, arg_str), pic.electron_x)
-            save_pickle("{}_step_{}__ne".format(sim_str, step, arg_str), pic.ne)
-            save_pickle( "{}_step_{}__e".format(sim_str, step, arg_str), pic.e)
+            save_pickle("{}/step_{}_ev".format(params.data_dir, step), pic.electron_v)
+            save_pickle("{}/step_{}_ex".format(params.data_dir, step), pic.electron_x)
+            save_pickle("{}/step_{}_ne".format(params.data_dir, step), pic.ne)
+            save_pickle("{}/step_{}_e ".format(params.data_dir, step), pic.e)
 
     # get the saved quantities and save to pickle
     ee = pic.output["electrostatic_energy"]
     ke = pic.output["kinetic_energy"]
-    save_pickle("{}_{}_ee".format(sim_str, arg_str), ee)
-    save_pickle("{}_{}_ke".format(sim_str, arg_str), ke)
+    
+    save_pickle("{}/ee ".format(params.data_dir), ee)
+    save_pickle("{}/ke ".format(params.data_dir), ke)
 
     return
 
@@ -44,7 +46,7 @@ def two_stream(name, vpos, vneg, params={}):
             params - optional dictionary of simulation parameters'''
 
     # create a simulation object for holding simulation parameters
-    sim_params = Simulation()
+    sim_params = Parameters()
     sim_params.set("name", name)
     sim_params.set("vpos", vpos)
     sim_params.set("vneg", vneg)
@@ -55,12 +57,6 @@ def two_stream(name, vpos, vneg, params={}):
     pic.init_x_random()
     pic.init_v_two_beams(vpos, vneg)
     
-    vpos_str = str(vpos).replace(".", "dot")
-    vneg_str = str(vneg).replace(".", "dot")
-    sim_str = "two_stream"
-    arg_str = 
-
-
     run_simulation(steps, pic, arg_str, sim_str)
 
     return
