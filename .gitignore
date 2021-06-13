@@ -7,6 +7,9 @@ __pycache__/
 *.swo
 out/*
 !out/README.md
+py-platypus/out/*
+!py-platypus/out/README.md
+
 
 # don't commit binaries except README and skip research
 bin/*
