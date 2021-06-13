@@ -71,9 +71,10 @@ class Parameters:
         )
         self.data_dir = os.path.join(self.out_dir, "data")
         self.graph_dir = os.path.join(self.out_dir, "graph")
-   
+  
         self.set("dx", self["length"]/self["cells"], refresh=False)
         self.set("steps", int(self["runtime"]/self["timestep"]), refresh=False)
+        # TODO this is dependent on the dimension
         self.set("n_particles", self["nppc"] * self["cells"], refresh=False)
 
         return
