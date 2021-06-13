@@ -68,76 +68,40 @@ def two_stream(name, vpos, vneg, param_dict={}):
 
     return
 
-def single_stream(nppc):
+def single_stream(name, stream_v, stream_frac, param_dict={}):
     '''set up and run a single stream simulation demonstrating neutral beam
     injection heating'''
-    length = 2 * np.pi
-    cells = 32
-    timestep = 0.04
-    runtime = 80
-    steps = int(runtime/timestep)
-    
-    # initialize x randomly and two streams
-    pic = PIC_1D(cells, length/cells, timestep, cells * nppc, steps)
+   
+    sim_params = params.Parameters()
+    sim_params.set("name", name)
+    sim_params.set("stream_v", stream_v)
+    sim_params.set("stream_frac", stream_frac)
+    sim_params.set_from_dict(param_dict)
+
+    # initialize x randomly and create a maxwellian velocity with one stream
+    pic = PIC_1D(sim_params)
     pic.init_x_random()
     pic.init_v_maxwellian()
-    pic.init_v_single_stream(0.1, 1.5) 
+    pic.init_v_single_stream(stream_frac, stream_v) 
 
-    pickle_names = []
-    for step in range(steps):
-        print("Step {}".format(step))
-        pic.step()
-        pic.calc_electrostatic_energy()
-        pic.calc_kinetic_energy()
-        pic.calc_batch_kinetic_energy()
+    run_simulation(pic, sim_params)
 
-        # periodically save the electron velocity
-        if step % 200 == 0 or step == steps - 1:
-            name = "single_stream_npcc_{}_step_{}_ev".format(nppc, step)
-            save_pickle(name, pic.electron_v)
-            pickle_names.append(name + ".p")
-
-    ee = pic.output["electrostatic_energy"]
-    ke = pic.output["kinetic_energy"]
-    batch_ke = pic.output["batch_ke"]
-    save_pickle("single_stream_npcc_{}_extended_ee".format(nppc), ee)
-    save_pickle("single_stream_npcc_{}_extended_ke".format(nppc), ke)
-    save_pickle("single_stream_npcc_{}_extended_batch_ke".format(nppc), batch_ke)
-
-    return pickle_names
-
-
-def landau(nppc, amplitude):
+def landau(name, amplitude, mode, param_dict={}):
     '''set up and run a landau damping simulation'''
-    length = 2 * np.pi
-    cells = 32
-    timestep = 0.04
-    runtime = 30
-    steps = int(runtime/timestep)
-
-    # initialize x randomly and two streams
-    pic = PIC_1D(cells, length/cells, timestep, cells * nppc, steps)
-    pic.init_x_random()
-    pic.init_v_maxwellian()
-    pic.density_perturbation(amplitude, 1)
     
-    # step through the simulation
-    for step in range(steps):
-        print("Step {}".format(step))
-        pic.step()                       # update particle positions
-        pic.calc_electrostatic_energy()  # save the total electrostatic energy
-        pic.calc_kinetic_energy()        # save the total kinetic energy
-        if step % 200 == 0 or step == steps - 1:
-            save_pickle("landau_amplitude_{}_npcc_{}_step_{}_ev".format(amplitude, nppc, step), pic.electron_v)
-            save_pickle("landau_amplitude_{}_npcc_{}_step_{}_ex".format(amplitude, nppc, step), pic.electron_x)
-            save_pickle("landau_amplitude_{}_npcc_{}_step_{}_ne".format(amplitude, nppc, step), pic.ne)
-            save_pickle("landau_amplitude_{}_npcc_{}_step_{}_e".format(amplitude, nppc, step), pic.e)
+    sim_params = params.Parameters()
+    sim_params.set("name", name)
+    sim_params.set("mode", mode)
+    sim_params.set("amplitude", amplitude)
+    sim_params.set_from_dict(param_dict)
 
-    ee = pic.output["electrostatic_energy"]
-    ke = pic.output["kinetic_energy"]
-    save_pickle("landau_amplitude_{}_npcc_{}_ee".format(amplitude, nppc), ee)
-    save_pickle("landau_amplitude_{}_npcc_{}_ke".format(amplitude, nppc), ke)
-
+    pic = PIC_1D(sim_params)
+    pic.init_x_random()              # initialize random x
+    pic.init_v_maxwellian()          # maxwellian velocity distribution
+    pic.density_perturbation(amplitude, mode) # create charge density perturbation
+    
+    run_simulation(pic, sim_params)
+    
     return
 
 

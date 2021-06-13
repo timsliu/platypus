@@ -21,8 +21,12 @@ class Parameters:
             "runtime": 30,
             "dimensions": 1,
             "nppc": 50,
-            "vpos": None,
-            "vneg": None,
+            "vpos": None,            # velocity of positive stream (2 stream)
+            "vneg": None,            # velocity of negative stream (2 stream)
+            "stream_v": None,        # stream velocity (single stream)
+            "stream_frac": None,     # fraction of particles in the stream
+            "mode": None,            # number of density waves
+            "amplitude": None,       # amplitude of charge perturbation
             "dx": None,              # cell size (derived)
             "steps": None,           # total steps (derived)
             "n_particles": None,     # total particles (derived)
