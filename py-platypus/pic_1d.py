@@ -12,6 +12,9 @@ MIN_J = 1e-8    # minimum value for index J when building k array
 class PIC_1D:
     def __init__(self, params):
         # TODO verify it's a valid params set
+        
+        # random seed
+        np.random.seed(params["seed"])
 
         # domain parameters 
         self.dx = params["dx"]
@@ -33,10 +36,10 @@ class PIC_1D:
         self.ion_v = np.zeros(self.n_particles)      # ion velocities
         self.ion_e = np.zeros(self.n_particles)      # e-field at particles
         
-        self.ne = np.zeros(self.cells)             # electron number density at each cell
-        self.ni = np.zeros(self.cells)             # electron number density at each cell
-        self.rho = np.zeros(self.cells)            # charge density at each cell center
-        self.phi = np.zeros(self.cells)            # potential at cell centers
+        self.ne = np.zeros(self.cells)        # electron number density at each cell
+        self.ni = np.zeros(self.cells)        # electron number density at each cell
+        self.rho = np.zeros(self.cells)       # charge density at each cell center
+        self.phi = np.zeros(self.cells)       # potential at cell centers
         self.batch = []                       # batch of particles to follow
 
         # field quantities on nodes 
@@ -54,8 +57,8 @@ class PIC_1D:
 
     def init_x_uniform(self):
         '''uniformly initialize the positions of the macroparticles'''
-        self.electron_x = np.linspace(0, xmax, num=self.n_particles, endpoint=False) 
-        self.ion_x = np.linspace(0, xmax, num=self.n_particles, endpoint=False) 
+        self.electron_x = np.linspace(0, self.xmax, num=self.n_particles, endpoint=False) 
+        self.ion_x = np.linspace(0, self.xmax, num=self.n_particles, endpoint=False) 
         return
 
     def init_v_maxwellian(self):

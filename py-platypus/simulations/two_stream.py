@@ -10,4 +10,4 @@ import run_sim
 
 
 if __name__ == "__main__":
-    run_sim.two_stream("two-stream", 1, -1, {"name": "two-stream"})
+    run_sim.two_stream("two-stream", 0.5, -0.5)
