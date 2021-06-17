@@ -11,7 +11,6 @@ MIN_J = 1e-8    # minimum value for index J when building k array
 
 class PIC_2D:
     def __init__(self, params):
-        # TODO verify it's a valid params set
         
         # random seed
         np.random.seed(params["seed"])
@@ -20,14 +19,13 @@ class PIC_2D:
         self.dx = params["dx"]                    # size of cells
         self.dt = params["timestep"]
         self.steps = params["steps"]              # time steps to run for
-        self.cells_x = params["cells"][0]         # number of cells in x direction
-        self.cells_y = params["cells"][1]         # number of cells in y direction
-        self.cells = self.cells_x * self.cells_y 
+        self.cells = params["cells"]              # number of cells in x direction
         self.nodes_x = params["cells"][0] + 1
-        self.nodes_Y = params["cells"][1] + 1
+        self.nodes_y = params["cells"][1] + 1
         self.n_particles = params["n_particles"]  # total number of particles
-        self.xmax = self.dx * self.cells_x
-        self.ymax = self.dx * self.cells_y
+        print(self.dx, self.cells) 
+        self.xmax = self.dx[0] * self.cells[0]
+        self.ymax = self.dx[1] * self.cells[1]
         
         self.particle_weight = 1/(self.n_particles/self.cells)  # density/particles per cell
         
@@ -43,14 +41,14 @@ class PIC_2D:
         self.ion_vx = np.zeros(self.n_particles)      # ion velocities
         self.ion_vy = np.zeros(self.n_particles)      # ion velocities
         self.ion_e = np.zeros(self.n_particles)       # e-field at particles
-       
+  
         # electron and ion number density at each cell
-        self.ne  = np.zeros((self.cells_x, self.cells_y))  
-        self.ni  = np.zeros((self.cells_x, self.cells_y))  
+        self.ne  = np.zeros((self.cells[0], self.cells[1]))  
+        self.ni  = np.zeros((self.cells[0], self.cells[1]))  
         # charge density at each cell center
-        self.rho = np.zeros((self.cells_x, self.cells_y))  
+        self.rho = np.zeros((self.cells[0], self.cells[1]))  
         # potential at cell centers
-        self.phi = np.zeros((self.cells_x, self.cells_y))  
+        self.phi = np.zeros((self.cells[0], self.cells[1]))  
         self.batch = []                       # batch of particles to follow
 
         # field quantities on nodes 
@@ -62,23 +60,29 @@ class PIC_2D:
     def init_x_random(self):
         '''randomly initialize the positions of the macroparticles'''
         self.electron_x = np.random.rand(self.n_particles) * self.xmax
-        self.ion_x = np.random.rand(self.n_particles) * self.xmax
+        self.electron_y = np.random.rand(self.n_particles) * self.ymax
         
-        return
-
-    def init_x_uniform(self):
-        '''uniformly initialize the positions of the macroparticles'''
-        self.electron_x = np.linspace(0, self.xmax, num=self.n_particles, endpoint=False) 
-        self.ion_x = np.linspace(0, self.xmax, num=self.n_particles, endpoint=False) 
+        self.ion_x = np.random.rand(self.n_particles) * self.xmax
+        self.ion_y = np.random.rand(self.n_particles) * self.ymax
+        
         return
 
     def init_v_maxwellian(self):
         '''initializes the velocity distribution function as a maxwellian'''
+       
+        # confirm that 2D maxwell is maxwell in each dimension
         for i in range(self.n_particles):
-            r1 = max(1e-8, np.random.rand())
-            r2 = np.random.rand()
-            self.electron_v[i] = np.sqrt(-np.log(r1)) * np.cos(2 * np.pi * r2)
-            self.ion_v[i] = 0
+            r1x = max(1e-8, np.random.rand())
+            r2x = np.random.rand()
+            
+            r1y = max(1e-8, np.random.rand())
+            r2y = np.random.rand()
+            
+            self.electron_vx[i] = np.sqrt(-np.log(r1x)) * np.cos(2 * np.pi * r2x)
+            self.ion_vx[i] = 0
+            
+            self.electron_vy[i] = np.sqrt(-np.log(r1y)) * np.cos(2 * np.pi * r2y)
+            self.ion_vy[i] = 0
         
         return
     
@@ -87,7 +91,7 @@ class PIC_2D:
         counter propagating beams
         inputs: vpos - normalized velocity of positive beam
                 vneg - normalized velocity of negative beam'''
-
+        # TODO look up what this two beam instability in 2D looks like
         # randomly select which half is positive
         pos_particles = np.random.choice(
             range(self.n_particles), 
@@ -97,38 +101,38 @@ class PIC_2D:
         # iterate through particles and set the velocities
         for i in range(self.n_particles):
             if i in pos_particles:
-                self.electron_v[i] = vpos
+                self.electron_vx[i] = vpos
             else:
-                self.electron_v[i] = vneg
-            self.ion_v[i] = 0
+                self.electron_vx[i] = vneg
+            
+            self.electron_vy[i] = 0
+            self.ion_vx[i] = 0
+            self.ion_vy[i] = 0
         
         return
 
-    def init_v_single_stream(self, fraction, v):
+    def init_v_single_stream(self, fraction, beam_width, v):
         '''randomly sets a certain fraction of electrons to an identical
         velocity, simulating a single stream
         inputs: fraction - percent of particles to set velocity
                 v - normalized velocity'''
-        
-        # randomly select which half is positive
-        stream_particles = np.random.choice(
-            range(self.n_particles), 
-            size=int(self.n_particles * fraction), 
-            replace = False)
-
-        self.batch = stream_particles
-        # iterate through particles and set the velocities
+        # TODO 
+        beam_y_start = self.ymax/2 - beam_width/2   # start and stop of beam
+        beam_y_stop = self.ymax/2 + beam_width/2
+       
         for i in range(self.n_particles):
-            if i in stream_particles:
-                self.electron_v[i] = v
-        
+            if self.electron_y[i] > beam_y_stop and self.electron_y[i] < beam_y_start:
+                r = np.random.rand()
+                if r < fraction:
+                    self.electron_vx[i] = v
+                    self.electron_vy[i] = 0
         return
 
     def density_perturbation(self, delta_n, k):
-        '''create a sinusoidal density perturbation
+        '''create a sinusoidal density perturbation along the x-axis
         delta_n - perturbation amplitude
         k - k wave number of perturbation'''
-
+        
         for i in range(self.n_particles):
             delta_x = delta_n/k * np.sin(k * self.electron_x[i])
             self.electron_x[i] += delta_x
