@@ -11,10 +11,13 @@ from pic_2d import *
 import matplotlib.pyplot as plt
 
 
+
+
 if __name__ == "__main__":
     sim_params = params.Parameters(2)
+    # set up parameters 
     params = {
-        "length": [2 * np.pi, np.pi],
+        "length": [2 * np.pi, 2 * np.pi],
         "cells": [32, 16],
         "dimensions": 2,
         "nppc": 8
@@ -22,17 +25,43 @@ if __name__ == "__main__":
 
     sim_params.set_from_dict(params)
     pic = PIC_2D(sim_params)
+   
+    # initialize x randomly and check distribution
     pic.init_x_random()
-    pic.init_v_maxwellian()
-
     plt.figure(1)
     plt.scatter(pic.electron_x, pic.electron_y, s=0.1)
 
+    # initialize a maxwellian velocity distribution
+    pic.init_v_maxwellian()
     plt.figure(2)
     bins = np.linspace(-3, 3, 40)
     plt.hist2d(pic.electron_vx, pic.electron_vy, bins = [bins, bins])
-      
-    # Adding color bar
     plt.colorbar()
-      
+    
+    # create a single stream and plot vx and vy
+    pic.init_v_single_stream(1, 0.5, 2)
+    plt.figure(3)
+    plt.scatter(pic.electron_x, pic.electron_y, c=pic.electron_vx, s = 1)
+    plt.title("Vx")
+    
+    plt.figure(4)
+    plt.scatter(pic.electron_x, pic.electron_y, c=pic.electron_vy, s = 1)
+    plt.title("Vy")
+    
+    # create a two stream setup and plot vx and vy
+    pic.init_v_maxwellian()
+    pic.init_v_two_beams(0.8, 0.5, 2, -2)
+    plt.figure(5)
+    plt.scatter(pic.electron_x, pic.electron_y, c=pic.electron_vx, s = 2)
+    plt.title("Two beams Vx")
+    
+    plt.figure(6)
+    plt.scatter(pic.electron_x, pic.electron_y, c=pic.electron_vy, s = 2)
+    plt.title("Two beams Vy")
+
+    # create a density perturbation
+    pic.density_perturbation(0.7, 6)
+    plt.figure(7)
+    plt.scatter(pic.electron_x, pic.electron_y, s=1)
+
     plt.show()

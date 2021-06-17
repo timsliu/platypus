@@ -86,28 +86,30 @@ class PIC_2D:
         
         return
     
-    def init_v_two_beams(self, vpos, vneg):
+    def init_v_two_beams(self, fraction, beam_width, vpos, vneg):
         '''initializes the velocity distribution of electrons as two 
-        counter propagating beams
+        counter propagating beams. This function should be called after
+        the x and v have already been initialized
         inputs: vpos - normalized velocity of positive beam
                 vneg - normalized velocity of negative beam'''
-        # TODO look up what this two beam instability in 2D looks like
-        # randomly select which half is positive
-        pos_particles = np.random.choice(
-            range(self.n_particles), 
-            size=int(self.n_particles/2), 
-            replace = False)
+        
+        beam_y_start = self.ymax/2 - beam_width/2   # start and stop of beam
+        beam_y_stop = self.ymax/2 + beam_width/2
 
         # iterate through particles and set the velocities
         for i in range(self.n_particles):
-            if i in pos_particles:
-                self.electron_vx[i] = vpos
-            else:
-                self.electron_vx[i] = vneg
-            
-            self.electron_vy[i] = 0
-            self.ion_vx[i] = 0
-            self.ion_vy[i] = 0
+            if self.electron_y[i] < beam_y_stop and self.electron_y[i] > beam_y_start:
+                r = np.random.rand()
+
+                # particle is in the positive beam
+                if r < fraction / 2:
+                    self.electron_vx[i] = vpos 
+                    self.electron_vy[i] = 0
+
+                # particle is in the negative beam
+                if r > fraction / 2 and r < fraction:
+                    self.electron_vx[i] = vneg 
+                    self.electron_vy[i] = 0
         
         return
 
@@ -116,12 +118,12 @@ class PIC_2D:
         velocity, simulating a single stream
         inputs: fraction - percent of particles to set velocity
                 v - normalized velocity'''
-        # TODO 
+        
         beam_y_start = self.ymax/2 - beam_width/2   # start and stop of beam
         beam_y_stop = self.ymax/2 + beam_width/2
        
         for i in range(self.n_particles):
-            if self.electron_y[i] > beam_y_stop and self.electron_y[i] < beam_y_start:
+            if self.electron_y[i] < beam_y_stop and self.electron_y[i] > beam_y_start:
                 r = np.random.rand()
                 if r < fraction:
                     self.electron_vx[i] = v
