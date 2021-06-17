@@ -11,14 +11,12 @@ from pic_2d import *
 import matplotlib.pyplot as plt
 
 
-
-
 if __name__ == "__main__":
     sim_params = params.Parameters(2)
     # set up parameters 
     params = {
         "length": [2 * np.pi, 2 * np.pi],
-        "cells": [32, 16],
+        "cells": [24, 32],
         "dimensions": 2,
         "nppc": 8
     }
@@ -60,8 +58,13 @@ if __name__ == "__main__":
     plt.title("Two beams Vy")
 
     # create a density perturbation
-    pic.density_perturbation(0.7, 6)
+    pic.density_perturbation(0.8, 4)
     plt.figure(7)
     plt.scatter(pic.electron_x, pic.electron_y, s=1)
+
+    pic.update_ne()
+    plt.figure(8)
+    ax = plt.imshow(pic.ne, interpolation = 'none')
+    plt.colorbar()
 
     plt.show()

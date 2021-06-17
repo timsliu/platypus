@@ -6,6 +6,7 @@ import numpy as np
 import copy
 from scipy import fft, ifft
 import matplotlib.pyplot as plt
+import utils
 
 MIN_J = 1e-8    # minimum value for index J when building k array
 
@@ -23,11 +24,10 @@ class PIC_2D:
         self.nodes_x = params["cells"][0] + 1
         self.nodes_y = params["cells"][1] + 1
         self.n_particles = params["n_particles"]  # total number of particles
-        print(self.dx, self.cells) 
         self.xmax = self.dx[0] * self.cells[0]
         self.ymax = self.dx[1] * self.cells[1]
         
-        self.particle_weight = 1/(self.n_particles/self.cells)  # density/particles per cell
+        self.particle_weight = 1/(self.n_particles/(self.cells[0] * self.cells[1]))  # density/particles per cell
         
         # state information
         self.electron_x  = np.zeros(self.n_particles) # electron positions
@@ -154,57 +154,94 @@ class PIC_2D:
         self.update_n("electron") 
         return
 
+    def cell_neighbors(self, x, dim, cell):
+        '''calculates the indices of the two adjacent cells that a particle
+        weight should be distributed between and the center of the cells. Note
+        that the value returned may include "phantom cells" past the boundary
+        of the system
+
+        inputs: x - position
+                dim - index of dimension (0 for x, 1 for y, 2 for z)
+                cell - index of cell the
+        outputs: cell_0 - index of lower cell the weight should be distributed
+                 cell_1 - index of upper cell
+                 cell_0_center - center of cell_0 along specified dimension
+                 cell_1_center - center of cell_1 along specified dimension'''
+        
+        dx = self.dx[dim]           # cell size along this dimension
+        cells = self.cells[dim]     # number of cells along this dimension
+
+        # particle is to the right of cell midpoint
+        if x > cell * dx + 0.5 * dx:
+            cell_0 = cell
+            cell_1 = cell + 1
+        # particle is to the left of cell midpoint
+        else:
+            cell_0 = cell - 1
+            cell_1 = cell
+            
+        # center of left and right cells
+        cell_0_center = cell_0 * dx + 0.5 * dx
+        cell_1_center = cell_1 * dx + 0.5 * dx
+        
+        return cell_0, cell_1, cell_0_center, cell_1_center
+
     def update_n(self, particle_type):
         '''update the particle density
         particle_type (str) - "ion" or "electron" '''
-        
+       
         # copy the particle array we're interested in
         if particle_type == "electron":
-            particle_x = np.copy(self.electron_x)
+            particle_x = self.electron_x
+            particle_y = self.electron_y
+            densities = self.ne
         elif particle_type == "ion":
-            particle_x = np.copy(self.ion_x)
+            particle_x = self.ion_x
+            particle_y = self.ion_y
+            densities = self.ni
         else:
             raise ValueError("Unrecognized particle type: ".format(particle_type))
 
-        # clear the array of densities
-        densities = np.zeros(self.cells)
-        for x_n in particle_x:
+        for i in range(self.n_particles):
+            x_n = particle_x[i]
+            y_n = particle_y[i]
             
             # cell the particle is in
-            cell = int(np.floor(x_n/self.dx))
+            cell_y = int(np.floor(y_n/self.dx[0]))
+            cell_x = int(np.floor(x_n/self.dx[1]))
+            
             # find indices of cells to the left and right that the weight
             # will be distributed between
+            cell_u, cell_d, y0, y1 = self.cell_neighbors(y_n, 0, cell_y)
+            cell_l, cell_r, x0, x1 = self.cell_neighbors(x_n, 1, cell_x)
 
-            # particle is to the right of cell midpoint
-            if x_n > cell * self.dx + 0.5 * self.dx:
-                cell_left = cell
-                cell_right = cell + 1
-            # particle is to the left of cell midpoint
-            else:
-                cell_left = cell - 1
-                cell_right = cell
-            
-            # center of left and right cells
-            cell_left_x = cell_left * self.dx + 0.5 * self.dx
-            cell_right_x = cell_right * self.dx + 0.5 * self.dx
-           
-            # weight to be distributed to left and right cells
-            weight_left = (cell_right_x - x_n)/self.dx * self.particle_weight 
-            weight_right = (x_n - cell_left_x)/self.dx * self.particle_weight 
-        
+            # calculate area of each rectangle
+            area_upper_left  = utils.points_to_area((x_n, y_n), (x0, y0))
+            area_upper_right = utils.points_to_area((x_n, y_n), (x1, y0))
+            area_lower_left  = utils.points_to_area((x_n, y_n), (x0, y1))
+            area_lower_right = utils.points_to_area((x_n, y_n), (x1, y1))
+
+            # total area of a cell
+            total_area = self.dx[0] * self.dx[1]
+
+            # calculate weight to be distributed to each quadrant
+            weight_upper_left  = area_lower_right/total_area * self.particle_weight 
+            weight_upper_right = area_lower_left/total_area * self.particle_weight
+            weight_lower_left  = area_upper_right/total_area * self.particle_weight 
+            weight_lower_right = area_upper_left/total_area * self.particle_weight
             # get actual cell index, accounting for wraparound
-            cell_left = cell_left % self.cells
-            cell_right = cell_right % self.cells
-
-            densities[cell_left] += weight_left
-            densities[cell_right] += weight_right
+            
+            cell_l = cell_l % self.cells[1]
+            cell_r = cell_r % self.cells[1]
+            cell_u = cell_u % self.cells[0]
+            cell_d = cell_d % self.cells[0]
+            
+            # update the densities
+            densities[cell_u][cell_l] += weight_upper_left
+            densities[cell_u][cell_r] += weight_upper_right
+            densities[cell_d][cell_l] += weight_lower_left
+            densities[cell_d][cell_r] += weight_lower_right
        
-        # copy the cell densities to appropriate array
-        if particle_type == "electron":
-            self.ne = copy.deepcopy(densities)
-        if particle_type == "ion":
-            self.ni = copy.deepcopy(densities)
-
         return
 
     def update_rho(self):
