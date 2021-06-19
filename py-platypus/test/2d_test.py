@@ -15,8 +15,8 @@ if __name__ == "__main__":
     sim_params = params.Parameters(2)
     # set up parameters 
     params = {
-        "length": [2 * np.pi, 2 * np.pi],
-        "cells": [24, 32],
+        "length": [4 * np.pi, 4 * np.pi],
+        "cells": [64, 64],
         "dimensions": 2,
         "nppc": 8
     }
@@ -64,7 +64,38 @@ if __name__ == "__main__":
 
     pic.update_ne()
     plt.figure(8)
+    plt.title("Electron number density")
     ax = plt.imshow(pic.ne, interpolation = 'none')
     plt.colorbar()
+
+    # calculate charge density
+    pic.update_ne()
+    pic.update_ni()
+    pic.update_rho()
+    plt.figure(9)
+    ax = plt.imshow(pic.rho, interpolation = 'none')
+    plt.title("Charge density")
+    plt.colorbar()
+
+    # test calculating phi from rho
+    sin_2d = np.zeros(pic.cells)
+    for i in range(pic.cells[0]):
+        for j in range(pic.cells[1]):
+            sin_2d[i][j] = np.sin(4 * np.pi * i / pic.cells[0]) + \
+                           np.sin(4 * np.pi * j / pic.cells[1])
+
+    pic.rho = sin_2d
+    pic.update_phi()
+
+    plt.figure(10)
+    ax = plt.imshow(pic.rho, interpolation = 'none')
+    plt.title("Sin Charge density")
+    plt.colorbar()
+    
+    plt.figure(11)
+    ax = plt.imshow(pic.phi, interpolation = 'none')
+    plt.title("Electric potential")
+    plt.colorbar()
+
 
     plt.show()

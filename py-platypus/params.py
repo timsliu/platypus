@@ -60,7 +60,7 @@ class Parameters:
         '''initialize default parameters for 2d simulation'''
         params = {
             "length": [2 * np.pi, 2 * np.pi],
-            "cells": [32, 32],
+            "cells": [32, 32],     # matrix notation row, col
             "dimensions": 2
         }
 

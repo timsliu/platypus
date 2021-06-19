@@ -21,11 +21,11 @@ class PIC_2D:
         self.dt = params["timestep"]
         self.steps = params["steps"]              # time steps to run for
         self.cells = params["cells"]              # number of cells in x direction
-        self.nodes_x = params["cells"][0] + 1
-        self.nodes_y = params["cells"][1] + 1
+        self.nodes_x = params["cells"][1] + 1
+        self.nodes_y = params["cells"][0] + 1
         self.n_particles = params["n_particles"]  # total number of particles
-        self.xmax = self.dx[0] * self.cells[0]
-        self.ymax = self.dx[1] * self.cells[1]
+        self.xmax = self.dx[1] * self.cells[1]
+        self.ymax = self.dx[0] * self.cells[0]
         
         self.particle_weight = 1/(self.n_particles/(self.cells[0] * self.cells[1]))  # density/particles per cell
         
@@ -189,8 +189,8 @@ class PIC_2D:
     def update_n(self, particle_type):
         '''update the particle density
         particle_type (str) - "ion" or "electron" '''
-       
-        # copy the particle array we're interested in
+      
+        # created shallow copy of the particle type we're interested in
         if particle_type == "electron":
             particle_x = self.electron_x
             particle_y = self.electron_y
@@ -206,7 +206,7 @@ class PIC_2D:
             x_n = particle_x[i]
             y_n = particle_y[i]
             
-            # cell the particle is in
+            # find the cell the particle is in
             cell_y = int(np.floor(y_n/self.dx[0]))
             cell_x = int(np.floor(x_n/self.dx[1]))
             
@@ -252,24 +252,24 @@ class PIC_2D:
 
     def update_phi(self):
         '''update the electric potential at each cell center'''
-        #self.rho = np.sin(np.linspace(0, 2 * np.pi, self.cells))
-        R = fft(-self.rho)                  # fft of rho deviation 
+        print("max rho: ", np.max(self.rho))
+        R = np.fft.fft2(-self.rho)                  # fft of rho deviation 
 
         # build intermediate k array
         k = np.zeros(self.cells)
-        for j in range(self.cells):
-            k[j] = np.pi/self.dx * max(j, MIN_J)/(self.cells/2)
-            if j >= self.cells/2:
-                k[j] -= 2 * np.pi/self.dx
+        for i in range(self.cells[0]):
+            for j in range(self.cells[1]):
+                coeff   = (np.sin(np.pi * i/self.cells[0])/self.dx[0]) ** 2 +\
+                          (np.sin(np.pi * j/self.cells[1])/self.dx[1]) ** 2
+
+                k[i][j] = -1 * max(MIN_J, coeff)
         
-        # intermediate kappa array
-        kappa = np.sin(k * self.dx/2)/(self.dx/2)
-        # intermediate Y array
-        Y = - R/(kappa * kappa)
-        Y_hat = ifft(Y)
+        Y = R/k                      # divide Fourier transform of rho by coef
+        Y_hat = np.fft.ifft2(Y)      # take inverse Fourier transform
         potential = np.real(Y_hat)   # potential is the real part
         avg_potential = np.mean(potential)
         self.phi = (potential - avg_potential)
+        print("max phi: ", np.max(self.phi))
 
         return
 
