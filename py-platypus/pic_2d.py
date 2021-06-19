@@ -262,7 +262,8 @@ class PIC_2D:
                 coeff   = (np.sin(np.pi * i/self.cells[0])/self.dx[0]) ** 2 +\
                           (np.sin(np.pi * j/self.cells[1])/self.dx[1]) ** 2
 
-                k[i][j] = -1 * max(MIN_J, coeff)
+                k[i][j] = -4 * max(MIN_J, coeff) * \
+                           self.xmax/4/np.pi * self.ymax/4/np.pi 
         
         Y = R/k                      # divide Fourier transform of rho by coef
         Y_hat = np.fft.ifft2(Y)      # take inverse Fourier transform
@@ -270,7 +271,7 @@ class PIC_2D:
         avg_potential = np.mean(potential)
         self.phi = (potential - avg_potential)
         print("max phi: ", np.max(self.phi))
-
+        
         return
 
     def update_e(self):

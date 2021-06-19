@@ -15,7 +15,7 @@ if __name__ == "__main__":
     sim_params = params.Parameters(2)
     # set up parameters 
     params = {
-        "length": [4 * np.pi, 4 * np.pi],
+        "length": [4 * np.pi, 8 * np.pi],
         "cells": [64, 64],
         "dimensions": 2,
         "nppc": 8
@@ -98,4 +98,4 @@ if __name__ == "__main__":
     plt.colorbar()
 
 
-    plt.show()
+    #plt.show()
