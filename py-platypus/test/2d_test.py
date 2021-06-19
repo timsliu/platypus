@@ -97,4 +97,16 @@ if __name__ == "__main__":
     plt.title("Electric potential")
     plt.colorbar()
 
+    # test calculating electric field at the nodes
+    pic.update_e()
+    plt.figure(12)
+    ax = plt.imshow(pic.ex, interpolation = 'none')
+    plt.title("Electric field Ex")
+    plt.colorbar()
+    
+    plt.figure(13)
+    ax = plt.imshow(pic.ey, interpolation = 'none')
+    plt.title("Electric field Ey")
+    plt.colorbar()
+
     plt.show()

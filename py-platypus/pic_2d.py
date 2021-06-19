@@ -22,7 +22,8 @@ class PIC_2D:
         self.dt = params["timestep"]
         self.steps = params["steps"]              # time steps to run for
         self.cells = params["cells"]              # number of cells in x direction
-        self.nodes = params["cells"] + 1
+        self.nodes = [x + 1 for x in params["cells"]]
+        print("nodes: ", self.nodes) 
         self.n_particles = params["n_particles"]  # total number of particles
         self.xmax = self.dx[1] * self.cells[1]
         self.ymax = self.dx[0] * self.cells[0]
@@ -275,24 +276,28 @@ class PIC_2D:
 
     def update_e(self):
         '''update electric field at each node'''
-        
-        e_fields = [self.ex, self.ey]
-        for d in range(self.dimensions): 
-            for i in range(self.nodes[d]):
-                if i == 0:
-                    # use the left potential boundary condition 
-                    left_potential_0 = self.phi[-1]
-                else:
-                    left_potential_0 = self.phi[i-1]
+        print(self.cells) 
+       
+        rows = self.cells[0]
+        cols = self.cells[1]
 
-                if i == (self.nodes - 1):
-                    # use the right potential boundary condition 
-                    right_potential = self.phi[0]
-                else:
-                    right_potential = self.phi[i]
+        for i in range(self.nodes[0]):
+            for j in range(self.nodes[1]):
+                
+                # iterpolate potential adjacent to the node in each direction
+                up_potential   = (self.phi[(i - 1) % rows][(j - 1) % cols] +\
+                                  self.phi[(i - 1) % rows][j % cols])/2
+                down_potential = (self.phi[i % rows][(j - 1) % cols] +\
+                                  self.phi[i % rows][j % cols])/2
+                
+                left_potential  = (self.phi[(i - 1) % rows][(j - 1) % cols] +\
+                                   self.phi[i % rows][(j - 1) % cols])/2
+                right_potential = (self.phi[(i - 1) % rows][j % cols] +\
+                                   self.phi[i % rows][j % cols])/2
 
                 # E = -(phi_i - phi_i-1)/dx
-                self.e[i] = -(right_potential - left_potential)/self.dx 
+                self.ex[i][j] = -(right_potential - left_potential)/self.dx[1] 
+                self.ey[i][j] = -(down_potential - up_potential)/self.dx[0] 
         
         return
     
