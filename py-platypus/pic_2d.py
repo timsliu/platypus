@@ -15,14 +15,14 @@ class PIC_2D:
         
         # random seed
         np.random.seed(params["seed"])
+        self.dimensions = 2
 
         # domain parameters 
         self.dx = params["dx"]                    # size of cells
         self.dt = params["timestep"]
         self.steps = params["steps"]              # time steps to run for
         self.cells = params["cells"]              # number of cells in x direction
-        self.nodes_x = params["cells"][1] + 1
-        self.nodes_y = params["cells"][0] + 1
+        self.nodes = params["cells"] + 1
         self.n_particles = params["n_particles"]  # total number of particles
         self.xmax = self.dx[1] * self.cells[1]
         self.ymax = self.dx[0] * self.cells[0]
@@ -52,7 +52,8 @@ class PIC_2D:
         self.batch = []                       # batch of particles to follow
 
         # field quantities on nodes 
-        self.e = np.zeros((self.nodes_x, self.nodes_y))          # electric field at each node
+        self.ex = np.zeros(self.nodes)  # electric field Ex at each node
+        self.ey = np.zeros(self.nodes)  # electric field Ey at each node
 
         # list of dictionaries holding output values
         self.output = {"electrostatic_energy" :[], "kinetic_energy": [], "batch_ke": []}
@@ -252,7 +253,7 @@ class PIC_2D:
 
     def update_phi(self):
         '''update the electric potential at each cell center'''
-        print("max rho: ", np.max(self.rho))
+        
         R = np.fft.fft2(-self.rho)                  # fft of rho deviation 
 
         # build intermediate k array
@@ -262,35 +263,36 @@ class PIC_2D:
                 coeff   = (np.sin(np.pi * i/self.cells[0])/self.dx[0]) ** 2 +\
                           (np.sin(np.pi * j/self.cells[1])/self.dx[1]) ** 2
 
-                k[i][j] = -4 * max(MIN_J, coeff) * \
-                           self.xmax/4/np.pi * self.ymax/4/np.pi 
+                k[i][j] = -4 * max(MIN_J, coeff)
         
         Y = R/k                      # divide Fourier transform of rho by coef
         Y_hat = np.fft.ifft2(Y)      # take inverse Fourier transform
         potential = np.real(Y_hat)   # potential is the real part
         avg_potential = np.mean(potential)
         self.phi = (potential - avg_potential)
-        print("max phi: ", np.max(self.phi))
         
         return
 
     def update_e(self):
         '''update electric field at each node'''
-        for i in range(self.nodes):
-            if i == 0:
-                # use the left potential boundary condition 
-                left_potential = self.phi[-1]
-            else:
-                left_potential = self.phi[i-1]
+        
+        e_fields = [self.ex, self.ey]
+        for d in range(self.dimensions): 
+            for i in range(self.nodes[d]):
+                if i == 0:
+                    # use the left potential boundary condition 
+                    left_potential_0 = self.phi[-1]
+                else:
+                    left_potential_0 = self.phi[i-1]
 
-            if i == (self.nodes - 1):
-                # use the right potential boundary condition 
-                right_potential = self.phi[0]
-            else:
-                right_potential = self.phi[i]
+                if i == (self.nodes - 1):
+                    # use the right potential boundary condition 
+                    right_potential = self.phi[0]
+                else:
+                    right_potential = self.phi[i]
 
-            # E = -(phi_i - phi_i-1)/dx
-            self.e[i] = -(right_potential - left_potential)/self.dx 
+                # E = -(phi_i - phi_i-1)/dx
+                self.e[i] = -(right_potential - left_potential)/self.dx 
         
         return
     
