@@ -352,7 +352,8 @@ class PIC_2D:
         '''update position of particles based on v_(n + 0.5)'''
         for i in range(self.n_particles):
 
-            self.electron_x[i] += self.electron_v[i] * self.dt
+            self.electron_x[i] += self.electron_vx[i] * self.dt
+            self.electron_y[i] += self.electron_vy[i] * self.dt
 
             # particle past boundary condition; circular boundary 
             while self.electron_x[i] < 0:
@@ -360,6 +361,12 @@ class PIC_2D:
 
             while self.electron_x[i] > self.xmax:
                 self.electron_x[i] -= self.xmax
+            
+            while self.electron_y[i] < 0:
+                self.electron_y[i] += self.ymax
+
+            while self.electron_y[i] > self.ymax:
+                self.electron_y[i] -= self.ymax
 
         return
 
