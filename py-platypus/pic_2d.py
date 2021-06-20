@@ -279,8 +279,6 @@ class PIC_2D:
     def update_e(self):
         '''update electric field at each node'''
         
-        print("Mean potential: ", np.mean(self.phi))
-       
         rows = self.cells[0]
         cols = self.cells[1]
 
@@ -478,11 +476,8 @@ class PIC_2D:
         '''run the simulation for a single step, updating all parameters;
            methods for saving outputs must be called separately'''
         self.update_ni()        # calculate e and i number densities
-        print("Ni: ", np.mean(self.ni))
         self.update_ne()  
-        print("Ne: ", np.mean(self.ne))
         self.update_rho()       # update charge density
-        print("Charge density:", np.mean(self.rho))
         #print("Mean charge density:", np.mean(self.rho))
         self.update_phi()       # calculate cell potential
         #print("Potential: ", self.phi)

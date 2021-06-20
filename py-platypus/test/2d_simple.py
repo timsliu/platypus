@@ -37,6 +37,16 @@ if __name__ == "__main__":
         pic.calc_electrostatic_energy()
         pic.calc_kinetic_energy()
         pic.calc_batch_kinetic_energy()
+        if i > 0: 
+            ee = pic.output["electrostatic_energy"]
+            ke = pic.output["kinetic_energy"]
+            
+            ee_change = ee[i] - ee[i-1]
+            ke_change = ke[i] - ke[i-1]
+            
+            print("EE change: {}".format(ee_change))
+            print("KE change: {}".format(ke_change))
+            print("Change ratio {}".format(ke_change/ee_change))
 
     plt.figure(1)
     plt.plot(pic.output["kinetic_energy"])
@@ -62,4 +72,13 @@ if __name__ == "__main__":
     plt.xlabel("Time step")
     plt.ylabel("Energy")
 
+    ee = pic.output["electrostatic_energy"]
+    ke = pic.output["kinetic_energy"]
+
+    ee_change = ee[-1] - ee[0]
+    ke_change = ke[-1] - ke[0]
+
+    print("EE change: {}".format(ee_change))
+    print("KE change: {}".format(ke_change))
+    print("Change ratio {}".format(ke_change/ee_change))
     plt.show()
