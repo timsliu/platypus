@@ -109,4 +109,20 @@ if __name__ == "__main__":
     plt.title("Electric field Ey")
     plt.colorbar()
 
+    # test updating particle velocity
+    pic.electron_vx = np.zeros(pic.n_particles)   # zero out particle velocity
+    pic.electron_vy = np.zeros(pic.n_particles)
+
+    pic.update_v()        # update velocity based on E field
+
+    plt.figure(14)
+    plt.scatter(pic.electron_x, pic.electron_y, c=pic.electron_vx, s = 2)
+    plt.title("Velocity vx")
+    plt.colorbar()
+    
+    plt.figure(15)
+    plt.scatter(pic.electron_x, pic.electron_y, c=pic.electron_vy, s = 2)
+    plt.title("Velocity vy")
+    plt.colorbar()
+
     plt.show()

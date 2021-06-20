@@ -276,7 +276,6 @@ class PIC_2D:
 
     def update_e(self):
         '''update electric field at each node'''
-        print(self.cells) 
        
         rows = self.cells[0]
         cols = self.cells[1]
@@ -305,22 +304,49 @@ class PIC_2D:
         '''update velocity of particles based on electric fields'''
         for i in range(self.n_particles):
             x_n = self.electron_x[i]
+            y_n = self.electron_y[i]
 
-            # indices of left and right nodes
-            node_left = int(np.floor(x_n/self.dx))
-            node_right = int(np.ceil(x_n/self.dx))
-
-            # electric field at the left and right nodes
-            e_left = self.e[node_left]
-            e_right = self.e[node_right]
-
-            # position of left and right nodes
-            x_left = node_left * self.dx
-            x_right = node_right * self.dx
+            # indices of neighboring nodes
+            node_left  = int(np.floor(x_n/self.dx[1]))
+            node_right = int(np.ceil(x_n/self.dx[1]))
             
-            # calculate electric field at particle and update velocity
-            e_particle = (x_right - x_n)/self.dx * e_left + (x_n - x_left)/self.dx * e_right
-            self.electron_v[i] -= e_particle * self.dt
+            node_up   = int(np.floor(y_n/self.dx[0]))
+            node_down = int(np.ceil(y_n/self.dx[0]))
+
+            # coordinates of surrounding nodes
+            x0 = node_left * self.dx[1]
+            x1 = node_right * self.dx[1]
+            y0 = node_up * self.dx[0]
+            y1 = node_down * self.dx[0]
+
+            # area of each rectangle
+            area_upper_left  = utils.points_to_area((x_n, y_n), (x0, y0))
+            area_upper_right = utils.points_to_area((x_n, y_n), (x1, y0))
+            area_lower_left  = utils.points_to_area((x_n, y_n), (x0, y1))
+            area_lower_right = utils.points_to_area((x_n, y_n), (x1, y1))
+
+            # total area of a cell
+            total_area = self.dx[0] * self.dx[1]
+
+            # calculate weight to be distributed to each quadrant
+            weight_00 = area_lower_right/total_area 
+            weight_01 = area_lower_left/total_area
+            weight_10 = area_upper_right/total_area 
+            weight_11 = area_upper_left/total_area
+
+            # electric field at each corner
+            e_00 = [self.ex[node_up][node_left], self.ey[node_up][node_left]]
+            e_01 = [self.ex[node_up][node_right], self.ey[node_up][node_right]]
+            e_10 = [self.ex[node_down][node_left], self.ey[node_down][node_left]]
+            e_11 = [self.ex[node_down][node_right], self.ey[node_down][node_right]]
+            
+            # list of weights and list of electric fields
+            weights = np.array([weight_00, weight_01, weight_10, weight_11])
+            e_nodes = np.array([e_00, e_01, e_10, e_11])
+
+            e_particle = np.sum(list(map(lambda a, b: a * b, weights, e_nodes)), axis=0)
+            self.electron_vx[i] -= e_particle[0] * self.dt
+            self.electron_vy[i] -= e_particle[1] * self.dt
 
     def update_x(self):
         '''update position of particles based on v_(n + 0.5)'''
