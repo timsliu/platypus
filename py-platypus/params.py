@@ -72,9 +72,7 @@ class Parameters:
         specified in params will be left as the default value'''
 
         # set the object's parameters to the values in the passed dict
-        print(params) 
         for param in params.keys():
-            print(param) 
             self.set(param, params[param], refresh=False)
 
         self.refresh()
@@ -90,7 +88,6 @@ class Parameters:
 
         # TODO additional checks on parameters
         self.params[param] = value   # set the value
-        print(param, value)
         # make sure derived fields are up to date
         if refresh:
             self.refresh()
@@ -104,8 +101,6 @@ class Parameters:
         )
         self.data_dir = os.path.join(self.out_dir, "data")
         self.graph_dir = os.path.join(self.out_dir, "graph")
-        print(self["length"])
-        print(self["cells"])
         self.set("dx", list(map(lambda a, b: a/b, self["length"], self["cells"])), refresh=False)
         self.set("steps", int(self["runtime"]/self["timestep"]), refresh=False)
         # TODO this is dependent on the dimension

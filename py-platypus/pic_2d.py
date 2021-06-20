@@ -23,7 +23,6 @@ class PIC_2D:
         self.steps = params["steps"]              # time steps to run for
         self.cells = params["cells"]              # number of cells in x direction
         self.nodes = [x + 1 for x in params["cells"]]
-        print("nodes: ", self.nodes) 
         self.n_particles = params["n_particles"]  # total number of particles
         self.xmax = self.dx[1] * self.cells[1]
         self.ymax = self.dx[0] * self.cells[0]
@@ -378,25 +377,49 @@ class PIC_2D:
     def calc_electrostatic_energy(self):
         '''calculate and save the electrostatic energy'''
         electrostatic_energy = 0 
-        for i in range(self.cells):
-            e_cell = np.mean([self.e[i], self.e[i + 1]]) # average E field in cell
-            electrostatic_energy += 0.5 * self.dx * (e_cell ** 2)
+        for i in range(self.cells[0]):
+            for j in range(self.cells[1]):
+                ex_cell = np.mean([
+                    self.ex[i][j],
+                    self.ex[i][j + 1],
+                    self.ex[i + 1][j],
+                    self.ex[i + 1][j + 1]
+                ])
+                
+                ey_cell = np.mean([
+                    self.ey[i][j],
+                    self.ey[i][j + 1],
+                    self.ey[i + 1][j],
+                    self.ey[i + 1][j + 1]
+                ])
+               
+                # U = 0.5 * epsilon * area * E^2
+                electrostatic_energy += 0.5 * self.dx[0] * self.dx[1]\
+                    * (ex_cell ** 2 + ey_cell ** 2)
         
         # save the value
         self.output["electrostatic_energy"].append(electrostatic_energy)
     
     def calc_kinetic_energy(self):
         '''calculate and save the kinetic energy'''
-        ke_energy = 0.5 * self.particle_weight * sum(self.electron_v * self.electron_v)
+        ke_energy = 0.5 * self.particle_weight * \
+            (sum(self.electron_vx * self.electron_vx) + \
+             sum(self.electron_vy * self.electron_vy))
+        
         self.output["kinetic_energy"].append(ke_energy) 
 
         return
     
     def calc_batch_kinetic_energy(self):
-        '''calculate and save the kinetic energy'''
+        '''calculate and save the kinetic energy of the particles in the
+        batch being studied'''
+        
         ke_energy = 0.0 
+        
         for i in self.batch: 
-            ke_energy += 0.5 * self.particle_weight * self.electron_v[i] * self.electron_v[i]
+            ke_energy += 0.5 * self.particle_weight * \
+                (self.electron_vx[i] * self.electron_vx[i] +\
+                 self.electron_vy[i] * self.electron_vy[i])
 
         self.output["batch_ke"].append(ke_energy) 
         return
@@ -418,14 +441,4 @@ class PIC_2D:
         self.update_v()         # calculate velocity of each particle
         self.update_x()         # update positions
 
-
-    def spectate(self):
-        '''print velocity, position, electric field of a particle'''
-
-        print("x: {:.3f}, v: {:.3f}, e_left: {:.3f}, e_right: {:.3f}".format(
-            float(self.electron_x[10]), 
-            float(self.electron_v[10]),
-            float(self.e[int(np.floor(self.electron_x[10]/self.dx))]),
-            float(self.e[int(np.ceil(self.electron_x[10]/self.dx))])))
-    
 
