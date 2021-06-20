@@ -271,17 +271,35 @@ class PIC_2D:
         avg_potential = np.mean(potential)
         self.phi = (potential - avg_potential)
         
+        
         return
 
     def update_e(self):
         '''update electric field at each node'''
+        
+        print("Mean potential: ", np.mean(self.phi))
        
         rows = self.cells[0]
         cols = self.cells[1]
 
-        for i in range(self.nodes[0]):
-            for j in range(self.nodes[1]):
+        u_potentials = []
+        d_potentials = []
+        l_potentials = []
+        r_potentials = []
+       
+        ul_potentials = [] 
+        ur_potentials = []
+        dl_potentials = []
+        dr_potentials = []
+
+        for i in range(self.nodes[0] - 1):
+            for j in range(self.nodes[1] - 1):
                 
+                ul_potential = self.phi[(i - 1) % rows][(j - 1) % cols]
+                ur_potential = self.phi[(i - 1) % rows][j % cols]
+                dl_potential = self.phi[i % rows][(j - 1) % cols]
+                dr_potential = self.phi[i % rows][j % cols]
+
                 # iterpolate potential adjacent to the node in each direction
                 up_potential   = (self.phi[(i - 1) % rows][(j - 1) % cols] +\
                                   self.phi[(i - 1) % rows][j % cols])/2
@@ -293,10 +311,30 @@ class PIC_2D:
                 right_potential = (self.phi[(i - 1) % rows][j % cols] +\
                                    self.phi[i % rows][j % cols])/2
 
+                u_potentials.append(up_potential)
+                d_potentials.append(down_potential)
+                l_potentials.append(left_potential)
+                r_potentials.append(right_potential)
+        
+                ul_potentials.append(ul_potential) 
+                ur_potentials.append(ur_potential)
+                dl_potentials.append(dl_potential)
+                dr_potentials.append(dr_potential)
+                
                 # E = -(phi_i - phi_i-1)/dx
                 self.ex[i][j] = -(right_potential - left_potential)/self.dx[1] 
                 self.ey[i][j] = -(down_potential - up_potential)/self.dx[0] 
-        
+       
+        print("Mean left potential: ", np.mean(u_potentials))
+        print("Mean right potential: ", np.mean(d_potentials))
+        print("Mean up potential: ", np.mean(r_potentials))
+        print("Mean down potential: ", np.mean(l_potentials))
+
+        print("ul_potentials: ", np.mean(ul_potentials)) 
+        print("ur_potentials: ", np.mean(ur_potentials))
+        print("dl_potentials: ", np.mean(dl_potentials))
+        print("dr_potentials: ", np.mean(dr_potentials))
+
         return
     
     def update_v(self):
@@ -344,8 +382,18 @@ class PIC_2D:
             e_nodes = np.array([e_00, e_01, e_10, e_11])
 
             e_particle = np.sum(list(map(lambda a, b: a * b, weights, e_nodes)), axis=0)
+            #print("({:.3f}, {:.3f}) e_field: {:.3f}, {:.3f} weight: {:.3f}".format(x0, y0, e_00[0], e_00[1], weight_00))
+            #print("({:.3f}, {:.3f}) e_field: {:.3f}, {:.3f} weight: {:.3f}".format(x1, y0, e_01[0], e_01[1], weight_01))
+            #print("({:.3f}, {:.3f}) e_field: {:.3f}, {:.3f} weight: {:.3f}".format(x0, y1, e_10[0], e_10[1], weight_10))
+            #print("({:.3f}, {:.3f}) e_field: {:.3f}, {:.3f} weight: {:.3f}".format(x1, y1, e_11[0], e_11[1], weight_11))
+
+            #print(x_n, y_n, e_particle)
+            #exit()
+
             self.electron_vx[i] -= e_particle[0] * self.dt
             self.electron_vy[i] -= e_particle[1] * self.dt
+
+        return
 
     def update_x(self):
         '''update position of particles based on v_(n + 0.5)'''
