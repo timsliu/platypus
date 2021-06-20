@@ -43,12 +43,12 @@ class PIC_2D:
         self.ion_e = np.zeros(self.n_particles)       # e-field at particles
   
         # electron and ion number density at each cell
-        self.ne  = np.zeros((self.cells[0], self.cells[1]))  
-        self.ni  = np.zeros((self.cells[0], self.cells[1]))  
+        self.ne  = np.zeros(self.cells)  
+        self.ni  = np.zeros(self.cells)  
         # charge density at each cell center
-        self.rho = np.zeros((self.cells[0], self.cells[1]))  
+        self.rho = np.zeros(self.cells)  
         # potential at cell centers
-        self.phi = np.zeros((self.cells[0], self.cells[1]))  
+        self.phi = np.zeros(self.cells)  
         self.batch = []                       # batch of particles to follow
 
         # field quantities on nodes 
@@ -190,15 +190,17 @@ class PIC_2D:
     def update_n(self, particle_type):
         '''update the particle density
         particle_type (str) - "ion" or "electron" '''
-      
+     
         # created shallow copy of the particle type we're interested in
         if particle_type == "electron":
             particle_x = self.electron_x
             particle_y = self.electron_y
+            self.ne = np.zeros(self.cells)
             densities = self.ne
         elif particle_type == "ion":
             particle_x = self.ion_x
             particle_y = self.ion_y
+            self.ni = np.zeros(self.cells)
             densities = self.ni
         else:
             raise ValueError("Unrecognized particle type: ".format(particle_type))
@@ -292,8 +294,8 @@ class PIC_2D:
         dl_potentials = []
         dr_potentials = []
 
-        for i in range(self.nodes[0] - 1):
-            for j in range(self.nodes[1] - 1):
+        for i in range(self.nodes[0]):
+            for j in range(self.nodes[1]):
                 
                 ul_potential = self.phi[(i - 1) % rows][(j - 1) % cols]
                 ur_potential = self.phi[(i - 1) % rows][j % cols]
@@ -325,15 +327,15 @@ class PIC_2D:
                 self.ex[i][j] = -(right_potential - left_potential)/self.dx[1] 
                 self.ey[i][j] = -(down_potential - up_potential)/self.dx[0] 
        
-        print("Mean left potential: ", np.mean(u_potentials))
-        print("Mean right potential: ", np.mean(d_potentials))
-        print("Mean up potential: ", np.mean(r_potentials))
-        print("Mean down potential: ", np.mean(l_potentials))
+        #print("Mean left potential: ", np.mean(u_potentials))
+        #print("Mean right potential: ", np.mean(d_potentials))
+        #print("Mean up potential: ", np.mean(r_potentials))
+        #print("Mean down potential: ", np.mean(l_potentials))
 
-        print("ul_potentials: ", np.mean(ul_potentials)) 
-        print("ur_potentials: ", np.mean(ur_potentials))
-        print("dl_potentials: ", np.mean(dl_potentials))
-        print("dr_potentials: ", np.mean(dr_potentials))
+        #print("ul_potentials: ", np.mean(ul_potentials)) 
+        #print("ur_potentials: ", np.mean(ur_potentials))
+        #print("dl_potentials: ", np.mean(dl_potentials))
+        #print("dr_potentials: ", np.mean(dr_potentials))
 
         return
     
@@ -476,11 +478,11 @@ class PIC_2D:
         '''run the simulation for a single step, updating all parameters;
            methods for saving outputs must be called separately'''
         self.update_ni()        # calculate e and i number densities
-        #print("Ni: ", self.ni)
+        print("Ni: ", np.mean(self.ni))
         self.update_ne()  
-        #print("Ne: ", self.ne)
+        print("Ne: ", np.mean(self.ne))
         self.update_rho()       # update charge density
-        #print("Charge density:", self.rho)
+        print("Charge density:", np.mean(self.rho))
         #print("Mean charge density:", np.mean(self.rho))
         self.update_phi()       # calculate cell potential
         #print("Potential: ", self.phi)

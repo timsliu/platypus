@@ -40,10 +40,10 @@ if __name__ == "__main__":
 
     plt.figure(1)
     plt.plot(pic.output["kinetic_energy"])
-    plt.title("Kinetic energy")
+    plt.title("Kinetic nergy")
     plt.xlabel("Time step")
     plt.ylabel("KE")
-    
+   
     plt.figure(2)
     plt.plot(pic.output["electrostatic_energy"])
     plt.title("Electrostatic energy")
@@ -55,5 +55,11 @@ if __name__ == "__main__":
     plt.title("Batch kinetic energy")
     plt.xlabel("Time step")
     plt.ylabel("Batch KE")
+    
+    plt.figure(4)
+    plt.plot(np.array(pic.output["electrostatic_energy"]) + np.array(pic.output["kinetic_energy"]))
+    plt.title("Total energy")
+    plt.xlabel("Time step")
+    plt.ylabel("Energy")
 
     plt.show()
