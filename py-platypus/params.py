@@ -21,7 +21,7 @@ class Parameters:
             "timestep": 0.04, 
             "runtime": 30,
             "dimensions": 1,
-            "nppc": 50,
+            "nppc": 100,
             "vpos": None,            # velocity of positive stream (2 stream)
             "vneg": None,            # velocity of negative stream (2 stream)
             "mode": None,            # number of density waves
@@ -35,7 +35,7 @@ class Parameters:
         if dims == 1:
             self.init_1d()
 
-        if dims == 1:
+        if dims == 2:
             self.init_2d()
        
         # output directories
@@ -44,6 +44,7 @@ class Parameters:
         )
         self.data_dir = os.path.join(self.out_dir, "data")
         self.graph_dir = os.path.join(self.out_dir, "graph")
+
 
     def init_1d(self):
         '''initialize default parameters for 1d simulation'''
@@ -103,15 +104,23 @@ class Parameters:
         self.graph_dir = os.path.join(self.out_dir, "graph")
         self.set("dx", list(map(lambda a, b: a/b, self["length"], self["cells"])), refresh=False)
         self.set("steps", int(self["runtime"]/self["timestep"]), refresh=False)
-        # TODO this is dependent on the dimension
         self.set("n_particles", self["nppc"] * np.prod(self["cells"]), refresh=False)
 
         return
 
     def save_json(self):
         '''save the parameters as a json file'''
-        
-        json_data = json.dumps(self.params, indent = 4)
+        params = {}
+        for key in self.params.keys():
+            # convert numpy type to python types 
+            if type(self[key]) == type(np.array([])):
+                params[key] = list(self[key])
+            if type(self[key]) == type(np.int64(0)):
+                params[key] = int(self[key])
+            else:
+                params[key] = self[key]
+
+        json_data = json.dumps(params, indent = 4)
         with open(os.path.join(self.out_dir, "params.json"), "w") as f:
             f.write(json_data)
         

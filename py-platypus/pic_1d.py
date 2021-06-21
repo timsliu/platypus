@@ -14,18 +14,18 @@ class PIC_1D:
         # TODO verify it's a valid params set
         
         # random seed
-        np.random.seed(params["seed"])
+        #np.random.seed(params["seed"])
 
         # domain parameters 
         self.dx = params["dx"]
         self.dt = params["timestep"]
         self.steps = params["steps"]              # time steps to run for
         self.cells = params["cells"]              # number of cells
-        self.nodes = params["cells"] + 1
+        self.nodes = [x + 1 for x in params["cells"]]
         self.n_particles = params["n_particles"]  # total number of particles
-        self.xmax = self.dx * self.cells
-        
-        self.particle_weight = 1/(self.n_particles/self.cells)  # density/particles per cell
+        self.xmax = self.dx[0] * self.cells[0]
+       
+        self.particle_weight = 1/(self.n_particles/np.prod(self.cells))  # density/particles per cell
         
         # state information
         self.electron_x = np.zeros(self.n_particles) # electron positions
@@ -150,16 +150,16 @@ class PIC_1D:
             raise ValueError("Unrecognized particle type: ".format(particle_type))
 
         # clear the array of densities
-        densities = np.zeros(self.cells)
+        densities = np.zeros(self.cells[0])
         for x_n in particle_x:
             
             # cell the particle is in
-            cell = int(np.floor(x_n/self.dx))
+            cell = int(np.floor(x_n/self.dx[0]))
             # find indices of cells to the left and right that the weight
             # will be distributed between
 
             # particle is to the right of cell midpoint
-            if x_n > cell * self.dx + 0.5 * self.dx:
+            if x_n > cell * self.dx[0] + 0.5 * self.dx[0]:
                 cell_left = cell
                 cell_right = cell + 1
             # particle is to the left of cell midpoint
@@ -168,16 +168,16 @@ class PIC_1D:
                 cell_right = cell
             
             # center of left and right cells
-            cell_left_x = cell_left * self.dx + 0.5 * self.dx
-            cell_right_x = cell_right * self.dx + 0.5 * self.dx
+            cell_left_x = cell_left * self.dx[0] + 0.5 * self.dx[0]
+            cell_right_x = cell_right * self.dx[0] + 0.5 * self.dx[0]
            
             # weight to be distributed to left and right cells
-            weight_left = (cell_right_x - x_n)/self.dx * self.particle_weight 
-            weight_right = (x_n - cell_left_x)/self.dx * self.particle_weight 
+            weight_left = (cell_right_x - x_n)/self.dx[0] * self.particle_weight 
+            weight_right = (x_n - cell_left_x)/self.dx[0] * self.particle_weight 
         
             # get actual cell index, accounting for wraparound
-            cell_left = cell_left % self.cells
-            cell_right = cell_right % self.cells
+            cell_left = cell_left % self.cells[0]
+            cell_right = cell_right % self.cells[0]
 
             densities[cell_left] += weight_left
             densities[cell_right] += weight_right
@@ -202,14 +202,14 @@ class PIC_1D:
         R = fft(-self.rho)                  # fft of rho deviation 
 
         # build intermediate k array
-        k = np.zeros(self.cells)
-        for j in range(self.cells):
-            k[j] = np.pi/self.dx * max(j, MIN_J)/(self.cells/2)
-            if j >= self.cells/2:
-                k[j] -= 2 * np.pi/self.dx
+        k = np.zeros(self.cells[0])
+        for j in range(self.cells[0]):
+            k[j] = np.pi/self.dx[0] * max(j, MIN_J)/(self.cells[0]/2)
+            if j >= self.cells[0]/2:
+                k[j] -= 2 * np.pi/self.dx[0]
         
         # intermediate kappa array
-        kappa = np.sin(k * self.dx/2)/(self.dx/2)
+        kappa = np.sin(k * self.dx[0]/2)/(self.dx[0]/2)
         # intermediate Y array
         Y = - R/(kappa * kappa)
         Y_hat = ifft(Y)
@@ -221,21 +221,21 @@ class PIC_1D:
 
     def update_e(self):
         '''update electric field at each node'''
-        for i in range(self.nodes):
+        for i in range(self.nodes[0]):
             if i == 0:
                 # use the left potential boundary condition 
                 left_potential = self.phi[-1]
             else:
                 left_potential = self.phi[i-1]
 
-            if i == (self.nodes - 1):
+            if i == (self.nodes[0] - 1):
                 # use the right potential boundary condition 
                 right_potential = self.phi[0]
             else:
                 right_potential = self.phi[i]
 
             # E = -(phi_i - phi_i-1)/dx
-            self.e[i] = -(right_potential - left_potential)/self.dx 
+            self.e[i] = -(right_potential - left_potential)/self.dx[0] 
         
         return
     
@@ -245,19 +245,20 @@ class PIC_1D:
             x_n = self.electron_x[i]
 
             # indices of left and right nodes
-            node_left = int(np.floor(x_n/self.dx))
-            node_right = int(np.ceil(x_n/self.dx))
+            node_left = int(np.floor(x_n/self.dx[0]))
+            node_right = int(np.ceil(x_n/self.dx[0]))
+
 
             # electric field at the left and right nodes
             e_left = self.e[node_left]
             e_right = self.e[node_right]
 
             # position of left and right nodes
-            x_left = node_left * self.dx
-            x_right = node_right * self.dx
-            
+            x_left = node_left * self.dx[0]
+            x_right = node_right * self.dx[0]
+           
             # calculate electric field at particle and update velocity
-            e_particle = (x_right - x_n)/self.dx * e_left + (x_n - x_left)/self.dx * e_right
+            e_particle = (x_right - x_n)/self.dx[0] * e_left + (x_n - x_left)/self.dx[0] * e_right
             self.electron_v[i] -= e_particle * self.dt
 
     def update_x(self):
@@ -283,9 +284,9 @@ class PIC_1D:
     def calc_electrostatic_energy(self):
         '''calculate and save the electrostatic energy'''
         electrostatic_energy = 0 
-        for i in range(self.cells):
+        for i in range(self.cells[0]):
             e_cell = np.mean([self.e[i], self.e[i + 1]]) # average E field in cell
-            electrostatic_energy += 0.5 * self.dx * (e_cell ** 2)
+            electrostatic_energy += 0.5 * self.dx[0] * (e_cell ** 2)
         
         # save the value
         self.output["electrostatic_energy"].append(electrostatic_energy)
@@ -330,7 +331,7 @@ class PIC_1D:
         print("x: {:.3f}, v: {:.3f}, e_left: {:.3f}, e_right: {:.3f}".format(
             float(self.electron_x[10]), 
             float(self.electron_v[10]),
-            float(self.e[int(np.floor(self.electron_x[10]/self.dx))]),
-            float(self.e[int(np.ceil(self.electron_x[10]/self.dx))])))
+            float(self.e[int(np.floor(self.electron_x[10]/self.dx[0]))]),
+            float(self.e[int(np.ceil(self.electron_x[10]/self.dx[0]))])))
     
 
