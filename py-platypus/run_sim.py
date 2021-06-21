@@ -53,7 +53,7 @@ def two_stream(name, vpos, vneg, param_dict={}):
             params - optional dictionary of simulation parameters'''
 
     # create a simulation object for holding simulation parameters
-    sim_params = params.Parameters()
+    sim_params = params.Parameters(1)
     sim_params.set("name", name)
     sim_params.set("vpos", vpos)
     sim_params.set("vneg", vneg)
@@ -72,7 +72,7 @@ def single_stream(name, stream_v, stream_frac, param_dict={}):
     '''set up and run a single stream simulation demonstrating neutral beam
     injection heating'''
    
-    sim_params = params.Parameters()
+    sim_params = params.Parameters(1)
     sim_params.set("name", name)
     sim_params.set("stream_v", stream_v)
     sim_params.set("stream_frac", stream_frac)
@@ -89,7 +89,7 @@ def single_stream(name, stream_v, stream_frac, param_dict={}):
 def landau(name, amplitude, mode, param_dict={}):
     '''set up and run a landau damping simulation'''
     
-    sim_params = params.Parameters()
+    sim_params = params.Parameters(1)
     sim_params.set("name", name)
     sim_params.set("mode", mode)
     sim_params.set("amplitude", amplitude)
