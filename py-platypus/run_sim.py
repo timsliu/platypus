@@ -5,7 +5,7 @@ import utils
 
 from pic_1d import *
 
-PRINT_EVERY = 20    # print step number
+PRINT_EVERY = 100    # print step number
 SAVE_EVERY = 100    # save simulation info
 
 def run_simulation(pic, params):
@@ -43,7 +43,12 @@ def run_simulation(pic, params):
     utils.save_pickle("{}/ee".format(params.data_dir), ee)
     utils.save_pickle("{}/ke".format(params.data_dir), ke)
 
-    return
+    delta_ee = max(np.array(ee)) - ee[0]
+    delta_ke = ke[list(ee).index(max(ee))] - ke[0]
+
+    ratio = delta_ee/delta_ke
+
+    return params, delta_ee, delta_ke, ratio
 
 def two_stream(name, vpos, vneg, param_dict={}):
     '''set up and run a two stream instability
@@ -64,9 +69,8 @@ def two_stream(name, vpos, vneg, param_dict={}):
     pic.init_x_random()
     pic.init_v_two_beams(vpos, vneg)
     
-    run_simulation(pic, sim_params)
+    return run_simulation(pic, sim_params)
 
-    return
 
 def single_stream(name, stream_v, stream_frac, param_dict={}):
     '''set up and run a single stream simulation demonstrating neutral beam
