@@ -43,8 +43,12 @@ def run_simulation(pic, params):
     utils.save_pickle("{}/ee".format(params.data_dir), ee)
     utils.save_pickle("{}/ke".format(params.data_dir), ke)
 
-    delta_ee = max(np.array(ee)) - ee[0]
-    delta_ke = ke[list(ee).index(max(ee))] - ke[0]
+    diff_ee = np.array(ee) - ee[0]
+    max_diff_ee = max(abs(diff_ee))
+    max_index = list(abs(diff_ee)).index(max_diff_ee)
+    
+    delta_ee = diff_ee[max_index]
+    delta_ke = ke[max_index] - ke[0]
 
     ratio = delta_ee/delta_ke
 
