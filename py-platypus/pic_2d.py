@@ -411,6 +411,10 @@ class PIC_2D:
             (sum(self.electron_vx * self.electron_vx) + \
              sum(self.electron_vy * self.electron_vy))
         
+        ke_energy *= np.prod(self.dx)  # multiply by ratio of potential energy
+                                       # to kinetic energy so total energy is
+                                       # constant
+        
         self.output["kinetic_energy"].append(ke_energy) 
 
         return
@@ -425,6 +429,10 @@ class PIC_2D:
             ke_energy += 0.5 * self.particle_weight * \
                 (self.electron_vx[i] * self.electron_vx[i] +\
                  self.electron_vy[i] * self.electron_vy[i])
+        
+        ke_energy *= np.prod(self.dx)  # multiply by ratio of potential energy
+                                       # to kinetic energy so total energy is
+                                       # constant
 
         self.output["batch_ke"].append(ke_energy) 
         return

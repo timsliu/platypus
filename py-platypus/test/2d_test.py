@@ -16,9 +16,9 @@ if __name__ == "__main__":
     # set up parameters 
     params = {
         "length": [2 * np.pi, 4 * np.pi],
-        "cells": [32, 64],
+        "cells": [32, 32],
         "dimensions": 2,
-        "nppc": 8
+        "nppc": 12
     }
 
     sim_params.set_from_dict(params)

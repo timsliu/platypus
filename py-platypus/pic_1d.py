@@ -294,6 +294,10 @@ class PIC_1D:
     def calc_kinetic_energy(self):
         '''calculate and save the kinetic energy'''
         ke_energy = 0.5 * self.particle_weight * sum(self.electron_v * self.electron_v)
+        ke_energy *= np.prod(self.dx)  # multiply by ratio of potential energy
+                                       # to kinetic energy so total energy is
+                                       # constant
+
         self.output["kinetic_energy"].append(ke_energy) 
 
         return
@@ -303,7 +307,7 @@ class PIC_1D:
         ke_energy = 0.0 
         for i in self.batch: 
             ke_energy += 0.5 * self.particle_weight * self.electron_v[i] * self.electron_v[i]
-
+        ke_energy *= np.prod(self.dx)
         self.output["batch_ke"].append(ke_energy) 
         return
 

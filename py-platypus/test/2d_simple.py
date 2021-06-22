@@ -31,7 +31,7 @@ if __name__ == "__main__":
     pic.init_v_maxwellian()
     pic.batch = [0, 1, 2, 3, 4]
 
-    for i in range(10):
+    for i in range(20):
         print("Simple 2d test step: {}".format(i))
         pic.step()
         pic.calc_electrostatic_energy()
