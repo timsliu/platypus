@@ -1,4 +1,4 @@
-# example of setting up, running, and graphing a two stream instability
+# example of setting up, running, and graphing landau damping
 
 import sys
 import os
@@ -10,4 +10,4 @@ import run_sim
 
 
 if __name__ == "__main__":
-    run_sim.two_stream("two-stream", 0.5, -0.5)
+    run_sim.landau("landau_1d", 1, param_dict={"runtime": 10})
