@@ -11,62 +11,45 @@ class Parameters:
 
     def __init__(self, dims):
         # dictionary with default parameters
-        # TODO have different defaults based on dimension
+        
         self.params = {
             "name": "default-simulation",
             "seed": 0,              # random seed
             "version": "1.0",
-            "length": None,
-            "cells": None,
+            "length": [2 * np.pi for x in range(dims)],
+            "cells": [32 for x in range(dims)],
             "timestep": 0.04, 
             "runtime": 30,
-            "dimensions": 1,
+            "dimensions": dims,
             "nppc": 100,
-            "vpos": None,            # velocity of positive stream (2 stream)
-            "vneg": None,            # velocity of negative stream (2 stream)
-            "mode": None,            # number of density waves
-            "amplitude": None,       # amplitude of charge perturbation
             "dx": None,              # cell size (derived)
             "steps": None,           # total steps (derived)
             "n_particles": None,     # total particles (derived)
+            "print_every": 20,       # time steps between printing current step
+            "save_every": 100,       # interval between saving data
+            "single_stream": {       # defaults for single stream instability
+                "stream_v": 1, 
+                "stream_frac": 0.5, 
+                "stream_width": 0.5
+            },
+            "landau": {              # defaults for Landau damping
+                "amplitude": 0.5,
+                "mode": 1
+            },
+            "two_stream": {          # defaults for two stream instability
+                "vpos": 0.5,
+                "vneg": -0.5,
+                "stream_frac": 1,
+                "stream_width": 0.5
+            },
         }
 
-        # initialize defaults based on number of dimensions
-        if dims == 1:
-            self.init_1d()
-
-        if dims == 2:
-            self.init_2d()
-       
         # output directories
         self.out_dir = os.path.join(
             PLATYPUS_HOME, "py-platypus/out/{}".format(self["name"])
         )
         self.data_dir = os.path.join(self.out_dir, "data")
         self.graph_dir = os.path.join(self.out_dir, "graph")
-
-
-    def init_1d(self):
-        '''initialize default parameters for 1d simulation'''
-        params = {
-            "length": [2 * np.pi],
-            "cells": [32],
-            "dimensions": 1
-        }
-
-        self.set_from_dict(params)
-        return
-
-    def init_2d(self):
-        '''initialize default parameters for 2d simulation'''
-        params = {
-            "length": [2 * np.pi, 2 * np.pi],
-            "cells": [32, 32],     # matrix notation row, col
-            "dimensions": 2
-        }
-
-        self.set_from_dict(params)
-        return
 
     def set_from_dict(self, params):
         '''set parameters from a passed dictionary. Parameters not

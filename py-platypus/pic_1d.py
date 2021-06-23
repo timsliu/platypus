@@ -14,7 +14,8 @@ class PIC_1D:
         # TODO verify it's a valid params set
         
         # random seed
-        #np.random.seed(params["seed"])
+        np.random.seed(params["seed"])
+        self.params = params
 
         # domain parameters 
         self.dx = params["dx"]
@@ -46,7 +47,11 @@ class PIC_1D:
         self.e = np.zeros(self.nodes)          # electric field at each node
 
         # list of dictionaries holding output values
-        self.output = {"electrostatic_energy" :[], "kinetic_energy": [], "batch_ke": []}
+        self.output = {
+            "electrostatic_energy" :[], 
+            "kinetic_energy": [], 
+            "batch_ke": []
+        }
 
     def init_x_random(self):
         '''randomly initialize the positions of the macroparticles'''
@@ -71,11 +76,14 @@ class PIC_1D:
         
         return
     
-    def init_v_two_beams(self, vpos, vneg):
+    def init_v_two_stream(self):
         '''initializes the velocity distribution of electrons as two 
-        counter propagating beams
+        counter propagating streams
         inputs: vpos - normalized velocity of positive beam
                 vneg - normalized velocity of negative beam'''
+        
+        vpos = self.params["two_stream"]["vpos"]
+        vneg = self.params["two_stream"]["vneg"]
 
         # randomly select which half is positive
         pos_particles = np.random.choice(
@@ -93,11 +101,14 @@ class PIC_1D:
         
         return
 
-    def init_v_single_stream(self, fraction, v):
+    def init_v_single_stream(self):
         '''randomly sets a certain fraction of electrons to an identical
         velocity, simulating a single stream
         inputs: fraction - percent of particles to set velocity
                 v - normalized velocity'''
+       
+        fraction = self.params["single_stream"]["stream_frac"]
+        v = self.params["single_stream"]["stream_v"]
         
         # randomly select which half is positive
         stream_particles = np.random.choice(
@@ -113,10 +124,13 @@ class PIC_1D:
         
         return
 
-    def density_perturbation(self, delta_n, k):
+    def density_perturbation(self):
         '''create a sinusoidal density perturbation
         delta_n - perturbation amplitude
         k - k wave number of perturbation'''
+
+        delta_n = self.params["landau"]["amplitude"]
+        k = self.params["landau"]["mode"]
 
         for i in range(self.n_particles):
             delta_x = delta_n/k * np.sin(k * self.electron_x[i])
@@ -198,7 +212,7 @@ class PIC_1D:
 
     def update_phi(self):
         '''update the electric potential at each cell center'''
-        #self.rho = np.sin(np.linspace(0, 2 * np.pi, self.cells))
+        
         R = fft(-self.rho)                  # fft of rho deviation 
 
         # build intermediate k array

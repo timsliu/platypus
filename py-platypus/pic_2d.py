@@ -15,6 +15,7 @@ class PIC_2D:
         
         # random seed
         np.random.seed(params["seed"])
+        self.params = params
         self.dimensions = 2
 
         # domain parameters 
@@ -34,7 +35,6 @@ class PIC_2D:
         self.electron_y  = np.zeros(self.n_particles) # electron positions
         self.electron_vx = np.zeros(self.n_particles) # electron velocities
         self.electron_vy = np.zeros(self.n_particles) # electron velocities
-        self.electron_e = np.zeros(self.n_particles)  # e-field at particles
         
         self.ion_x  = np.zeros(self.n_particles)      # ion positions
         self.ion_y  = np.zeros(self.n_particles)      # ion positions
@@ -87,54 +87,68 @@ class PIC_2D:
         
         return
     
-    def init_v_two_beams(self, fraction, beam_width, vpos, vneg):
+    def init_v_two_stream(self):
         '''initializes the velocity distribution of electrons as two 
-        counter propagating beams. This function should be called after
+        counter propagating streams. This function should be called after
         the x and v have already been initialized
-        inputs: vpos - normalized velocity of positive beam
-                vneg - normalized velocity of negative beam'''
+        inputs: vpos - normalized velocity of positive stream
+                vneg - normalized velocity of negative stream
+                fraction - fraction of particles in the width part of streams'''
+
+        vpos         = self.params["two_stream"]["vpos"]
+        vneg         = self.params["two_stream"]["vneg"]
+        fraction     = self.params["two_stream"]["stream_frac"]
+        stream_width = self.params["two_stream"]["stream_width"]
         
-        beam_y_start = self.ymax/2 - beam_width/2   # start and stop of beam
-        beam_y_stop = self.ymax/2 + beam_width/2
+        stream_y_start = self.ymax/2 - stream_width/2   # start and stop of stream
+        stream_y_stop = self.ymax/2 + stream_width/2
 
         # iterate through particles and set the velocities
         for i in range(self.n_particles):
-            if self.electron_y[i] < beam_y_stop and self.electron_y[i] > beam_y_start:
+            if self.electron_y[i] < stream_y_stop and self.electron_y[i] > stream_y_start:
                 r = np.random.rand()
 
-                # particle is in the positive beam
+                # particle is in the positive stream
                 if r < fraction / 2:
                     self.electron_vx[i] = vpos 
                     self.electron_vy[i] = 0
 
-                # particle is in the negative beam
+                # particle is in the negative stream
                 if r > fraction / 2 and r < fraction:
                     self.electron_vx[i] = vneg 
                     self.electron_vy[i] = 0
         
         return
 
-    def init_v_single_stream(self, fraction, beam_width, v):
+    def init_v_single_stream(self):
         '''randomly sets a certain fraction of electrons to an identical
         velocity, simulating a single stream
         inputs: fraction - percent of particles to set velocity
-                v - normalized velocity'''
+                v - normalized velocity
+                stream_width - width of the stream'''
         
-        beam_y_start = self.ymax/2 - beam_width/2   # start and stop of beam
-        beam_y_stop = self.ymax/2 + beam_width/2
+        fraction = self.params["single_stream"]["stream_frac"]
+        stream_width = self.params["single_stream"]["stream_width"] 
+        v = self.params["single_stream"]["stream_v"]
+        
+        stream_y_start = self.ymax/2 - stream_width/2   # start and stop of stream
+        stream_y_stop = self.ymax/2 + stream_width/2
        
         for i in range(self.n_particles):
-            if self.electron_y[i] < beam_y_stop and self.electron_y[i] > beam_y_start:
+            if self.electron_y[i] < stream_y_stop and self.electron_y[i] > stream_y_start:
                 r = np.random.rand()
                 if r < fraction:
                     self.electron_vx[i] = v
                     self.electron_vy[i] = 0
         return
 
-    def density_perturbation(self, delta_n, k):
+    def density_perturbation(self):
         '''create a sinusoidal density perturbation along the x-axis
         delta_n - perturbation amplitude
         k - k wave number of perturbation'''
+        
+        delta_n = self.params["landau"]["amplitude"]
+        k = self.params["landau"]["mode"]
         
         for i in range(self.n_particles):
             delta_x = delta_n/k * np.sin(k * self.electron_x[i])

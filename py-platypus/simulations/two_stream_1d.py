@@ -1,4 +1,5 @@
-# example of setting up, running, and graphing a two stream instability
+# example of setting up, running, and graphing a two stream instability in
+# one dimension
 
 import sys
 import os
@@ -10,4 +11,4 @@ import run_sim
 
 
 if __name__ == "__main__":
-    run_sim.single_stream("single-stream", 1, 0.1)
+    run_sim.two_stream("two-stream-1d", 1)
