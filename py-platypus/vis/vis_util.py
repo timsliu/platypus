@@ -1,5 +1,31 @@
 import matplotlib.pyplot as plt
 import pickle
+import numpy as np
+
+def get_subplot_config(subplots):
+    '''return an arrangement of subplots given the total number of subplots
+    to plot. The function returns the number of rows and columns needed to 
+    accomodate all subplots, and tries to arrange them in a square matrix, 
+    defaulting to more columns than rows.
+    inputs: subplots - number of subplots
+    outputs: rows - rows of subplots
+             cols - columns of subplots'''
+
+    # start with square array large enough to fit subplots
+    rows = int(np.ceil(np.sqrt(subplots)))
+    cols = rows 
+
+    # reduce excess rows
+    while (rows - 1) * cols >= subplots:
+        rows -= 1
+
+    # try to reduce rows further for a fully filled rectangle
+    if (rows - 1) * (cols + 1) == subplots:
+        rows -= 1
+        cols += 1
+
+    return rows, cols
+
 
 def plot_lines(filename, data, x_axis, y_axis, title, log=False, legend=None):
     '''plot a single line chart with several lines
@@ -12,27 +38,41 @@ def plot_lines(filename, data, x_axis, y_axis, title, log=False, legend=None):
             log - display y as log plot
             legend - list of strings labeling the data'''
 
-    plt.figure()
-    # iterate through the data, plotting each line
-    for i in range(len(data)):
-        if legend is not None:
-            plt.plot(data[i], label=legend[i])
-        else:
-            plt.plot(data[i])
-   
-    # add axes and title
-    plt.title(title)
-    plt.xlabel(x_axis)
-    plt.ylabel(y_axis)
-    plt.grid(True)
-  
-     # add optional features
-    if legend is not None:
-        plt.legend()
-    
-    if log: 
-        plt.yscale("log")
+    subplots = len(data)
+    rows, cols, = get_subplot_config(subplots)
+    fig, axs = plt.subplots(2, 3, constrained_layout=True)
 
+    for i in range(subplots):
+        # location in the subplot grid
+        col = i % cols
+        row = int(np.floor(i/cols))
+
+        plot_lines = len(data[i])
+        for j in range(plot_lines):
+            if legend is not None:
+                axes[row, col].plot(data[i], label=legend[i])
+            else:
+                axes[row, col].plot(data[i])
+        
+        # add axes and title
+        axes[row, col].title(title)
+        axes[row, col].grid(True)
+        
+        # add optional features
+        if legend is not None:
+            axes[row, col].legend()
+        
+        if log: 
+            axes[row, col].yscale("log")
+
+    # set the axis labels
+    for ax in axs.flat:
+        ax.set(xlabel = x_axis, ylabel = y_axis)
+
+    # only have axis titles on the outer edge
+    for ax in axs.flat:
+        ax.label_outer()
+   
     # save file
     plt.savefig(filename, dpi=800)
 
@@ -72,7 +112,8 @@ def plot_histograms(filenames, x_axis, y_axis, title, fig_name):
 
     return
 
-def plot_scatters_3d
+def plot_scatters_2d(x_file, y_file, x_axis, y_axis, title):
+    pass
 
 def plot_scatters_2d(x_file, y_file, x_axis, y_axis, title):
     '''plot a histogram of some data'''
