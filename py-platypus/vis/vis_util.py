@@ -27,43 +27,44 @@ def get_subplot_config(subplots):
     return rows, cols
 
 
-def plot_lines(filename, data, x_axis, y_axis, title, log=False, legend=None):
+def plot_lines(filename, data, x_axis, y_axis, titles, 
+               subplotter, log=False, legend=None):
     '''plot a single line chart with several lines
     inputs: filename - full path to output filename
             data - 2d array of data; dimension 0 is for each subplot, 
                    dimension 1 is for multiple lines on a subplot
             x-axis - name of x-axis
             y-axis - name of y-axis
-            title - chart title
+            titles - list of chart titles
             log - display y as log plot
             legend - list of strings labeling the data'''
 
-    subplots = len(data)
-    rows, cols, = get_subplot_config(subplots)
-    fig, axs = plt.subplots(2, 3, constrained_layout=True)
+    subplots = len(data)                       # number of subplots
+    rows, cols, = get_subplot_config(subplots) # subplot arrangement
+    fig, axs = plt.subplots(rows, cols, constrained_layout=True, squeeze=False)
+    
+    if legend is None:
+        legend = subplots * [None]
 
+    # iterate through subplots
     for i in range(subplots):
         # location in the subplot grid
         col = i % cols
         row = int(np.floor(i/cols))
 
-        plot_lines = len(data[i])
-        for j in range(plot_lines):
-            if legend is not None:
-                axes[row, col].plot(data[i], label=legend[i])
-            else:
-                axes[row, col].plot(data[i])
+        # call function to plot the data
+        axs[row, col] = subplotter(axs[row, col], data[i], legend[i])
         
         # add axes and title
-        axes[row, col].title(title)
-        axes[row, col].grid(True)
+        axs[row, col].set_title(titles[i])
+        axs[row, col].grid(True)
         
         # add optional features
-        if legend is not None:
-            axes[row, col].legend()
+        if legend[i] is not None:
+            axs[row, col].legend()
         
         if log: 
-            axes[row, col].yscale("log")
+            axs[row, col].yscale("log")
 
     # set the axis labels
     for ax in axs.flat:
@@ -77,6 +78,26 @@ def plot_lines(filename, data, x_axis, y_axis, title, log=False, legend=None):
     plt.savefig(filename, dpi=800)
 
     return
+       
+
+def subplot_lines(axs, data, legend):
+    '''helper function that plots multiple lines on a subplot
+    inputs: axs - matplotlib axes object for a single subplot
+            data - list of data to plot
+            legend - list of labels in the same order as the lines''' 
+    
+    plot_lines = len(data)    # number of lines to plot
+  
+    # iterate through the lines
+    for j in range(plot_lines):
+        
+        # plot with or without lines 
+        if legend is not None:
+            axs.plot(data[j], label=legend[j])
+        else:
+            axs.plot(data[j])
+
+    return axs
 
 
 def plot_histograms(filenames, x_axis, y_axis, title, fig_name):
