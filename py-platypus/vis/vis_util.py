@@ -1,22 +1,43 @@
 import matplotlib.pyplot as plt
 import pickle
 
-def plot_line(filename, x_axis, y_axis, title):
-    '''plot a histogram of some data'''
+def plot_lines(filename, data, x_axis, y_axis, title, log=False, legend=None):
+    '''plot a single line chart with several lines
+    inputs: filename - full path to output filename
+            data - 2d array of data; dimension 0 is for each subplot, 
+                   dimension 1 is for multiple lines on a subplot
+            x-axis - name of x-axis
+            y-axis - name of y-axis
+            title - chart title
+            log - display y as log plot
+            legend - list of strings labeling the data'''
 
-    # load data from pickle
-    data = pickle.load(open(filename, "rb"))
-    
     plt.figure()
-    plt.plot(data)
+    # iterate through the data, plotting each line
+    for i in range(len(data)):
+        if legend is not None:
+            plt.plot(data[i], label=legend[i])
+        else:
+            plt.plot(data[i])
+   
+    # add axes and title
     plt.title(title)
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
     plt.grid(True)
-    #plt.yscale("log")
-    plt.savefig(filename.replace(".p", ".png"), dpi=800)
+  
+     # add optional features
+    if legend is not None:
+        plt.legend()
+    
+    if log: 
+        plt.yscale("log")
+
+    # save file
+    plt.savefig(filename, dpi=800)
 
     return
+
 
 def plot_histograms(filenames, x_axis, y_axis, title, fig_name):
     '''plot a histogram of some data'''
@@ -51,24 +72,9 @@ def plot_histograms(filenames, x_axis, y_axis, title, fig_name):
 
     return
 
-def plot_histogram(filename, x_axis, y_axis, title):
-    '''plot a histogram of some data'''
+def plot_scatters_3d
 
-    # load data from pickle
-    data = pickle.load(open(filename, "rb"))
-    
-    plt.figure()
-    plt.hist(data, bins=20)
-    plt.title(title)
-    plt.xlabel(x_axis)
-    plt.ylabel(y_axis)
-    plt.yscale("log")
-    plt.grid(True)
-    plt.savefig(filename.replace(".p", ".png"), dpi=800)
-
-    return
-
-def plot_scatter(x_file, y_file, x_axis, y_axis, title):
+def plot_scatters_2d(x_file, y_file, x_axis, y_axis, title):
     '''plot a histogram of some data'''
 
     # load data from pickle
