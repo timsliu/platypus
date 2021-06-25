@@ -9,7 +9,9 @@ PLATYPUS_HOME = os.getenv("PLATYPUS_HOME")
 
 class Parameters:
 
-    def __init__(self, dims):
+    def __init__(self, dims, load_file=None):
+        '''inputs: dims - dimensions of the simulation
+                   load_file - full path to json file to load parameters from'''
         # dictionary with default parameters
         
         self.params = {
@@ -43,6 +45,10 @@ class Parameters:
                 "stream_width": 0.5
             },
         }
+
+        # initialize the parameters from a json file
+        if load_file is not None:
+            self.params = json.load(open(load_file))
 
         # output directories
         self.out_dir = os.path.join(

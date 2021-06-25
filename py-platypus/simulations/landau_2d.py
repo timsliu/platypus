@@ -9,9 +9,14 @@ sys.path.append(os.path.join(PLATYPUS_HOME, "py-platypus/vis"))
 
 import run_sim
 from plotter import Plotter
+from params import Parameters
 
 if __name__ == "__main__":
-    #params = run_sim.landau("landau_2d", 2, param_dict={"runtime": 5})
-    
-    plotter = Plotter("landau_2d")
-    plotter.plot_energy()
+    #run_sim.landau("landau_2d", 2, 
+    #    param_dict={"runtime": 5, "save_every": 10}
+    #)
+   
+    param_json = os.path.join(PLATYPUS_HOME, "py-platypus/out/landau_2d/params.json")
+    params = Parameters(2, load_file=param_json) 
+    plotter = Plotter("landau_2d", params)
+    plotter.plot_electric_field()

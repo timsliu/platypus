@@ -43,6 +43,9 @@ def plot_lines(filename, data, x_axis, y_axis, titles,
     rows, cols, = get_subplot_config(subplots) # subplot arrangement
     fig, axs = plt.subplots(rows, cols, constrained_layout=True, squeeze=False)
     
+    ylim_neg = 1.1 * np.min(data) 
+    ylim_pos = 1.1 * np.max(data)
+
     if legend is None:
         legend = subplots * [None]
 
@@ -58,6 +61,9 @@ def plot_lines(filename, data, x_axis, y_axis, titles,
         # add axes and title
         axs[row, col].set_title(titles[i])
         axs[row, col].grid(True)
+        
+        if subplotter == subplot_lines:
+            axs[row, col].set_ylim(ylim_neg, ylim_pos)
         
         # add optional features
         if legend[i] is not None:
@@ -99,6 +105,61 @@ def subplot_lines(axs, data, legend):
 
     return axs
 
+def subplot_grid(axs, data, legend):
+    '''helper function for plotting values that lie on a 2-D grid.
+    inputs: axs - matplotlib axes object for a single subplot
+            data - 2D array of data to plot
+            legend - unused paramter'''
+
+    if len(data) > 1:
+        raise ValueError("subplot_grid mishapened input")
+    axs.imshow(data[0], interpolation = 'none')
+
+    return axs
+
+def subplot_scatter_2d(axs, data, legend):
+    '''helper function for plotting a scatter plot of data with 2
+    dimensions.
+    inputs: axs - matplotlib axes object for a single subplot
+            data - list with each element containing 2 arrays 
+                   [[x_vals0, y_vals0], [x_vals1, y_vals1]]
+            legend - unused paramter'''
+
+    plot_series = len(data)    # number of series to plot
+  
+    # iterate through the lines
+    for j in range(plot_lines):
+        
+        # plot with or without lines 
+        if legend is not None:
+            axs.scatter(data[j][0], data[j][1], label=legend[j])
+        else:
+            axs.scatter(data[j][0], data[j][1])
+
+    return axs
+
+
+def subplot_scatter_3d(axs, data, legend):
+    '''helper function for plotting a scatter plot of data with 3
+    dimensions. The third dimension is illustrated with color. Only a single
+    data series can be plotted per subplot
+    inputs: axs - matplotlib axes object for a single subplot
+            data - list with 3 arrays [x_vals0, y_vals0, z_vals0]
+            legend - unused paramter'''
+
+    axs.scatter(data[0], data[1], c=data[2])
+
+    return axs
+
+def subplot_histogram(axs, data, legend):
+    '''helper function for plotting a histogram subplot
+    inputs: axs - matplotlib axes object for a single subplot
+            data - 1D array of data
+            legend - unused paramter'''
+
+    axs.hist(data)
+
+    return axs
 
 def plot_histograms(filenames, x_axis, y_axis, title, fig_name):
     '''plot a histogram of some data'''
@@ -133,22 +194,3 @@ def plot_histograms(filenames, x_axis, y_axis, title, fig_name):
 
     return
 
-def plot_scatters_2d(x_file, y_file, x_axis, y_axis, title):
-    pass
-
-def plot_scatters_2d(x_file, y_file, x_axis, y_axis, title):
-    '''plot a histogram of some data'''
-
-    # load data from pickle
-    x_data = pickle.load(open(x_file, "rb"))
-    y_data = pickle.load(open(y_file, "rb"))
-    
-    plt.figure()
-    plt.scatter(x_data, y_data, s=1)
-    plt.title(title)
-    plt.xlabel(x_axis)
-    plt.ylabel(y_axis)
-    plt.grid(True)
-    plt.savefig(title.replace(" ", "_") + ".png", dpi=800)
-
-    return

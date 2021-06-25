@@ -31,7 +31,7 @@ def run_simulation(pic, params):
                     params.data_dir, step), pic.electron_v)
                 utils.save_pickle("{}/step_{}_ex".format(
                     params.data_dir, step), pic.electron_x)
-                utils.save_pickle("{}/step_{}_E".format(
+                utils.save_pickle("{}/step_{}_ef".format(
                     params.data_dir, step), pic.e)
             if dims == 2: 
                 utils.save_pickle("{}/step_{}_evx".format(
@@ -42,9 +42,9 @@ def run_simulation(pic, params):
                     params.data_dir, step), pic.electron_x)
                 utils.save_pickle("{}/step_{}_ey".format(
                     params.data_dir, step), pic.electron_y)
-                utils.save_pickle("{}/step_{}_Ex".format(
+                utils.save_pickle("{}/step_{}_efx".format(
                     params.data_dir, step), pic.ex)
-                utils.save_pickle("{}/step_{}_Ey".format(
+                utils.save_pickle("{}/step_{}_efy".format(
                     params.data_dir, step), pic.ey)
 
             utils.save_pickle("{}/step_{}_ne".format(

@@ -16,16 +16,14 @@ import utils
 import pickle
 
 class Plotter:
-    def __init__(self, name):
-        #self.params = params
-        params = {"name": name}
-        self.dims = 1
-        self.dpi = 800
+    def __init__(self, name, params):
+        self.params = params
+        
         self.out_dir = os.path.join(
-            PLATYPUS_HOME, "py-platypus/out/{}/graphs".format(params["name"]))
+            PLATYPUS_HOME, "py-platypus/out/{}/graphs".format(self.params["name"]))
         
         self.data_dir = os.path.join(
-            PLATYPUS_HOME, "py-platypus/out/{}/data".format(params["name"]))
+            PLATYPUS_HOME, "py-platypus/out/{}/data".format(self.params["name"]))
 
     def get_files(self, id_str):
         '''get all files with a certain id string'''
@@ -44,36 +42,51 @@ class Plotter:
         
         return target_files, steps
 
+    def plot_series(self, suffix, out_name, x_axis, y_axis, title, subplotter):
+        '''helper function to plot a data series across several time steps
+        inputs: suffix - identifier at end of pickle files to parse
+                out_name - name of output file with .png extension
+                x_axis - x_axis for charts
+                y_axis - y_axis for charts
+                title - title for each subplot
+                subplotter - function for plotting a subplot'''
+
+        values = []
+        files, steps = self.get_files(suffix)
+        
+        # open all the files
+        for f in files:
+            values.append(
+                [pickle.load(open(os.path.join(self.data_dir, f), "rb"))])
+        
+        # name of output file name 
+        graph_file_name = os.path.join(self.out_dir, out_name)
+        
+        # plot the subplots
+        vis_util.plot_lines(
+            graph_file_name,
+            values, 
+            x_axis,
+            y_axis,
+            ["{} step {}".format(title, x) for x in steps],
+            subplotter 
+        )
+
     def plot_electric_field(self):
         '''plot the electric field at multiple timesteps'''
-       
-        if self.dims == 1:
-            E_fields = []
-            E_files, steps = self.get_files("E")
-           
-            # open all the electric field files
-            for f in E_files:
-                E_fields.append(
-                    [pickle.load(open(os.path.join(self.data_dir, f), "rb"))])
+      
+        # call helper for single dimension
+        if self.params["dimensions"] == 1:
+            self.plot_series("ef", "ef.png", "Position (x)", 
+                "Electric field", "E field", vis_util.subplot_lines) 
+
+        # call helper for two dimensions
+        if self.params["dimensions"] == 2:
+            self.plot_series("efx", "efx.png", "Position (x)", 
+                "Position (y)", "E field", vis_util.subplot_grid) 
             
-            # name of output file name 
-            graph_file_name = os.path.join(self.out_dir, "E.png")
-            
-            # plot the subplots
-            vis_util.plot_lines(
-                graph_file_name,
-                E_fields,
-                "Position (x)",
-                "Electric field",
-                ["E field step {}".format(x) for x in steps],
-                vis_util.subplot_lines
-            )
-
-        #if self.dims == 2
-        #    Ex_files, steps = get_files("Ex")
-        #    Ey_files, _ = get_files("Ey")
-
-
+            self.plot_series("efy", "efy.png", "Position (x)", 
+                "Position (y)", "E field", vis_util.subplot_grid) 
 
         return
 
