@@ -42,23 +42,33 @@ class Plotter:
         
         return target_files, steps
 
-    def plot_series(self, suffix, out_name, x_axis, y_axis, title, subplotter):
+    def plot_series(self, suffixes, out_name, x_axis, y_axis, title, subplotter):
         '''helper function to plot a data series across several time steps
-        inputs: suffix - identifier at end of pickle files to parse
+        inputs: suffixes - identifier at end of pickle files to parse
                 out_name - name of output file with .png extension
                 x_axis - x_axis for charts
                 y_axis - y_axis for charts
                 title - title for each subplot
                 subplotter - function for plotting a subplot'''
 
-        values = []
-        files, steps = self.get_files(suffix)
-        
-        # open all the files
-        for f in files:
-            values.append(
-                [pickle.load(open(os.path.join(self.data_dir, f), "rb"))])
-        
+        values    = []    # array holding data for each subplot
+        all_files = []    # 2D array with suffixes by subplots elements
+
+        # iterate through the data types we need to open
+        for suffix in suffixes:
+            files, steps = self.get_files(suffix)
+            all_files.append(files) 
+
+        # iterate through the data for each subplot
+        for i in range(len(steps)):
+            subplot_values = []
+            # add the data for each data type at each timestep 
+            for j in range(len(suffixes)):
+                subplot_values.append(pickle.load(
+                    open(os.path.join(self.data_dir, all_files[j][i]), "rb")))
+            values.append(subplot_values)
+       
+        print(len(values))
         # name of output file name 
         graph_file_name = os.path.join(self.out_dir, out_name)
         
@@ -78,15 +88,15 @@ class Plotter:
       
         # call helper for single dimension
         if self.params["dimensions"] == 1:
-            self.plot_series("ef", "ef.png", "Position (x)", 
+            self.plot_series(["ef"], "ef.png", "Position (x)", 
                 "Electric field", "E field", vis_util.subplot_lines) 
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
-            self.plot_series("efx", "efx.png", "Position (x)", 
+            self.plot_series(["efx"], "efx.png", "Position (x)", 
                 "Position (y)", "E field", vis_util.subplot_grid) 
             
-            self.plot_series("efy", "efy.png", "Position (x)", 
+            self.plot_series(["efy"], "efy.png", "Position (x)", 
                 "Position (y)", "E field", vis_util.subplot_grid) 
 
         return
@@ -107,9 +117,10 @@ class Plotter:
             [[ke, ee]], 
             "Time step", 
             "Normalized energy", 
-            ["Energy"],
+            "Energy",
             vis_util.subplot_lines, 
-            legend=[["Kinetic energy", "Electrostatic energy"]]
+            legend=[["Kinetic energy", "Electrostatic energy"]],
+            zero=True
         )
 
         # plot kinetic energy
@@ -118,8 +129,9 @@ class Plotter:
             [[ee]], 
             "Time step", 
             "Normalized energy", 
-            ["Electrostatic energy"],
-            vis_util.subplot_lines, 
+            "Electrostatic energy",
+            vis_util.subplot_lines,
+            zero=True
         )
         
         # plot potential energy
@@ -128,8 +140,9 @@ class Plotter:
             [[ke]], 
             "Time step", 
             "Normalized energy", 
-            ["Kinetic energy"],
-            vis_util.subplot_lines, 
+            "Kinetic energy",
+            vis_util.subplot_lines,
+            zero=True
         )
 
 
@@ -140,12 +153,12 @@ class Plotter:
       
         # call helper for single dimension
         if self.params["dimensions"] == 1:
-            self.plot_series("ne", "ne.png", "Position (x)", 
+            self.plot_series(["ne"], "ne.png", "Position (x)", 
                 "Density", "Electron density", vis_util.subplot_lines) 
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
-            self.plot_series("ne", "ne.png", "Position (x)", 
+            self.plot_series(["ne"], "ne.png", "Position (x)", 
                 "Position (y)", "Electron density", vis_util.subplot_grid) 
             
         return
@@ -163,5 +176,14 @@ class Plotter:
     def plot_velocity(self):
         '''plot histogram showing velocity distribution at several different
         time steps'''
-        return
+        
+        # call helper for single dimension
+        if self.params["dimensions"] == 1:
+            self.plot_series("v", "v.png", "Position (x)", 
+                "Velocity", "Velocity", vis_util.subplot_histogram) 
+
+        # call helper for two dimensions
+        if self.params["dimensions"] == 2:
+            self.plot_series(["vx", "vy"], "v.png", "Vx", 
+                "Vy", "Velocity", vis_util.subplot_histogram_2d) 
 

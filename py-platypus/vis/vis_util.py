@@ -2,6 +2,50 @@ import matplotlib.pyplot as plt
 import pickle
 import numpy as np
 
+BINS = 20
+LIM_FACTOR = 0.05
+
+LIM_UP = 1 + LIM_FACTOR
+LIM_DN = 1 - LIM_FACTOR
+
+def get_limits(data, zero, subplotter):
+    '''generate reasonable upper and lower axis limits for the data
+    inputs: data - array of all data
+            zero - bool for setting the lower limit to zero'''
+
+    data_min = np.min(data)
+    data_max = np.max(data)
+
+    # special case for 1D histogram
+    if subplotter == subplot_histogram:
+        lim_neg = 0
+        lim_pos = LIM_UP * max(np.histogram(data, bins=BINS))
+        return lim_neg, lim_pos
+
+    # special case for 2D histogram
+    if subplotter == subplot_histogram_2d:
+        lim_neg = 0
+        lim_pos = LIM_UP * max(
+            [np.max(np.histogram2d(x[0], x[1], bins=BINS)[0]) for x in data])
+
+        return lim_neg, lim_pos
+
+    # rules for getting max limit
+    if data_max > 0:
+        lim_pos = LIM_UP * data_max
+    else:
+        lim_pos = 0.9 * data_max
+   
+    # rules for getting min limit
+    if zero:
+        lim_neg = 0
+    elif data_min < 0:
+        lim_neg = LIM_UP * data_min
+    else:
+        lim_neg = LIM_DN * data_min
+
+    return lim_neg, lim_pos
+
 def get_subplot_config(subplots):
     '''return an arrangement of subplots given the total number of subplots
     to plot. The function returns the number of rows and columns needed to 
@@ -28,23 +72,25 @@ def get_subplot_config(subplots):
 
 
 def plot_lines(filename, data, x_axis, y_axis, title, 
-               subplotter, log=False, legend=None, steps=None):
+               subplotter, log=False, legend=None, steps=None, 
+               zero=False):
     '''plot a single line chart with several lines
     inputs: filename - full path to output filename
             data - 2d array of data; dimension 0 is for each subplot, 
                    dimension 1 is for multiple lines on a subplot
             x-axis - name of x-axis
             y-axis - name of y-axis
-            titles - list of chart titles
+            title - figure title
             log - display y as log plot
-            legend - list of strings labeling the data'''
+            legend - list of strings labeling the data
+            steps - list of time steps the data is from'''
 
     subplots = len(data)                       # number of subplots
     rows, cols, = get_subplot_config(subplots) # subplot arrangement
     fig, axs = plt.subplots(rows, cols, constrained_layout=True, squeeze=False)
-    
-    lim_neg = 1.1 * np.min(data) 
-    lim_pos = 1.1 * np.max(data)
+
+    # call function to get upper and lower figure limits
+    lim_neg, lim_pos = get_limits(data, zero, subplotter)
 
     if legend is None:
         legend = subplots * [None]
@@ -62,7 +108,7 @@ def plot_lines(filename, data, x_axis, y_axis, title,
 
         # call function to plot the data
         axs[row, col] = subplotter(axs[row, col], data[i], legend[i], (lim_neg, lim_pos))
-        
+       
         # add subplot title if available
         if steps is not None: 
             axs[row, col].set_title("Step {}".format(steps[i]), fontsize=10)
@@ -81,12 +127,9 @@ def plot_lines(filename, data, x_axis, y_axis, title,
         ax.set_xlabel(x_axis, fontsize = 10)
         ax.set_ylabel(y_axis, fontsize = 10)
 
-
-
     # only have axis titles on the outer edge
     for ax in axs.flat:
         ax.label_outer()
-
 
     # add figure title
     fig.suptitle(title)
@@ -95,7 +138,6 @@ def plot_lines(filename, data, x_axis, y_axis, title,
     plt.savefig(filename, dpi=800)
 
     return
-       
 
 def subplot_lines(axs, data, legend, lims):
     '''helper function that plots multiple lines on a subplot
@@ -115,7 +157,7 @@ def subplot_lines(axs, data, legend, lims):
         else:
             axs.plot(data[j])
             
-    axs[row, col].set_ylim(lim[0], lim[1])
+    axs.set_ylim(lims[0], lims[1])
 
     return axs
 
@@ -173,40 +215,18 @@ def subplot_histogram(axs, data, legend, lims):
             data - 1D array of data
             legend - unused paramter'''
 
-    axs.hist(data)
+    axs.hist(data[0], bins=BINS)
+    axs.set_ylim(0, lims[1])
 
     return axs
 
-def plot_histograms(filenames, x_axis, y_axis, title, fig_name):
-    '''plot a histogram of some data'''
-    rows = 2
-    cols = 3
-    # load data from pickle
-    fig, axs = plt.subplots(2, 3, constrained_layout=True)
-    timesteps = [0, 200, 400, 600, 800, 999] 
+def subplot_histogram_2d(axs, data, legend, lims):
+    '''helper function for plotting 2D data as a histogram subplot
+    inputs: axs - matplotlib axes object for a single subplot
+            data - array of data [x_values, y_values]
+            legend - unused paramter'''
 
-    for i, filename in enumerate(filenames):
-        print(filename)
-        data = pickle.load(open(filename, "rb"))
-        col = i % cols
-        row = int(np.floor(i/cols))
-        print(row, col)
-        
-        axs[row, col].hist(data, bins=20)
-        axs[row, col].set_title("Timestep: {}".format(timesteps[i]))
-        axs[row, col].set_ylim(0, 850)
-        axs[row, col].grid(True)
-    
-    # set the axis labels
-    for ax in axs.flat:
-        ax.set(xlabel = x_axis, ylabel = y_axis)
+    axs.hist2d(data[0], data[1], bins=BINS, vmin=lims[0], vmax=lims[1])
 
-    # only have axis titles on the outer edge
-    for ax in axs.flat:
-        ax.label_outer()
-    
-    plt.savefig(fig_name, dpi=800)
-
-
-    return
+    return axs
 
