@@ -20,3 +20,4 @@ if __name__ == "__main__":
     params = Parameters(2, load_file=param_json) 
     plotter = Plotter("landau_2d", params)
     plotter.plot_electric_field()
+    plotter.plot_density()

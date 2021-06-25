@@ -27,8 +27,8 @@ def get_subplot_config(subplots):
     return rows, cols
 
 
-def plot_lines(filename, data, x_axis, y_axis, titles, 
-               subplotter, log=False, legend=None):
+def plot_lines(filename, data, x_axis, y_axis, title, 
+               subplotter, log=False, legend=None, steps=None):
     '''plot a single line chart with several lines
     inputs: filename - full path to output filename
             data - 2d array of data; dimension 0 is for each subplot, 
@@ -43,27 +43,29 @@ def plot_lines(filename, data, x_axis, y_axis, titles,
     rows, cols, = get_subplot_config(subplots) # subplot arrangement
     fig, axs = plt.subplots(rows, cols, constrained_layout=True, squeeze=False)
     
-    ylim_neg = 1.1 * np.min(data) 
-    ylim_pos = 1.1 * np.max(data)
+    lim_neg = 1.1 * np.min(data) 
+    lim_pos = 1.1 * np.max(data)
 
     if legend is None:
         legend = subplots * [None]
 
     # iterate through subplots
-    for i in range(subplots):
+    for i in range(rows * cols):
         # location in the subplot grid
         col = i % cols
         row = int(np.floor(i/cols))
+      
+        # remove axis for unused subplots 
+        if i >= subplots:
+            axs[row, col].set_axis_off()
+            continue
 
         # call function to plot the data
-        axs[row, col] = subplotter(axs[row, col], data[i], legend[i])
+        axs[row, col] = subplotter(axs[row, col], data[i], legend[i], (lim_neg, lim_pos))
         
-        # add axes and title
-        axs[row, col].set_title(titles[i])
-        axs[row, col].grid(True)
-        
-        if subplotter == subplot_lines:
-            axs[row, col].set_ylim(ylim_neg, ylim_pos)
+        # add subplot title if available
+        if steps is not None: 
+            axs[row, col].set_title("Step {}".format(steps[i]), fontsize=10)
         
         # add optional features
         if legend[i] is not None:
@@ -71,14 +73,23 @@ def plot_lines(filename, data, x_axis, y_axis, titles,
         
         if log: 
             axs[row, col].yscale("log")
+        
+        axs[row, col].grid(True)
 
     # set the axis labels
     for ax in axs.flat:
-        ax.set(xlabel = x_axis, ylabel = y_axis)
+        ax.set_xlabel(x_axis, fontsize = 10)
+        ax.set_ylabel(y_axis, fontsize = 10)
+
+
 
     # only have axis titles on the outer edge
     for ax in axs.flat:
         ax.label_outer()
+
+
+    # add figure title
+    fig.suptitle(title)
    
     # save file
     plt.savefig(filename, dpi=800)
@@ -86,11 +97,12 @@ def plot_lines(filename, data, x_axis, y_axis, titles,
     return
        
 
-def subplot_lines(axs, data, legend):
+def subplot_lines(axs, data, legend, lims):
     '''helper function that plots multiple lines on a subplot
     inputs: axs - matplotlib axes object for a single subplot
             data - list of data to plot
-            legend - list of labels in the same order as the lines''' 
+            legend - list of labels in the same order as the lines
+            lims - tuple specifying upper and lower bounds''' 
     
     plot_lines = len(data)    # number of lines to plot
   
@@ -102,10 +114,12 @@ def subplot_lines(axs, data, legend):
             axs.plot(data[j], label=legend[j])
         else:
             axs.plot(data[j])
+            
+    axs[row, col].set_ylim(lim[0], lim[1])
 
     return axs
 
-def subplot_grid(axs, data, legend):
+def subplot_grid(axs, data, legend, lims):
     '''helper function for plotting values that lie on a 2-D grid.
     inputs: axs - matplotlib axes object for a single subplot
             data - 2D array of data to plot
@@ -113,11 +127,11 @@ def subplot_grid(axs, data, legend):
 
     if len(data) > 1:
         raise ValueError("subplot_grid mishapened input")
-    axs.imshow(data[0], interpolation = 'none')
+    axs.imshow(data[0], interpolation = 'none', vmin=lims[0], vmax=lims[1])
 
     return axs
 
-def subplot_scatter_2d(axs, data, legend):
+def subplot_scatter_2d(axs, data, legend, lims):
     '''helper function for plotting a scatter plot of data with 2
     dimensions.
     inputs: axs - matplotlib axes object for a single subplot
@@ -135,11 +149,13 @@ def subplot_scatter_2d(axs, data, legend):
             axs.scatter(data[j][0], data[j][1], label=legend[j])
         else:
             axs.scatter(data[j][0], data[j][1])
+    
+    axs[row, col].set_ylim(lim[0], lim[1])
 
     return axs
 
 
-def subplot_scatter_3d(axs, data, legend):
+def subplot_scatter_3d(axs, data, legend, lims):
     '''helper function for plotting a scatter plot of data with 3
     dimensions. The third dimension is illustrated with color. Only a single
     data series can be plotted per subplot
@@ -151,7 +167,7 @@ def subplot_scatter_3d(axs, data, legend):
 
     return axs
 
-def subplot_histogram(axs, data, legend):
+def subplot_histogram(axs, data, legend, lims):
     '''helper function for plotting a histogram subplot
     inputs: axs - matplotlib axes object for a single subplot
             data - 1D array of data

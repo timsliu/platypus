@@ -68,8 +68,9 @@ class Plotter:
             values, 
             x_axis,
             y_axis,
-            ["{} step {}".format(title, x) for x in steps],
-            subplotter 
+            title,
+            subplotter,
+            steps=steps
         )
 
     def plot_electric_field(self):
@@ -135,16 +136,32 @@ class Plotter:
         return
 
     def plot_density(self):
+        '''plot the electron density at multiple timesteps'''
+      
+        # call helper for single dimension
+        if self.params["dimensions"] == 1:
+            self.plot_series("ne", "ne.png", "Position (x)", 
+                "Density", "Electron density", vis_util.subplot_lines) 
+
+        # call helper for two dimensions
+        if self.params["dimensions"] == 2:
+            self.plot_series("ne", "ne.png", "Position (x)", 
+                "Position (y)", "Electron density", vis_util.subplot_grid) 
+            
         return
 
     def plot_phase(self):
+        '''plot the phase space illustrating velocity as a function of
+        position at several time steps'''
+        
         return
 
     def plot_all(self):
+        '''plot all default graphs''' 
         return
 
     def plot_velocity(self):
+        '''plot histogram showing velocity distribution at several different
+        time steps'''
         return
 
-    def plot_position(self):
-        return
