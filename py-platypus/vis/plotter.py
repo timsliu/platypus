@@ -66,7 +66,7 @@ class Plotter:
                 subplot_values.append(pickle.load(
                     open(os.path.join(self.data_dir, all_files[j][i]), "rb")))
             values.append(subplot_values)
-       
+      
         # name of output file name 
         graph_file_name = os.path.join(self.out_dir, out_name)
         

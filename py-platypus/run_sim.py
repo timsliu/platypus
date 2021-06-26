@@ -19,11 +19,10 @@ def run_simulation(pic, params):
     for step in range(steps):
         if step % params["print_every"] == 0:
             print("Step {}".format(step))
-        
         pic.step()                       # step the simulatioin
         pic.calc_electrostatic_energy()  # calc the total electrostatic energy
         pic.calc_kinetic_energy()        # calc the total kinetic energy
-
+        
         # save simulation information
         if step % params["save_every"] == 0 or step == steps - 1:
             if dims == 1: 
@@ -49,7 +48,7 @@ def run_simulation(pic, params):
 
             utils.save_pickle("{}/step_{}_ne".format(
                 params.data_dir, step), pic.ne)
-
+    
     # get the saved quantities and save to pickle
     ee = pic.output["electrostatic_energy"]
     ke = pic.output["kinetic_energy"]
@@ -86,8 +85,11 @@ def two_stream(name, dims, param_dict={}):
     
     # initialize x randomly and create two streams
     pic.init_x_random()
-    pic.init_v_two_stream()
     
+    if dims == 2:
+        pic.init_v_maxwellian()
+    
+    pic.init_v_two_stream()
     run_simulation(pic, sim_params)
 
     return sim_params
