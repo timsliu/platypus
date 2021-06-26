@@ -25,6 +25,7 @@ class Plotter:
         self.data_dir = os.path.join(
             PLATYPUS_HOME, "py-platypus/out/{}/data".format(self.params["name"]))
 
+
     def get_files(self, id_str):
         '''get all files with a certain id string'''
         files = os.listdir(self.data_dir)
@@ -37,8 +38,6 @@ class Plotter:
 
         # parse for the step count
         steps = [int(f.split("_")[1]) for f in target_files]
-        print(target_files)
-        print(steps)
         
         return target_files, steps
 
@@ -68,7 +67,6 @@ class Plotter:
                     open(os.path.join(self.data_dir, all_files[j][i]), "rb")))
             values.append(subplot_values)
        
-        print(len(values))
         # name of output file name 
         graph_file_name = os.path.join(self.out_dir, out_name)
         
@@ -85,6 +83,8 @@ class Plotter:
 
     def plot_electric_field(self):
         '''plot the electric field at multiple timesteps'''
+        
+        print("Plotting electric field") 
       
         # call helper for single dimension
         if self.params["dimensions"] == 1:
@@ -104,6 +104,8 @@ class Plotter:
     def plot_energy(self):
         '''plot the kinetic and electrostatic energy as a function of time
         step'''
+        
+        print("Plotting energy") 
         
         ee = pickle.load(open(os.path.join(self.data_dir, "ee.p"), "rb"))
         ke = pickle.load(open(os.path.join(self.data_dir, "ke.p"), "rb"))
@@ -150,7 +152,9 @@ class Plotter:
 
     def plot_density(self):
         '''plot the electron density at multiple timesteps'''
-      
+     
+        print("Plotting density")
+
         # call helper for single dimension
         if self.params["dimensions"] == 1:
             self.plot_series(["ne"], "ne.png", "Position (x)", 
@@ -166,17 +170,28 @@ class Plotter:
     def plot_phase(self):
         '''plot the phase space illustrating velocity as a function of
         position at several time steps'''
-        
-        return
 
-    def plot_all(self):
-        '''plot all default graphs''' 
+        print("Plotting phase space")
+
+        if self.params["dimensions"] == 1:
+            self.plot_series(["x", "v"], "phase.png", "Position (x)",
+                "Velocity (v)", "Phase plot", vis_util.subplot_scatter_2d)
+        
+        if self.params["dimensions"] == 2:
+            self.plot_series(["ex", "ey", "evx"], "phase_vx.png", "Position (x)",
+                "Position (y)", "Phase plot (Vx)", vis_util.subplot_scatter_3d)
+            
+            self.plot_series(["ex", "ey", "evy"], "phase_vy.png", "Position (x)",
+                "Position (y)", "Phase plot (Vy)", vis_util.subplot_scatter_3d)
+          
         return
 
     def plot_velocity(self):
         '''plot histogram showing velocity distribution at several different
         time steps'''
-        
+      
+        print("Plotting velocity")
+
         # call helper for single dimension
         if self.params["dimensions"] == 1:
             self.plot_series("v", "v.png", "Position (x)", 
@@ -187,3 +202,13 @@ class Plotter:
             self.plot_series(["vx", "vy"], "v.png", "Vx", 
                 "Vy", "Velocity", vis_util.subplot_histogram_2d) 
 
+    def plot_all(self):
+        '''plot all default graphs'''
+
+        self.plot_electric_field()
+        self.plot_energy()
+        self.plot_density()
+        self.plot_phase()
+        self.plot_velocity()
+
+        return

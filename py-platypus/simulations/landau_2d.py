@@ -22,4 +22,5 @@ if __name__ == "__main__":
     #plotter.plot_electric_field()
     #plotter.plot_energy()
     #plotter.plot_density()
-    plotter.plot_velocity()
+    plotter.plot_phase() 
+    #plotter.plot_velocity()

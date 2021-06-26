@@ -19,7 +19,8 @@ def get_limits(data, zero, subplotter):
     # special case for 1D histogram
     if subplotter == subplot_histogram:
         lim_neg = 0
-        lim_pos = LIM_UP * max(np.histogram(data, bins=BINS))
+        lim_pos = LIM_UP * max(
+            [np.max(np.histogram(x, bins=BINS)[0]) for x in data])
         return lim_neg, lim_pos
 
     # special case for 2D histogram
@@ -29,6 +30,14 @@ def get_limits(data, zero, subplotter):
             [np.max(np.histogram2d(x[0], x[1], bins=BINS)[0]) for x in data])
 
         return lim_neg, lim_pos
+
+    if subplotter == subplot_scatter_2d:
+        data_max = max([np.max(x[1]) for x in data])
+        data_min = min([np.min(x[1]) for x in data])
+    
+    if subplotter == subplot_scatter_3d:
+        data_max = max([np.max(x[2]) for x in data])
+        data_min = min([np.min(x[2]) for x in data])
 
     # rules for getting max limit
     if data_max > 0:
@@ -181,18 +190,15 @@ def subplot_scatter_2d(axs, data, legend, lims):
                    [[x_vals0, y_vals0], [x_vals1, y_vals1]]
             legend - unused paramter'''
 
-    plot_series = len(data)    # number of series to plot
   
-    # iterate through the lines
-    for j in range(plot_lines):
         
-        # plot with or without lines 
-        if legend is not None:
-            axs.scatter(data[j][0], data[j][1], label=legend[j])
-        else:
-            axs.scatter(data[j][0], data[j][1])
+    # plot with or without lines 
+    if legend is not None:
+        axs.scatter(data[0], data[1], label=legend, s=0.1)
+    else:
+        axs.scatter(data[0], data[1], s=0.1)
     
-    axs[row, col].set_ylim(lim[0], lim[1])
+    axs.set_ylim(lims[0], lims[1])
 
     return axs
 
@@ -205,7 +211,7 @@ def subplot_scatter_3d(axs, data, legend, lims):
             data - list with 3 arrays [x_vals0, y_vals0, z_vals0]
             legend - unused paramter'''
 
-    axs.scatter(data[0], data[1], c=data[2])
+    axs.scatter(data[0], data[1], c=data[2], s=0.1, vmin=lims[0], vmax=lims[1])
 
     return axs
 
