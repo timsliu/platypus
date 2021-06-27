@@ -15,7 +15,7 @@ class Parameters:
         # dictionary with default parameters
         
         self.params = {
-            "name": "default-simulation",
+            "name": "default_simulation",
             "seed": 0,              # random seed
             "version": "1.0",
             "length": [2 * np.pi for x in range(dims)],

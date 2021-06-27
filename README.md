@@ -22,7 +22,7 @@ visualizations with Platypus.
 1. [Environment](#environment)
 2. [Installation](#installation)
 3. [Running your first simulation](#running-first-model)
-4. [Folder organization](#folder-organization)
+4. [Repository contents](#repo-contents)
 5. [Contributors and Contact](#contributors-and-contact)
 6. [License](#license)
 
@@ -44,7 +44,7 @@ to run on Windows.
 
 ## [Running your first simulation](#running-first-simu)
 
-## [Folder organization](#folder-organization)
+## [Repository contents](#repo-contents)
 This section describes the organization of the Platypus repository.
 
 ### bin
