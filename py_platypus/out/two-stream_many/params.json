@@ -1,0 +1,24 @@
+{
+    "name": "two-stream_many",
+    "seed": 0,
+    "version": "1.0",
+    "length": [
+        402.1238596594935
+    ],
+    "cells": [
+        128
+    ],
+    "timestep": 0.04,
+    "runtime": 20,
+    "dimensions": 1,
+    "nppc": 100,
+    "vpos": 0.5,
+    "vneg": -0.5,
+    "mode": null,
+    "amplitude": null,
+    "dx": [
+        3.141592653589793
+    ],
+    "steps": 500,
+    "n_particles": 12800
+}

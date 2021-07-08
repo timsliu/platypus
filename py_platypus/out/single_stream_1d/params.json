@@ -1,0 +1,37 @@
+{
+    "name": "single_stream_1d",
+    "seed": 0,
+    "version": "1.0",
+    "length": [
+        6.283185307179586
+    ],
+    "cells": [
+        32
+    ],
+    "timestep": 0.04,
+    "runtime": 40,
+    "dimensions": 1,
+    "nppc": 100,
+    "dx": [
+        0.19634954084936207
+    ],
+    "steps": 1000,
+    "n_particles": 3200,
+    "print_every": 20,
+    "save_every": 100,
+    "single_stream": {
+        "stream_v": 1,
+        "stream_frac": 0.5,
+        "stream_width": 0.5
+    },
+    "landau": {
+        "amplitude": 0.5,
+        "mode": 1
+    },
+    "two_stream": {
+        "vpos": 0.5,
+        "vneg": -0.5,
+        "stream_frac": 1,
+        "stream_width": 0.5
+    }
+}
