@@ -9,13 +9,13 @@
         32
     ],
     "timestep": 0.04,
-    "runtime": 5,
+    "runtime": 1,
     "dimensions": 1,
     "nppc": 100,
     "dx": [
         0.19634954084936207
     ],
-    "steps": 125,
+    "steps": 25,
     "n_particles": 3200,
     "print_every": 20,
     "save_every": 20,
