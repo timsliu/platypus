@@ -2,28 +2,21 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import vis_util
-
 import sys
 import os
-
-PLATYPUS_HOME = os.getenv("PLATYPUS_HOME")
-sys.path.append(os.path.join(PLATYPUS_HOME, "py-platypus"))
-
-import run_sim
-import params
-import utils
 import pickle
+
+import py_platypus as plat
 
 class Plotter:
     def __init__(self, name, params):
         self.params = params
         
         self.out_dir = os.path.join(
-            PLATYPUS_HOME, "py-platypus/out/{}/graphs".format(self.params["name"]))
+            plat.PLATYPUS_HOME, "py_platypus/out/{}/graphs".format(self.params["name"]))
         
         self.data_dir = os.path.join(
-            PLATYPUS_HOME, "py-platypus/out/{}/data".format(self.params["name"]))
+            plat.PLATYPUS_HOME, "py_platypus/out/{}/data".format(self.params["name"]))
 
 
     def get_files(self, id_str):
@@ -71,7 +64,7 @@ class Plotter:
         graph_file_name = os.path.join(self.out_dir, out_name)
         
         # plot the subplots
-        vis_util.plot_lines(
+        plat.vis_util.plot_lines(
             graph_file_name,
             values, 
             x_axis,
@@ -89,15 +82,15 @@ class Plotter:
         # call helper for single dimension
         if self.params["dimensions"] == 1:
             self.plot_series(["ef"], "ef.png", "Position (x)", 
-                "Electric field", "E field", vis_util.subplot_lines) 
+                "Electric field", "E field", plat.vis_util.subplot_lines) 
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
             self.plot_series(["efx"], "efx.png", "Position (x)", 
-                "Position (y)", "E field", vis_util.subplot_grid) 
+                "Position (y)", "E field", plat.vis_util.subplot_grid) 
             
             self.plot_series(["efy"], "efy.png", "Position (x)", 
-                "Position (y)", "E field", vis_util.subplot_grid) 
+                "Position (y)", "E field", plat.vis_util.subplot_grid) 
 
         return
 
@@ -114,36 +107,36 @@ class Plotter:
         combined_file = os.path.join(self.out_dir, "energy.png")
 
         # plot kinetic and electrostatic energy on one chart
-        vis_util.plot_lines(
+        plat.vis_util.plot_lines(
             combined_file,
             [[ke, ee]], 
             "Time step", 
             "Normalized energy", 
             "Energy",
-            vis_util.subplot_lines, 
+            plat.vis_util.subplot_lines, 
             legend=[["Kinetic energy", "Electrostatic energy"]],
             zero=True
         )
 
         # plot kinetic energy
-        vis_util.plot_lines(
+        plat.vis_util.plot_lines(
             ee_file, 
             [[ee]], 
             "Time step", 
             "Normalized energy", 
             "Electrostatic energy",
-            vis_util.subplot_lines,
+            plat.vis_util.subplot_lines,
             zero=True
         )
         
         # plot potential energy
-        vis_util.plot_lines(
+        plat.vis_util.plot_lines(
             ke_file, 
             [[ke]], 
             "Time step", 
             "Normalized energy", 
             "Kinetic energy",
-            vis_util.subplot_lines,
+            plat.vis_util.subplot_lines,
             zero=True
         )
 
@@ -158,12 +151,12 @@ class Plotter:
         # call helper for single dimension
         if self.params["dimensions"] == 1:
             self.plot_series(["ne"], "ne.png", "Position (x)", 
-                "Density", "Electron density", vis_util.subplot_lines) 
+                "Density", "Electron density", plat.vis_util.subplot_lines) 
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
             self.plot_series(["ne"], "ne.png", "Position (x)", 
-                "Position (y)", "Electron density", vis_util.subplot_grid) 
+                "Position (y)", "Electron density", plat.vis_util.subplot_grid) 
             
         return
 
@@ -175,14 +168,14 @@ class Plotter:
 
         if self.params["dimensions"] == 1:
             self.plot_series(["x", "v"], "phase.png", "Position (x)",
-                "Velocity (v)", "Phase plot", vis_util.subplot_scatter_2d)
+                "Velocity (v)", "Phase plot", plat.vis_util.subplot_scatter_2d)
         
         if self.params["dimensions"] == 2:
             self.plot_series(["ex", "ey", "evx"], "phase_vx.png", "Position (x)",
-                "Position (y)", "Phase plot (Vx)", vis_util.subplot_scatter_3d)
+                "Position (y)", "Phase plot (Vx)", plat.vis_util.subplot_scatter_3d)
             
             self.plot_series(["ex", "ey", "evy"], "phase_vy.png", "Position (x)",
-                "Position (y)", "Phase plot (Vy)", vis_util.subplot_scatter_3d)
+                "Position (y)", "Phase plot (Vy)", plat.vis_util.subplot_scatter_3d)
           
         return
 
@@ -195,12 +188,12 @@ class Plotter:
         # call helper for single dimension
         if self.params["dimensions"] == 1:
             self.plot_series("v", "v.png", "Position (x)", 
-                "Velocity", "Velocity", vis_util.subplot_histogram) 
+                "Velocity", "Velocity", plat.vis_util.subplot_histogram) 
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
             self.plot_series(["vx", "vy"], "v.png", "Vx", 
-                "Vy", "Velocity", vis_util.subplot_histogram_2d) 
+                "Vy", "Velocity", plat.vis_util.subplot_histogram_2d) 
 
     def plot_all(self):
         '''plot all default graphs'''

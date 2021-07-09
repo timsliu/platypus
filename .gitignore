@@ -8,8 +8,8 @@ __pycache__/
 *.swo
 out/*
 !out/README.md
-py-platypus/out/*
-!py-platypus/out/README.md
+py_platypus/out/*
+!py_platypus/out/README.md
 
 
 # don't commit binaries except README and skip research
@@ -33,7 +33,6 @@ var/
 wheels/
 pip-wheel-metadata/
 share/python-wheels/
-*.egg-info/
 .installed.cfg
 *.egg
 MANIFEST

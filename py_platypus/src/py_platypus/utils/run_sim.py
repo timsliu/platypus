@@ -1,10 +1,11 @@
 import matplotlib.pyplot as plt
 import os
-import params
-import utils
 
-from pic_1d import *
-from pic_2d import *
+import py_platypus as plat
+
+from py_platypus.models.pic_1d import PIC_1D as PIC_1D 
+from py_platypus.models.pic_2d import PIC_2D as PIC_2D 
+from py_platypus.utils.params import Parameters as Parameters
 
 def run_simulation(pic, params):
     '''helper function for running a simulation and saving the outputs
@@ -26,35 +27,35 @@ def run_simulation(pic, params):
         # save simulation information
         if step % params["save_every"] == 0 or step == steps - 1:
             if dims == 1: 
-                utils.save_pickle("{}/step_{}_ev".format(
+                plat.utils.save_pickle("{}/step_{}_ev".format(
                     params.data_dir, step), pic.electron_v)
-                utils.save_pickle("{}/step_{}_ex".format(
+                plat.utils.save_pickle("{}/step_{}_ex".format(
                     params.data_dir, step), pic.electron_x)
-                utils.save_pickle("{}/step_{}_ef".format(
+                plat.utils.save_pickle("{}/step_{}_ef".format(
                     params.data_dir, step), pic.e)
             if dims == 2: 
-                utils.save_pickle("{}/step_{}_evx".format(
+                plat.utils.save_pickle("{}/step_{}_evx".format(
                     params.data_dir, step), pic.electron_vx)
-                utils.save_pickle("{}/step_{}_evy".format(
+                plat.utils.save_pickle("{}/step_{}_evy".format(
                     params.data_dir, step), pic.electron_vy)
-                utils.save_pickle("{}/step_{}_ex".format(
+                plat.utils.save_pickle("{}/step_{}_ex".format(
                     params.data_dir, step), pic.electron_x)
-                utils.save_pickle("{}/step_{}_ey".format(
+                plat.utils.save_pickle("{}/step_{}_ey".format(
                     params.data_dir, step), pic.electron_y)
-                utils.save_pickle("{}/step_{}_efx".format(
+                plat.utils.save_pickle("{}/step_{}_efx".format(
                     params.data_dir, step), pic.ex)
-                utils.save_pickle("{}/step_{}_efy".format(
+                plat.utils.save_pickle("{}/step_{}_efy".format(
                     params.data_dir, step), pic.ey)
 
-            utils.save_pickle("{}/step_{}_ne".format(
+            plat.utils.save_pickle("{}/step_{}_ne".format(
                 params.data_dir, step), pic.ne)
     
     # get the saved quantities and save to pickle
     ee = pic.output["electrostatic_energy"]
     ke = pic.output["kinetic_energy"]
     
-    utils.save_pickle("{}/ee".format(params.data_dir), ee)
-    utils.save_pickle("{}/ke".format(params.data_dir), ke)
+    plat.utils.save_pickle("{}/ee".format(params.data_dir), ee)
+    plat.utils.save_pickle("{}/ke".format(params.data_dir), ke)
 
     return
 
@@ -77,7 +78,7 @@ def two_stream(name, dims, param_dict={}):
             param_dict - optional dictionary of parameters'''
 
     # create a simulation object for holding simulation parameters
-    sim_params = params.Parameters(dims)
+    sim_params = Parameters(dims)
     sim_params.set("name", name) 
     sim_params.set_from_dict(param_dict)
 
@@ -101,7 +102,7 @@ def single_stream(name, dims, param_dict={}):
             dims - number of dimensions
             param_dict - optional dictionary of parameters'''
    
-    sim_params = params.Parameters(dims)
+    sim_params = Parameters(dims)
     sim_params.set("name", name)
     sim_params.set_from_dict(param_dict)
 
@@ -122,7 +123,7 @@ def landau(name, dims, param_dict={}):
             dims - number of dimensions
             param_dict - optional dictionary of parameters'''
     
-    sim_params = params.Parameters(dims)
+    sim_params = Parameters(dims)
     sim_params.set("name", name)
     sim_params.set_from_dict(param_dict)
 

@@ -4,8 +4,7 @@ import json
 import os
 import shutil
 
-# full path to platypus home directory
-PLATYPUS_HOME = os.getenv("PLATYPUS_HOME")
+import py_platypus as plat
 
 class Parameters:
 
@@ -52,7 +51,7 @@ class Parameters:
 
         # output directories
         self.out_dir = os.path.join(
-            PLATYPUS_HOME, "py-platypus/out/{}".format(self["name"])
+            plat.PLATYPUS_HOME, "py_platypus/out/{}".format(self["name"])
         )
         self.data_dir = os.path.join(self.out_dir, "data")
         self.graph_dir = os.path.join(self.out_dir, "graph")
@@ -87,7 +86,7 @@ class Parameters:
     def refresh(self):
         '''update the derived self.params'''
         self.out_dir = os.path.join(
-            PLATYPUS_HOME, "py-platypus/out/{}".format(self["name"])
+            plat.PLATYPUS_HOME, "py_platypus/out/{}".format(self["name"])
         )
         self.data_dir = os.path.join(self.out_dir, "data")
         self.graph_dir = os.path.join(self.out_dir, "graph")
@@ -117,7 +116,6 @@ class Parameters:
 
     def init_output(self):
         '''create a folder for output simulation information'''
-        
         # create output folder for the simulation
         if os.path.exists(self.out_dir):
             shutil.rmtree(self.out_dir)

@@ -4,13 +4,9 @@
 import sys
 import os
 
-PLATYPUS_HOME = os.getenv("PLATYPUS_HOME")
-sys.path.append(os.path.join(PLATYPUS_HOME, "py-platypus"))
-sys.path.append(os.path.join(PLATYPUS_HOME, "py-platypus/vis"))
-
-import run_sim
-from plotter import Plotter
-from params import Parameters
+import py_platypus as plat
+from py_platypus.utils.params import Parameters as Parameters
+from py_platypus.vis.plotter import Plotter as Plotter
 
 if __name__ == "__main__":
 
@@ -28,9 +24,11 @@ if __name__ == "__main__":
         }
     }
     
-    run_sim.two_stream("two_stream_2d", 2, param_dict = params)
+    plat.run_sim.two_stream("two_stream_2d", 2, param_dict = params)
     
-    param_json = os.path.join(PLATYPUS_HOME, "py-platypus/out/two_stream_2d/params.json")
+    param_json = os.path.join(plat.PLATYPUS_HOME, "py_platypus/out/two_stream_2d/params.json")
     params = Parameters(2, load_file=param_json) 
     plotter = Plotter("two_stream_2d", params)
     plotter.plot_all()
+
+
