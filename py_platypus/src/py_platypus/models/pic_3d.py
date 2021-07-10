@@ -165,7 +165,6 @@ class PIC_3D:
                 self.electron_y[i] > stream_y_start and \
                 self.electron_z[i] < stream_z_stop and \
                 self.electron_z[i] > stream_z_start:
-                
                 r = np.random.rand()
                 if r < fraction:
                     self.electron_vx[i] = v
