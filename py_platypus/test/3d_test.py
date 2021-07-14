@@ -99,53 +99,62 @@ if __name__ == "__main__":
     ax = fig.add_subplot(projection='3d')
     ax.scatter(pic.electron_x, pic.electron_y, pic.electron_z, s=0.05)
 
+    # test updating number density
     pic.update_ne()
     print("Average number density: ", np.mean(pic.ne))
     xy_number_density = np.sum(pic.ne, axis=2)   # collapse the z dimension 
-    xz_number_density = np.sum(pic.ne, axis=1)   # collapse the y dimension 
+    xz_number_density = np.sum(pic.ne, axis=0)   # collapse the y dimension 
 
+    # imshow treats input as (rows, cols) but density is in (x, y, z) coords
+    # so swap the labels
     plt.figure(10)
     plt.title("Electron number density xy")
     plt.imshow(xy_number_density, interpolation = 'none')
-    plt.xlabel("x")
+    plt.xlabel("x") 
     plt.ylabel("y")
     plt.colorbar()
     
     plt.figure(11)
     plt.title("Electron number density xz")
     plt.imshow(xz_number_density, interpolation = 'none')
-    plt.xlabel("x")
-    plt.ylabel("z")
+    plt.xlabel("z")
+    plt.ylabel("x")
     plt.colorbar()
 
-    ## calculate charge density
-    #pic.update_ne()
-    #pic.update_ni()
-    #pic.update_rho()
-    #plt.figure(9)
-    #ax = plt.imshow(pic.rho, interpolation = 'none')
-    #plt.title("Charge density")
-    #plt.colorbar()
+    # calculate charge density
+    pic.update_rho()
+    print("Average charge density: ", np.mean(pic.rho))
+    xy_charge_density = np.sum(pic.rho, axis=2)   # collapse the z dimension 
+    xz_charge_density = np.sum(pic.rho, axis=0)   # collapse the y dimension 
+
+    plt.figure(12)
+    plt.title("Charge density xy")
+    plt.imshow(xy_charge_density, interpolation = 'none')
+    plt.xlabel("x") 
+    plt.ylabel("y")
+    plt.colorbar()
+    
+    plt.figure(13)
+    plt.title("Charge density xz")
+    plt.imshow(xz_charge_density, interpolation = 'none')
+    plt.xlabel("z")
+    plt.ylabel("x")
+    plt.colorbar()
 
     # test calculating phi from rho
-    #sin_2d = np.zeros(pic.cells)
-    #for i in range(pic.cells[0]):
-    #    for j in range(pic.cells[1]):
-    #        sin_2d[i][j] = np.sin(pic.dx[0] * i ) + \
-    #                       np.sin(pic.dx[1] * j )
+    sin_3d = np.zeros(pic.cells)
+    for i in range(pic.cells[0]):
+        for j in range(pic.cells[1]):
+            for k in range(pic.cells[2]):
+                sin_3d[i][j][k] = np.sin(pic.dx[0] * i ) + \
+                                  np.sin(pic.dx[1] * j ) + \
+                                  np.sin(pic.dx[2] * k )
 
-    #pic.rho = sin_2d
-    #pic.update_phi()
+    pic.rho = sin_3d
+    pic.update_phi()
 
-    #plt.figure(10)
-    #ax = plt.imshow(pic.rho, interpolation = 'none')
-    #plt.title("Sin Charge density")
-    #plt.colorbar()
-    #
-    #plt.figure(11)
-    #ax = plt.imshow(pic.phi, interpolation = 'none')
-    #plt.title("Electric potential")
-    #plt.colorbar()
+    abs_error = np.mean(np.abs((pic.phi - sin_3d)))
+    print("Average poisson solver error: ", abs_error)
 
     ## test calculating electric field at the nodes
     #pic.update_e()
@@ -175,4 +184,4 @@ if __name__ == "__main__":
     #plt.title("Velocity vy")
     #plt.colorbar()
 
-    plt.show()
+    #plt.show()

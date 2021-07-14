@@ -22,7 +22,7 @@ class PIC_3D:
         self.dx = params["dx"]                    # size of cells
         self.dt = params["timestep"]
         self.steps = params["steps"]              # time steps to run for
-        self.cells = params["cells"]              # number of cells in x direction
+        self.cells = params["cells"]              # number of cells in each direction
         self.nodes = [x + 1 for x in params["cells"]]
         self.n_particles = params["n_particles"]  # total number of particles
         self.xmax = self.dx[1] * self.cells[1]    # self.dx is in matrix order (i, j, k)
@@ -48,8 +48,9 @@ class PIC_3D:
         self.ion_vz = np.zeros(self.n_particles)      # ion velocities
   
         # electron and ion number density at each cell
-        self.ne  = np.zeros(self.cells)  
-        self.ni  = np.zeros(self.cells)  
+        # TODO this doesn't work if the number of cells in each axis is different
+        self.ne  = np.zeros(self.cells)       # x, y, z 
+        self.ni  = np.zeros(self.cells)       # x, y, z 
         # charge density at each cell center
         self.rho = np.zeros(self.cells)  
         # potential at cell centers
@@ -271,27 +272,27 @@ class PIC_3D:
             cell_z_0, cell_z_1, z0, z1 = self.cell_neighbors(z_n, 2, cell_z)
 
             # calculate area of each rectangular prism
-            area_x0y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z0))
-            area_x0y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z1))
-            area_x0y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z0))
-            area_x0y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z1))
-            area_x1y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z0))
-            area_x1y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z1))
-            area_x1y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z0))
-            area_x1y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z1))
+            vol_x0y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z0))
+            vol_x0y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z1))
+            vol_x0y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z0))
+            vol_x0y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z1))
+            vol_x1y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z0))
+            vol_x1y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z1))
+            vol_x1y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z0))
+            vol_x1y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z1))
 
             # total area of a cell
             total_volume = np.prod(self.dx)
 
             # calculate weight to be distributed to each quadrant
-            weight_x0y0z0 = area_x1y1z1/total_volume * self.particle_weight 
-            weight_x0y0z1 = area_x1y1z0/total_volume * self.particle_weight
-            weight_x0y1z0 = area_x1y0z1/total_volume * self.particle_weight 
-            weight_x0y1z1 = area_x1y0z0/total_volume * self.particle_weight
-            weight_x1y0z0 = area_x0y1z1/total_volume * self.particle_weight 
-            weight_x1y0z1 = area_x0y1z0/total_volume * self.particle_weight
-            weight_x1y1z0 = area_x0y0z1/total_volume * self.particle_weight 
-            weight_x1y1z1 = area_x0y0z0/total_volume * self.particle_weight
+            weight_x0y0z0 = vol_x1y1z1/total_volume * self.particle_weight 
+            weight_x0y0z1 = vol_x1y1z0/total_volume * self.particle_weight
+            weight_x0y1z0 = vol_x1y0z1/total_volume * self.particle_weight 
+            weight_x0y1z1 = vol_x1y0z0/total_volume * self.particle_weight
+            weight_x1y0z0 = vol_x0y1z1/total_volume * self.particle_weight 
+            weight_x1y0z1 = vol_x0y1z0/total_volume * self.particle_weight
+            weight_x1y1z0 = vol_x0y0z1/total_volume * self.particle_weight 
+            weight_x1y1z1 = vol_x0y0z0/total_volume * self.particle_weight
 
 
             # get actual cell index, accounting for wraparound
@@ -303,14 +304,14 @@ class PIC_3D:
             cell_z_1 = cell_z_1 % self.cells[2]
 
             # update the densities
-            densities[cell_x_0][cell_y_0][cell_y_0] += weight_x0y0z0
-            densities[cell_x_0][cell_y_0][cell_y_1] += weight_x0y0z1
-            densities[cell_x_0][cell_y_1][cell_y_0] += weight_x0y1z0
-            densities[cell_x_0][cell_y_1][cell_y_1] += weight_x0y1z1
-            densities[cell_x_1][cell_y_0][cell_y_0] += weight_x1y0z0
-            densities[cell_x_1][cell_y_0][cell_y_1] += weight_x1y0z1
-            densities[cell_x_1][cell_y_1][cell_y_0] += weight_x1y1z0
-            densities[cell_x_1][cell_y_1][cell_y_1] += weight_x1y1z1
+            densities[cell_y_0][cell_x_0][cell_z_0] += weight_x0y0z0
+            densities[cell_y_0][cell_x_0][cell_z_1] += weight_x0y0z1
+            densities[cell_y_0][cell_x_1][cell_z_0] += weight_x0y1z0
+            densities[cell_y_0][cell_x_1][cell_z_1] += weight_x0y1z1
+            densities[cell_y_1][cell_x_0][cell_z_0] += weight_x1y0z0
+            densities[cell_y_1][cell_x_0][cell_z_1] += weight_x1y0z1
+            densities[cell_y_1][cell_x_1][cell_z_0] += weight_x1y1z0
+            densities[cell_y_1][cell_x_1][cell_z_1] += weight_x1y1z1
        
         return
 
@@ -323,23 +324,24 @@ class PIC_3D:
     def update_phi(self):
         '''update the electric potential at each cell center'''
         
-        R = np.fft.fft2(-self.rho)                  # fft of rho deviation 
+        R = np.fft.fftn(-self.rho)                  # fft of rho deviation 
 
         # build intermediate k array
-        k = np.zeros(self.cells)
+        kappa = np.zeros(self.cells)
         for i in range(self.cells[0]):
             for j in range(self.cells[1]):
-                coeff   = (np.sin(np.pi * i/self.cells[0])/self.dx[0]) ** 2 +\
-                          (np.sin(np.pi * j/self.cells[1])/self.dx[1]) ** 2
+                for k in range(self.cells[2]):
+                    coeff   = (np.sin(np.pi * i/self.cells[0])/self.dx[0]) ** 2 +\
+                              (np.sin(np.pi * j/self.cells[1])/self.dx[1]) ** 2 +\
+                              (np.sin(np.pi * k/self.cells[2])/self.dx[2]) ** 2
 
-                k[i][j] = -4 * max(MIN_J, coeff)
+                    kappa[i][j][k] = -4 * max(MIN_J, coeff)
         
-        Y = R/k                      # divide Fourier transform of rho by coef
-        Y_hat = np.fft.ifft2(Y)      # take inverse Fourier transform
+        Y = R/kappa                  # divide Fourier transform of rho by coef
+        Y_hat = np.fft.ifftn(Y)      # take inverse Fourier transform
         potential = np.real(Y_hat)   # potential is the real part
         avg_potential = np.mean(potential)
         self.phi = (potential - avg_potential)
-        
         
         return
 
