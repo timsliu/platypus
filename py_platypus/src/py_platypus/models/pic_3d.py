@@ -350,24 +350,36 @@ class PIC_3D:
         
         rows = self.cells[0]
         cols = self.cells[1]
+        lays = self.cells[2]    # number of layers
 
         for i in range(self.nodes[0]):
             for j in range(self.nodes[1]):
-                
-                ul_potential = self.phi[(i - 1) % rows][(j - 1) % cols]
-                ur_potential = self.phi[(i - 1) % rows][j % cols]
-                dl_potential = self.phi[i % rows][(j - 1) % cols]
-                dr_potential = self.phi[i % rows][j % cols]
+                for k in range(self.nodes[2]):
 
-                # iterpolate potential adjacent to the node in each direction
-                up_potential    = np.mean([ul_potential, ur_potential]) 
-                down_potential  = np.mean([dl_potential, dr_potential])
-                left_potential  = np.mean([ul_potential, dl_potential])
-                right_potential = np.mean([ur_potential, dr_potential])
+                    # look up potential in the 8 cells surrounding the node 
+                    x0y0z0_potential = self.phi[(i - 1) % rows][(j - 1) % cols][(k - 1) % lays] 
+                    x0y0z1_potential = self.phi[(i - 1) % rows][(j - 1) % cols][k % lays]
+                    x0y1z0_potential = self.phi[(i - 1) % rows][j % cols][(k - 1) % lays]
+                    x0y1z1_potential = self.phi[(i - 1) % rows][j % cols][k % lays]
+                    x1y0z0_potential = self.phi[i % rows][(j - 1) % cols][(k - 1) % lays]
+                    x1y0z1_potential = self.phi[i % rows][(j - 1) % cols][k % lays]
+                    x1y1z0_potential = self.phi[i % rows][j % cols][(k - 1) % lays]
+                    x1y1z1_potential = self.phi[i % rows][j % cols][k % lays]
 
-                # E = -(phi_i - phi_i-1)/dx
-                self.ex[i][j] = -(right_potential - left_potential)/self.dx[1] 
-                self.ey[i][j] = -(down_potential - up_potential)/self.dx[0] 
+                    # iterpolate potential adjacent to the node in each direction
+                    x0_potential = np.mean([x0y0z0_potential, x0y0z1_potential, x0y1z0_potential, x0y1z1_potential]) 
+                    x1_potential = np.mean([x1y0z0_potential, x1y0z1_potential, x1y1z0_potential, x1y1z1_potential])
+
+                    y0_potential = np.mean([x0y0z0_potential, x0y0z1_potential, x1y0z0_potential, x1y0z1_potential])
+                    y1_potential = np.mean([x0y1z0_potential, x0y1z1_potential, x1y1z0_potential, x1y1z1_potential])
+
+                    z0_potential = np.mean([x0y0z0_potential, x0y1z0_potential, x1y0z0_potential, x1y1z0_potential])
+                    z1_potential = np.mean([x0y0z1_potential, x0y1z1_potential, x1y0z1_potential, x1y1z1_potential])
+                    
+                    # E = -(phi_i - phi_i-1)/dx
+                    self.ex[i][j][k] = -(x1_potential - x0_potential)/self.dx[1] 
+                    self.ey[i][j][k] = -(y1_potential - y0_potential)/self.dx[0] 
+                    self.ez[i][j][k] = -(z1_potential - z0_potential)/self.dx[2] 
        
         return
     
