@@ -202,34 +202,51 @@ def test_e_flat(pic):
 
     return
 
-def test_e_sin(pic):
-    '''test calculating the electric field from the potential with a sin wave'''
-    #ax = plt.imshow(pic.ex, interpolation = 'none')
-    #plt.title("Electric field Ex")
-    #plt.colorbar()
-    #
-    #plt.figure(13)
-    #ax = plt.imshow(pic.ey, interpolation = 'none')
-    #plt.title("Electric field Ey")
-    #plt.colorbar()
+def test_update_v(pic):
+    '''test updating the velocity'''
 
-    ## test updating particle velocity
-    #pic.electron_vx = np.zeros(pic.n_particles)   # zero out particle velocity
-    #pic.electron_vy = np.zeros(pic.n_particles)
+    # test updating particle velocity
+    pic.electron_vx = np.zeros(pic.n_particles)   # zero out particle velocity
+    pic.electron_vy = np.zeros(pic.n_particles)
+    pic.electron_vz = np.zeros(pic.n_particles)
+    
+    pic.init_x_random()
 
-    #pic.update_v()        # update velocity based on E field
+    # create sinusoidal electric field
+    sin_3d = np.zeros(pic.nodes) 
+    for i in range(pic.nodes[0]):
+        for j in range(pic.nodes[1]):
+            for k in range(pic.nodes[2]):
+                sin_3d[i][j][k] = np.sin(pic.dx[0] * i ) + \
+                                  np.sin(pic.dx[1] * j ) + \
+                                  np.sin(pic.dx[2] * k )
+    pic.ex = sin_3d
+    pic.ey = sin_3d
+    pic.ez = sin_3d
 
-    #plt.figure(14)
-    #plt.scatter(pic.electron_x, pic.electron_y, c=pic.electron_vx, s = 2)
-    #plt.title("Velocity vx")
-    #plt.colorbar()
-    #
-    #plt.figure(15)
-    #plt.scatter(pic.electron_x, pic.electron_y, c=pic.electron_vy, s = 2)
-    #plt.title("Velocity vy")
-    #plt.colorbar()
+    pic.update_v()        # update velocity based on E field
 
-    #plt.show()
+    positions = [pic.electron_x, pic.electron_y, pic.electron_z]
+    velocities = [pic.electron_vx, pic.electron_vy, pic.electron_vz]
+    coords = ["x", "y", "z"]
+
+
+    start_fig = 17
+    dims = pic.dimensions
+
+    # plot x, y, and z electric field along every pair of axes
+    for i in range(dims):
+        for j in range(dims): 
+    
+            plt.figure(start_fig + i * dims + j)
+            plt.scatter(positions[i % dims], positions[(i + 1) % dims], c=velocities[j], s = 2)
+            plt.title("Velocity {}".format(coords[j]))
+            plt.xlabel(coords[i % dims])
+            plt.ylabel(coords[(i + 1) % dims])
+            plt.colorbar()
+
+    return
+
 
 if __name__ == "__main__":
     
@@ -260,5 +277,6 @@ if __name__ == "__main__":
     sim_params.set_from_dict(params)
     pic = plat.pic_3d.PIC_3D(sim_params)
 
-    test_e_flat(pic)
+    #test_e_flat(pic)
+    test_update_v(pic)
     plt.show()

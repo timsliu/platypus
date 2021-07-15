@@ -388,48 +388,74 @@ class PIC_3D:
         for i in range(self.n_particles):
             x_n = self.electron_x[i]
             y_n = self.electron_y[i]
+            z_n = self.electron_z[i]
 
             # indices of neighboring nodes
-            node_left  = int(np.floor(x_n/self.dx[1]))
-            node_right = int(np.ceil(x_n/self.dx[1]))
+            node_x0  = int(np.floor(x_n/self.dx[1]))
+            node_x1 = int(np.ceil(x_n/self.dx[1]))
             
-            node_up   = int(np.floor(y_n/self.dx[0]))
-            node_down = int(np.ceil(y_n/self.dx[0]))
+            node_y0   = int(np.floor(y_n/self.dx[0]))
+            node_y1 = int(np.ceil(y_n/self.dx[0]))
+            
+            node_z0   = int(np.floor(z_n/self.dx[2]))
+            node_z1 = int(np.ceil(z_n/self.dx[2]))
 
             # coordinates of surrounding nodes
-            x0 = node_left * self.dx[1]
-            x1 = node_right * self.dx[1]
-            y0 = node_up * self.dx[0]
-            y1 = node_down * self.dx[0]
+            x0 = node_x0 * self.dx[1]
+            x1 = node_x1 * self.dx[1]
+            y0 = node_y0 * self.dx[0]
+            y1 = node_y1 * self.dx[0]
+            z0 = node_z0 * self.dx[2]
+            z1 = node_z1 * self.dx[2]
 
-            # area of each rectangle
-            area_upper_left  = pla.utils.points_to_area((x_n, y_n), (x0, y0))
-            area_upper_right = pla.utils.points_to_area((x_n, y_n), (x1, y0))
-            area_lower_left  = pla.utils.points_to_area((x_n, y_n), (x0, y1))
-            area_lower_right = pla.utils.points_to_area((x_n, y_n), (x1, y1))
+            # calculate area of each rectangular prism
+            vol_x0y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z0))
+            vol_x0y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z1))
+            vol_x0y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z0))
+            vol_x0y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z1))
+            vol_x1y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z0))
+            vol_x1y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z1))
+            vol_x1y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z0))
+            vol_x1y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z1))
 
             # total area of a cell
-            total_area = self.dx[0] * self.dx[1]
+            total_volume = np.prod(self.dx)
 
             # calculate weight to be distributed to each quadrant
-            weight_00 = area_lower_right/total_area 
-            weight_01 = area_lower_left/total_area
-            weight_10 = area_upper_right/total_area 
-            weight_11 = area_upper_left/total_area
+            weight_x0y0z0 = vol_x1y1z1/total_volume * self.particle_weight 
+            weight_x0y0z1 = vol_x1y1z0/total_volume * self.particle_weight
+            weight_x0y1z0 = vol_x1y0z1/total_volume * self.particle_weight 
+            weight_x0y1z1 = vol_x1y0z0/total_volume * self.particle_weight
+            weight_x1y0z0 = vol_x0y1z1/total_volume * self.particle_weight 
+            weight_x1y0z1 = vol_x0y1z0/total_volume * self.particle_weight
+            weight_x1y1z0 = vol_x0y0z1/total_volume * self.particle_weight 
+            weight_x1y1z1 = vol_x0y0z0/total_volume * self.particle_weight
 
-            # electric field at each corner
-            e_00 = [self.ex[node_up][node_left], self.ey[node_up][node_left]]
-            e_01 = [self.ex[node_up][node_right], self.ey[node_up][node_right]]
-            e_10 = [self.ex[node_down][node_left], self.ey[node_down][node_left]]
-            e_11 = [self.ex[node_down][node_right], self.ey[node_down][node_right]]
-            
+            # electric field [Ex, Ey, Ez] at each node surrounding the point
+            e_x0y0z0 = [self.ex[node_y0][node_x0][node_z0], self.ey[node_y0][node_x0][node_z0], self.ez[node_y0][node_x0][node_z0]]
+            e_x0y0z1 = [self.ex[node_y0][node_x0][node_z1], self.ey[node_y0][node_x0][node_z1], self.ez[node_y0][node_x0][node_z1]]
+            e_x0y1z0 = [self.ex[node_y1][node_x0][node_z0], self.ey[node_y1][node_x0][node_z0], self.ez[node_y1][node_x0][node_z0]]
+            e_x0y1z1 = [self.ex[node_y1][node_x0][node_z1], self.ey[node_y1][node_x0][node_z1], self.ez[node_y1][node_x0][node_z1]]
+            e_x1y0z0 = [self.ex[node_y0][node_x1][node_z0], self.ey[node_y0][node_x1][node_z0], self.ez[node_y0][node_x1][node_z0]]
+            e_x1y0z1 = [self.ex[node_y0][node_x1][node_z1], self.ey[node_y0][node_x1][node_z1], self.ez[node_y0][node_x1][node_z1]]
+            e_x1y1z0 = [self.ex[node_y1][node_x1][node_z0], self.ey[node_y1][node_x1][node_z0], self.ez[node_y1][node_x1][node_z0]]
+            e_x1y1z1 = [self.ex[node_y1][node_x1][node_z1], self.ey[node_y1][node_x1][node_z1], self.ez[node_y1][node_x1][node_z1]]
+
             # list of weights and list of electric fields
-            weights = np.array([weight_00, weight_01, weight_10, weight_11])
-            e_nodes = np.array([e_00, e_01, e_10, e_11])
+            weights = np.array([
+                weight_x0y0z0, weight_x0y0z1, 
+                weight_x0y1z0, weight_x0y1z1, 
+                weight_x1y0z0, weight_x1y0z1, 
+                weight_x1y1z0, weight_x1y1z1])
+
+            e_nodes = np.array([
+                e_x0y0z0, e_x0y0z1, e_x0y1z0, e_x0y1z1, 
+                e_x1y0z0, e_x1y0z1, e_x1y1z0, e_x1y1z1])
 
             e_particle = np.sum(list(map(lambda a, b: a * b, weights, e_nodes)), axis=0)
             self.electron_vx[i] -= e_particle[0] * self.dt
             self.electron_vy[i] -= e_particle[1] * self.dt
+            self.electron_vz[i] -= e_particle[2] * self.dt
 
         return
 
@@ -439,6 +465,7 @@ class PIC_3D:
 
             self.electron_x[i] += self.electron_vx[i] * self.dt
             self.electron_y[i] += self.electron_vy[i] * self.dt
+            self.electron_z[i] += self.electron_vz[i] * self.dt
 
             # particle past boundary condition; circular boundary 
             while self.electron_x[i] < 0:
@@ -452,6 +479,12 @@ class PIC_3D:
 
             while self.electron_y[i] > self.ymax:
                 self.electron_y[i] -= self.ymax
+            
+            while self.electron_z[i] < 0:
+                self.electron_z[i] += self.zmax
+
+            while self.electron_z[i] > self.zmax:
+                self.electron_z[i] -= self.zmax
 
         return
 
