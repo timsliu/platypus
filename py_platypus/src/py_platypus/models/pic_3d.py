@@ -488,42 +488,55 @@ class PIC_3D:
 
         return
 
-    def calc_bulk_u(self):
-        '''calculate and save the bulk velocity'''
-        # TODO
-        return
-
     def calc_electrostatic_energy(self):
         '''calculate and save the electrostatic energy'''
-        electrostatic_energy = 0 
-        for i in range(self.cells[0]):
-            for j in range(self.cells[1]):
-                ex_cell = np.mean([
-                    self.ex[i][j],
-                    self.ex[i][j + 1],
-                    self.ex[i + 1][j],
-                    self.ex[i + 1][j + 1]
-                ])
-                
-                ey_cell = np.mean([
-                    self.ey[i][j],
-                    self.ey[i][j + 1],
-                    self.ey[i + 1][j],
-                    self.ey[i + 1][j + 1]
-                ])
-               
-                # U = 0.5 * epsilon * area * E^2
-                electrostatic_energy += 0.5 * self.dx[0] * self.dx[1]\
-                    * (ex_cell ** 2 + ey_cell ** 2)
+        electrostatic_energy = 0
+        
+        # iterator over all 3 digit binary values representing neighbor indices
+        array_3d = np.ones([2 for x in range(self.dimensions)])
+        neighbor_it = np.nditer(array_3d, flags=['multi_index'])
+        neighbor_indices = [neighbor_it.multi_index for i in neighbor_it]
+
+        # iterator over indices of all cells
+        cell_it = np.nditer(np.ones(self.cells), flags=['multi_index'])
+
+        # iterate over all cells
+        for x in cell_it:
+
+            # list of the electric field of the 8 nodes bordering the cell
+            ex_neighbors = []
+            ey_neighbors = []
+            ez_neighbors = []
+           
+            # iterate through relative indices of the 8 nodes around the cell
+            for neighbor_index in neighbor_indices:
+                # get absolute index
+                j_neighbor, i_neighbor, k_neighbor = np.array(neighbor_index)\
+                                                     + np.array(cell_it.multi_index)
+
+                ex_neighbors.append(self.ex[j_neighbor][i_neighbor][k_neighbor])
+                ey_neighbors.append(self.ey[j_neighbor][i_neighbor][k_neighbor])
+                ez_neighbors.append(self.ez[j_neighbor][i_neighbor][k_neighbor])
+       
+            ex_cell = np.mean(ex_neighbors)
+            ey_cell = np.mean(ey_neighbors)
+            ez_cell = np.mean(ez_neighbors)
+
+            # U = 0.5 * epsilon * volume * E^2
+            electrostatic_energy += 0.5 * np.prod(self.dx)\
+                * (ex_cell ** 2 + ey_cell ** 2 + ez_cell ** 2)
         
         # save the value
         self.output["electrostatic_energy"].append(electrostatic_energy)
+
+        return
     
     def calc_kinetic_energy(self):
         '''calculate and save the kinetic energy'''
         ke_energy = 0.5 * self.particle_weight * \
             (sum(self.electron_vx * self.electron_vx) + \
-             sum(self.electron_vy * self.electron_vy))
+             sum(self.electron_vy * self.electron_vy) + \
+             sum(self.electron_vz * self.electron_vz))
         
         ke_energy *= np.prod(self.dx)  # multiply by ratio of potential energy
                                        # to kinetic energy so total energy is
@@ -542,7 +555,8 @@ class PIC_3D:
         for i in self.batch: 
             ke_energy += 0.5 * self.particle_weight * \
                 (self.electron_vx[i] * self.electron_vx[i] +\
-                 self.electron_vy[i] * self.electron_vy[i])
+                 self.electron_vy[i] * self.electron_vy[i] +\
+                 self.electron_vz[i] * self.electron_vz[i])
         
         ke_energy *= np.prod(self.dx)  # multiply by ratio of potential energy
                                        # to kinetic energy so total energy is

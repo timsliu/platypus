@@ -247,6 +247,19 @@ def test_update_v(pic):
 
     return
 
+def test_electrostatic_energy(pic):
+    '''test calculating the electrostatic energy'''
+
+    # set the electric field to all ones
+    pic.ex = np.ones(pic.nodes)
+    pic.ey = np.ones(pic.nodes)
+    pic.ez = np.ones(pic.nodes)
+
+    pic.calc_electrostatic_energy()
+    print("Calculated electrostatic energy: ", pic.output["electrostatic_energy"][0])
+    print("Expected: ", 0.5 * 3 * pic.xmax * pic.ymax * pic.zmax)
+
+    return
 
 if __name__ == "__main__":
     
@@ -278,5 +291,6 @@ if __name__ == "__main__":
     pic = plat.pic_3d.PIC_3D(sim_params)
 
     #test_e_flat(pic)
-    test_update_v(pic)
-    plt.show()
+    #test_update_v(pic)
+    test_electrostatic_energy(pic)
+    #plt.show()
