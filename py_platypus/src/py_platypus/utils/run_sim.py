@@ -5,6 +5,7 @@ import py_platypus as plat
 
 from py_platypus.models.pic_1d import PIC_1D as PIC_1D 
 from py_platypus.models.pic_2d import PIC_2D as PIC_2D 
+from py_platypus.models.pic_3d import PIC_3D as PIC_3D 
 from py_platypus.utils.params import Parameters as Parameters
 
 def run_simulation(pic, params):
@@ -66,6 +67,8 @@ def init_pic_by_dims(dims, params):
         pic = PIC_1D(params)
     elif dims == 2:
         pic = PIC_2D(params)
+    elif dims == 3:
+        pic = PIC_3D(params)
     else:
         raise ValueError("Expected dimensions 1 or 2; passed: {}".\
                          format(dims))

@@ -385,19 +385,21 @@ class PIC_3D:
     
     def update_v(self):
         '''update velocity of particles based on electric fields'''
+        
+        # iterate through all particles
         for i in range(self.n_particles):
             x_n = self.electron_x[i]
             y_n = self.electron_y[i]
             z_n = self.electron_z[i]
 
             # indices of neighboring nodes
-            node_x0  = int(np.floor(x_n/self.dx[1]))
+            node_x0 = int(np.floor(x_n/self.dx[1]))
             node_x1 = int(np.ceil(x_n/self.dx[1]))
             
-            node_y0   = int(np.floor(y_n/self.dx[0]))
+            node_y0 = int(np.floor(y_n/self.dx[0]))
             node_y1 = int(np.ceil(y_n/self.dx[0]))
             
-            node_z0   = int(np.floor(z_n/self.dx[2]))
+            node_z0 = int(np.floor(z_n/self.dx[2]))
             node_z1 = int(np.ceil(z_n/self.dx[2]))
 
             # coordinates of surrounding nodes
@@ -422,14 +424,14 @@ class PIC_3D:
             total_volume = np.prod(self.dx)
 
             # calculate weight to be distributed to each quadrant
-            weight_x0y0z0 = vol_x1y1z1/total_volume * self.particle_weight 
-            weight_x0y0z1 = vol_x1y1z0/total_volume * self.particle_weight
-            weight_x0y1z0 = vol_x1y0z1/total_volume * self.particle_weight 
-            weight_x0y1z1 = vol_x1y0z0/total_volume * self.particle_weight
-            weight_x1y0z0 = vol_x0y1z1/total_volume * self.particle_weight 
-            weight_x1y0z1 = vol_x0y1z0/total_volume * self.particle_weight
-            weight_x1y1z0 = vol_x0y0z1/total_volume * self.particle_weight 
-            weight_x1y1z1 = vol_x0y0z0/total_volume * self.particle_weight
+            weight_x0y0z0 = vol_x1y1z1/total_volume
+            weight_x0y0z1 = vol_x1y1z0/total_volume
+            weight_x0y1z0 = vol_x1y0z1/total_volume
+            weight_x0y1z1 = vol_x1y0z0/total_volume
+            weight_x1y0z0 = vol_x0y1z1/total_volume
+            weight_x1y0z1 = vol_x0y1z0/total_volume
+            weight_x1y1z0 = vol_x0y0z1/total_volume
+            weight_x1y1z1 = vol_x0y0z0/total_volume
 
             # electric field [Ex, Ey, Ez] at each node surrounding the point
             e_x0y0z0 = [self.ex[node_y0][node_x0][node_z0], self.ey[node_y0][node_x0][node_z0], self.ez[node_y0][node_x0][node_z0]]
@@ -452,6 +454,7 @@ class PIC_3D:
                 e_x0y0z0, e_x0y0z1, e_x0y1z0, e_x0y1z1, 
                 e_x1y0z0, e_x1y0z1, e_x1y1z0, e_x1y1z1])
 
+            # averaged electric field at the particle
             e_particle = np.sum(list(map(lambda a, b: a * b, weights, e_nodes)), axis=0)
             self.electron_vx[i] -= e_particle[0] * self.dt
             self.electron_vy[i] -= e_particle[1] * self.dt

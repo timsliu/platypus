@@ -261,6 +261,19 @@ def test_electrostatic_energy(pic):
 
     return
 
+def test_kinetic_energy(pic):
+    '''test calculating the kinetic energy'''
+
+    pic.electron_vx = np.ones(pic.n_particles)
+    pic.electron_vy = np.ones(pic.n_particles)
+    pic.electron_vz = np.ones(pic.n_particles)
+
+    pic.calc_kinetic_energy()
+    print("Calculated kinetic energy: ", pic.output["kinetic_energy"][0])
+    print("Expected: ", 0.5 * 3 * pic.particle_weight * pic.n_particles * np.prod(pic.dx))
+
+    return
+
 if __name__ == "__main__":
     
     sim_params = plat.params.Parameters(3)
@@ -290,7 +303,16 @@ if __name__ == "__main__":
     sim_params.set_from_dict(params)
     pic = plat.pic_3d.PIC_3D(sim_params)
 
+    #test_random_x(pic)
+    #test_maxwellian(pic)
+    #test_e_flat(pic)
+    #test_density_perturbation(pic)
+    #test_update_v(pic)
+    #test_electrostatic_energy(pic)
+    #test_rho(pic)
+    #test_phi(pic)
     #test_e_flat(pic)
     #test_update_v(pic)
     test_electrostatic_energy(pic)
-    #plt.show()
+    test_kinetic_energy(pic)
+    plt.show()
