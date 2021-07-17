@@ -359,10 +359,10 @@ class PIC_3D:
                     # look up potential in the 8 cells surrounding the node 
                     x0y0z0_potential = self.phi[(i - 1) % rows][(j - 1) % cols][(k - 1) % lays] 
                     x0y0z1_potential = self.phi[(i - 1) % rows][(j - 1) % cols][k % lays]
-                    x0y1z0_potential = self.phi[(i - 1) % rows][j % cols][(k - 1) % lays]
-                    x0y1z1_potential = self.phi[(i - 1) % rows][j % cols][k % lays]
-                    x1y0z0_potential = self.phi[i % rows][(j - 1) % cols][(k - 1) % lays]
-                    x1y0z1_potential = self.phi[i % rows][(j - 1) % cols][k % lays]
+                    x1y0z0_potential = self.phi[(i - 1) % rows][j % cols][(k - 1) % lays]
+                    x1y0z1_potential = self.phi[(i - 1) % rows][j % cols][k % lays]
+                    x0y1z0_potential = self.phi[i % rows][(j - 1) % cols][(k - 1) % lays]
+                    x0y1z1_potential = self.phi[i % rows][(j - 1) % cols][k % lays]
                     x1y1z0_potential = self.phi[i % rows][j % cols][(k - 1) % lays]
                     x1y1z1_potential = self.phi[i % rows][j % cols][k % lays]
 
