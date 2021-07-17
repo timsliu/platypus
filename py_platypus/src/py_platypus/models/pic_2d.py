@@ -18,6 +18,7 @@ class PIC_2D:
         np.random.seed(params["seed"])
         self.params = params
         self.dimensions = 2
+        self.step = 0                             # current step
 
         # domain parameters 
         self.dx = params["dx"]                    # size of cells
@@ -463,5 +464,6 @@ class PIC_2D:
         self.update_e()         # calculate electric field at nodes
         self.update_v()         # calculate velocity of each particle
         self.update_x()         # update positions
+        self.step += 1
 
 
