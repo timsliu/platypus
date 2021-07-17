@@ -2,11 +2,37 @@ import py_platypus as plat
 import numpy as np
 import matplotlib.pyplot as plt
 
+def test_random_x(pic):
+    pic.init_x_random()
+    plt.figure(1)
+    plt.scatter(pic.electron_x, pic.electron_y, s=0.05)
+
+    return
+
+def test_init_E(pic):
+    '''test calculating the inital electric field'''
+
+    pic.init_v_maxwellian()
+    pic.density_perturbation()
+    pic.init_E()
+
+    plt.figure(2)
+    plt.imshow(pic.ex)
+    plt.title("Ex field") 
+    plt.colorbar()
+
+    plt.figure(3) 
+    plt.imshow(pic.ey)
+    plt.title("Ey field") 
+    plt.colorbar()
+
+    return
+
 if __name__ == "__main__":
     # set up parameters 
     params = {
-        "length": [2 * np.pi, 2 * np.pi, 2 * np.pi],
-        "cells": [32, 32, 32],
+        "length": [2 * np.pi, 2 * np.pi],
+        "cells": [32, 32],
         "dimensions": 2,
         "nppc": 10,
         "single_stream": {       # defaults for single stream instability
@@ -30,5 +56,6 @@ if __name__ == "__main__":
     sim_params.set_from_dict(params)
     pic = plat.pic_2d_em.PIC_2D_EM(sim_params)
 
-
-
+    test_random_x(pic)
+    test_init_E(pic) 
+    plt.show()

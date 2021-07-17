@@ -2,17 +2,15 @@
 
 import sys
 import os
-
-PLATYPUS_HOME = os.getenv("PLATYPUS_HOME")
-sys.path.append(os.path.join(PLATYPUS_HOME, "py-platypus"))
-
-import params
-from pic_2d import *
 import matplotlib.pyplot as plt
+import numpy as np
 
+import py_platypus as plat
+from py_platypus.utils.params import Parameters as Parameters
+from py_platypus.models.pic_2d import PIC_2D as PIC_2D
 
 if __name__ == "__main__":
-    sim_params = params.Parameters(2)
+    sim_params = Parameters(2)
     # set up parameters 
     params = {
         "length": [2 * np.pi, 4 * np.pi],
