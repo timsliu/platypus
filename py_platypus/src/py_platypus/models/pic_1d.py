@@ -35,7 +35,6 @@ class PIC_1D:
         
         self.ion_x = np.zeros(self.n_particles)      # ion positions
         self.ion_v = np.zeros(self.n_particles)      # ion velocities
-        self.ion_e = np.zeros(self.n_particles)      # e-field at particles
         
         self.ne = np.zeros(self.cells)        # electron number density at each cell
         self.ni = np.zeros(self.cells)        # electron number density at each cell
