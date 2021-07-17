@@ -16,28 +16,23 @@ class PIC_2D_EM(PIC_2D):
         self.Jx = np.zeros([self.cells[0], self.nodes[1]])   # current density in x direction
         self.Jy = np.zeros([self.nodes[1], self.cells[0]])   # current density in y direction
 
-        # arrays for holding electron positions
-        self.electron_x0 = self.electron_x
-        self.electron_y0 = self.electron_y
-        self.electron_x1 = np.zeros(self.n_particles)
-        self.electron_y1 = np.zeros(self.n_particles)
+        self.Ex_edges = np.zeros([self.cells[0], self.nodes[1]])
+        self.Ey_edges = np.zeros([self.nodes[0], self.cellss[1]])
 
         # variables pointing to the current and previous electron positions
-        self.electron_x_curr = self.electron_x1
-        self.electron_y_curr = self.electron_y1
-        self.electron_x_last = self.electron_x0
-        self.electron_y_last = self.electron_y0
+        self.electron_x_last = np.zeros(self.n_particles)
+        self.electron_y_last = np.zeros(self.n_particles)
 
     def update_e(self):
         '''update electric field E using Faraday's law: curl(E) = -dB/dt'''
 
-    def update_B_half(self):
-        '''update magnetic field B using the values calculated by 
-        calc_B_update'''
-
     def calc_B_update(self):
         '''calculates the B field update for a half step using Ampere's law:
         curl(B) = u(J + epsilon dE/dt); the actual B field is not updated'''
+    
+    def update_B_half(self):
+        '''update magnetic field B using the values calculated by 
+        calc_B_update'''
 
     def update_J(self):
         '''calculate the current density J using the current and last
@@ -45,6 +40,11 @@ class PIC_2D_EM(PIC_2D):
 
     def init_B(self):
         '''set up initial conditions for the magnetic field B'''
+
+        # set initial magnetic field to be zero for now
+        self.Bz = np.zeros(self.cells)
+
+        return
 
     def init_E(self):
         '''set up initial conditions for the E field'''
@@ -54,7 +54,9 @@ class PIC_2D_EM(PIC_2D):
         super().update_ne()
         super().update_rho()
         super().update_phi()
-        super().update_e()
+        super().update_e()   # electric field one the nodes (corners)
+
+        # convert electric field on the nodes to the edges of the Yee mesh
 
     def step(self):
         '''run the simulation for a single step, updating all parameters;
