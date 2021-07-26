@@ -25,6 +25,81 @@ def test_init_E(pic):
     plt.imshow(pic.ey)
     plt.title("Ey field") 
     plt.colorbar()
+    
+    plt.figure(4)
+    plt.imshow(pic.Ex_edges)
+    plt.title("Ex field edges") 
+    plt.colorbar()
+
+    plt.figure(5) 
+    plt.imshow(pic.Ey_edges)
+    plt.title("Ey field edges") 
+    plt.colorbar()
+
+    return
+
+def test_update_B(pic):
+    '''test calculating the curl of a 2D vector field'''
+
+    # set up x vectors
+    rows, cols = pic.Ex_edges.shape
+    for i in range(rows):
+        for j in range(cols):
+            x = i - rows/2
+            y = j - cols/2
+            
+            pic.Ex_edges[i][j] = y 
+   
+    # set up y vectors
+    rows, cols = pic.Ey_edges.shape
+    for i in range(rows):
+        for j in range(cols):
+            x = i - rows/2
+            y = j - cols/2
+            
+            pic.Ey_edges[i][j] = -x 
+
+    pic.calc_B_update()
+    plt.figure(6)
+    plt.imshow(pic.delta_Bz)
+    plt.title("B update for uniform curl")
+
+def test_interpolate(pic):
+    '''test helper function for interpolating field properties at particles'''
+
+    corners = [0, 1, 0, 1]     # [x0, x1, y0, y1] coordinates of corners
+    x_ns = [0.5, 0.75]         # list of x_n particle positions
+    y_ns = [0.5, 0.75]         # list of y_n particle positions
+    values = [1, 2, 3, 4]      # field values at the four corners
+
+    # expected values
+    expected = [0.25 * 1 + 0.25 * 2 + 0.25 * 3 + 0.25 * 4, 
+                1/16 * 1 + 3/16 * 2 + 3/16 * 3 + 9/16 * 4]
+    
+    # scale expected values by 1/ area of cells 
+    expected = 1 / np.prod(pic.dx) * np.array(expected)
+
+    # iterate through test cases
+    for i in range(len(x_ns)):
+        int_value = pic.interpolate(x_ns[i], y_ns[i], corners, values) 
+        print("Expected: {} Actual: {}".format(expected[i], int_value))
+
+    return
+
+def test_interpolate_e(pic):
+    '''test interpolating the electric field at each particle from the field
+    values'''
+
+    pic.Ex_edges = np.random.rand(pic.Ex_edges.shape)
+    pic.Ey_edges = np.random.rand(pic.Ey_edges.shape)
+    pic.interpolate_e()
+
+    print("Average Ex field: {} Average Ex particle: {}".format(
+        np.mean(pic.Ex_edges), np.mean(self.e_particle[:, 0]))
+    
+    print("Average Ey field: {} Average Ey particle: {}".format(
+        np.mean(pic.Ey_edges), np.mean(self.e_particle[:, 1]))
+
 
     return
 
@@ -56,6 +131,8 @@ if __name__ == "__main__":
     sim_params.set_from_dict(params)
     pic = plat.pic_2d_em.PIC_2D_EM(sim_params)
 
-    test_random_x(pic)
-    test_init_E(pic) 
+    #test_random_x(pic)
+    #test_init_E(pic)
+    #test_update_B(pic)
+    test_interpolate(pic)
     plt.show()
