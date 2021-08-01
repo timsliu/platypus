@@ -5,6 +5,7 @@ import numpy as np
 import py_platypus as pla
 from py_platypus.models.pic_2d import PIC_2D as PIC_2D
 
+import matplotlib.pyplot as plt
 
 class PIC_2D_EM(PIC_2D):
     def __init__(self, params):
@@ -134,8 +135,8 @@ class PIC_2D_EM(PIC_2D):
 
     def interpolate_e(self):
         '''interpolate the E field at each particle'''
-       
-        # TODO there are no nodes, convert to use the edges
+      
+        # iterate through the particles
         for i in range(self.n_particles): 
             x_n = self.electron_x[i]
             y_n = self.electron_y[i]
@@ -145,27 +146,52 @@ class PIC_2D_EM(PIC_2D):
             edge_right = int(np.ceil(x_n/self.dx[1]))
             
             # up down indices of neighboring horizontal edges
-            edge_up  = int(np.floor(y_n/self.dy[0]))
-            edge_down = int(np.ceil(y_n/self.dy[0]))
+            edge_up  = int(np.floor(y_n/self.dx[0]))
+            edge_down = int(np.ceil(y_n/self.dx[0]))
+            
             
             # ==== interpolate Ex field ====
-            # vertical indices of the vertical edges to use 
-            edge_vup, edge_vdown, y0, y1 = cell_neighbors(y_n, 1, edge_up)
+            cell_x = edge_left
             
-            x0 = edge_left * self.dx[1]
-            x1 = edge_right * self.dx[1]
+            # column indices of the horizontal edges to use 
+            edge_hleft, edge_hright, x0, x1 = self.cell_neighbors(x_n, 0, cell_x)
             
-            e_00 = self.Ex_edges[edge_vup][edge_left] 
-            e_01 = self.Ex_edges[edge_vup][edge_right]
-            e_10 = self.Ex_edges[edge_vdown][edge_left]
-            e_11 = self.Ex_edges[edge_vdown][edge_right]
+            y0 = edge_up * self.dx[0]
+            y1 = edge_down * self.dx[0]
+
+            # wrap the indices of the edges
+            edge_hleft = edge_hleft % self.Ex_edges.shape[1] 
+            edge_hright = edge_hright % self.Ex_edges.shape[1] 
+
+            # look up Ex field at the four corners
+            e_00 = self.Ex_edges[edge_up][edge_hleft] 
+            e_01 = self.Ex_edges[edge_up][edge_hright]
+            e_10 = self.Ex_edges[edge_down][edge_hleft]
+            e_11 = self.Ex_edges[edge_down][edge_hright]
             
-            self.e_particle[i] = self.interpolate(
+            self.e_particle[i][0] = self.interpolate(
                 x_n, y_n, [x0, x1, y0, y1], [e_00, e_01, e_10, e_11])
 
             # ==== interpolate Ey field ====
-            # TODO 
-        
+            cell_y = edge_up
+            edge_vup, edge_vdown, y0, y1 = self.cell_neighbors(y_n, 1, cell_y) 
+            
+            x0 = edge_left * self.dx[1]
+            x1 = edge_right * self.dx[1] 
+            
+            # wrap the indices of the edges
+            edge_vup = edge_vup % self.Ey_edges.shape[0]
+            edge_vdown = edge_vdown % self.Ey_edges.shape[0]
+           
+            # look up Ey field at the four corners
+            e_00 = self.Ey_edges[edge_vup][edge_left] 
+            e_01 = self.Ey_edges[edge_vup][edge_right]
+            e_10 = self.Ey_edges[edge_vdown][edge_left]
+            e_11 = self.Ey_edges[edge_vdown][edge_right]
+            
+            self.e_particle[i][1] = self.interpolate(
+                x_n, y_n, [x0, x1, y0, y1], [e_00, e_01, e_10, e_11])
+
         return
 
     def interpolate_b(self):
@@ -175,15 +201,17 @@ class PIC_2D_EM(PIC_2D):
 
             x_n = self.electron_x[i]
             y_n = self.electron_y[i]
+            #print(x_n, y_n)
 
             # find the cell the particle is in
             cell_y = int(np.floor(y_n/self.dx[0]))
             cell_x = int(np.floor(x_n/self.dx[1]))
+            #print(cell_x, cell_y)
 
             # find four cell centers neighboring the particle
             cell_u, cell_d, y0, y1 = self.cell_neighbors(y_n, 0, cell_y)
             cell_l, cell_r, x0, x1 = self.cell_neighbors(x_n, 1, cell_x)
-           
+          
             # wrap the cell indices to get actual cell index
             cell_l = cell_l % self.cells[1]
             cell_r = cell_r % self.cells[1]
@@ -196,11 +224,17 @@ class PIC_2D_EM(PIC_2D):
             b_01 = self.Bz[cell_u][cell_r] 
             b_10 = self.Bz[cell_d][cell_l] 
             b_11 = self.Bz[cell_d][cell_r] 
+            #print((x0, y0), (x1, y0), (x0, y1), (x1, y1)) 
+            #print(b_00, b_01, b_10, b_11)
 
+            #plt.scatter([x_n], [y_n])
+            #plt.scatter([x0, x0, x1, x1], [y0, y1, y0, y1])
             # indices of neighboring cells
             self.b_particle[i] = self.interpolate(
-                x_n, y_n, [x0, x1, y0, y1], [b_00, b_01, b_10, b_11])
-
+                x_n, y_n, [x0, x1, y0, y1], [b_00, b_10, b_01, b_11])
+            
+            #print(self.b_particle[i])
+            #break
         return
 
     def update_v(self):

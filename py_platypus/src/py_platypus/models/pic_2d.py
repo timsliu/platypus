@@ -179,7 +179,7 @@ class PIC_2D:
 
         inputs: x - position
                 dim - index of dimension (0 for x, 1 for y, 2 for z)
-                cell - index of cell the
+                cell - index of cell the particle is in
         outputs: cell_0 - index of lower cell the weight should be distributed
                  cell_1 - index of upper cell
                  cell_0_center - center of cell_0 along specified dimension
