@@ -67,6 +67,7 @@ def test_update_B(pic):
 def test_interpolate(pic):
     '''test helper function for interpolating field properties at particles'''
 
+    print("==== Testing Interpolate ====")
     corners = [0, 1, 0, 1]     # [x0, x1, y0, y1] coordinates of corners
     x_ns = [0.5, 0.75]         # list of x_n particle positions
     y_ns = [0.5, 0.75]         # list of y_n particle positions
@@ -90,18 +91,32 @@ def test_interpolate_e(pic):
     '''test interpolating the electric field at each particle from the field
     values'''
 
-    pic.Ex_edges = np.random.rand(pic.Ex_edges.shape)
-    pic.Ey_edges = np.random.rand(pic.Ey_edges.shape)
+    print("==== Testing Interpolate E field ====")
+    pic.Ex_edges = np.random.rand(pic.Ex_edges.shape[0], pic.Ex_edges.shape[1])
+    pic.Ey_edges = np.random.rand(pic.Ey_edges.shape[0], pic.Ey_edges.shape[1])
+    pic.init_x_random() 
     pic.interpolate_e()
 
     print("Average Ex field: {} Average Ex particle: {}".format(
-        np.mean(pic.Ex_edges), np.mean(self.e_particle[:, 0]))
+        np.mean(pic.Ex_edges), np.mean(pic.e_particle[:, 0])))
     
     print("Average Ey field: {} Average Ey particle: {}".format(
-        np.mean(pic.Ey_edges), np.mean(self.e_particle[:, 1]))
-
+        np.mean(pic.Ey_edges), np.mean(pic.e_particle[:, 1])))
 
     return
+
+def test_interpolate_b(pic):
+    '''test interpolate the magnetic field at each particle from the field
+    values'''
+
+    print("==== Testing Interpolate B field ====")
+    pic.Bz = np.random.rand(pic.Bz.shape[0], pic.Bz.shape[1])
+    pic.init_x_random() 
+    pic.interpolate_b() 
+    
+    print("Average B field: {} Average B particle: {}".format(
+        np.mean(pic.Bz), np.mean(pic.b_particle)))
+    
 
 if __name__ == "__main__":
     # set up parameters 
@@ -135,4 +150,6 @@ if __name__ == "__main__":
     #test_init_E(pic)
     #test_update_B(pic)
     test_interpolate(pic)
+    test_interpolate_b(pic) 
+    test_interpolate_e(pic) 
     plt.show()
