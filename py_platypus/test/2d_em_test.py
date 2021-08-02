@@ -2,6 +2,8 @@ import py_platypus as plat
 import numpy as np
 import matplotlib.pyplot as plt
 
+NUM_TESTS = 5
+
 def test_random_x(pic):
     pic.init_x_random()
     plt.figure(1)
@@ -87,21 +89,65 @@ def test_interpolate(pic):
 
     return
 
-def test_interpolate_e(pic):
+def test_interpolate_ex(pic):
     '''test interpolating the electric field at each particle from the field
     values'''
 
-    print("==== Testing Interpolate E field ====")
+    print("==== Testing Interpolate Ex field ====")
     pic.Ex_edges = np.random.rand(pic.Ex_edges.shape[0], pic.Ex_edges.shape[1])
-    pic.Ey_edges = np.random.rand(pic.Ey_edges.shape[0], pic.Ey_edges.shape[1])
     pic.init_x_random() 
     pic.interpolate_e()
 
     print("Average Ex field: {} Average Ex particle: {}".format(
         np.mean(pic.Ex_edges), np.mean(pic.e_particle[:, 0])))
-    
+  
+    expected = np.zeros(NUM_TESTS)
+    for i in range(NUM_TESTS):
+        offset = np.random.rand() / 2
+        dy, dx = pic.dx
+        pic.electron_x[i] = (1 + offset) * dx 
+        pic.electron_y[i] = (1 - offset) * dy 
+
+        short = 0.5 - offset
+        expected[i] = (pic.Ex_edges[0][0] * offset * short +\
+                       pic.Ex_edges[0][1] * (1 - short) * offset +\
+                       pic.Ex_edges[1][0] * (1 - offset) * short +\
+                       pic.Ex_edges[1][1] * (1 - offset) * (1 - short)) 
+    pic.interpolate_e()
+   
+    for i in range(NUM_TESTS):
+        print("Expected: {} Actual: {}".format(expected[i], pic.e_particle[i][0]))
+
+    return
+
+def test_interpolate_ey(pic):
+    '''test interpolating the electric field at each particle from the field
+    values'''
+
+    print("==== Testing Interpolate Ey field ====")
+    pic.Ey_edges = np.indices(pic.Ey_edges.shape)[0]
+    pic.init_x_random() 
+    pic.interpolate_e()
+
     print("Average Ey field: {} Average Ey particle: {}".format(
         np.mean(pic.Ey_edges), np.mean(pic.e_particle[:, 1])))
+    
+    expected = np.zeros(NUM_TESTS)
+    for i in range(NUM_TESTS):
+        offset = np.random.rand() / 2
+        dy, dx = pic.dx
+        pic.electron_x[i] = (1 + offset) * dx 
+        pic.electron_y[i] = (1 - offset) * dy 
+
+        short = 0.5 - offset
+        expected[i] = (pic.Ex_edges[0][0] * offset * short +\
+                       pic.Ex_edges[0][1] * (1 - short) * offset +\
+                       pic.Ex_edges[1][0] * (1 - offset) * short +\
+                       pic.Ex_edges[1][1] * (1 - offset) * (1 - short)) 
+    pic.interpolate_e()
+   
+    for i in range(NUM_TESTS):
+        print("Expected: {} Actual: {}".format(expected[i], pic.e_particle[i][0]))
 
     return
 
@@ -110,13 +156,35 @@ def test_interpolate_b(pic):
     values'''
 
     print("==== Testing Interpolate B field ====")
-    pic.Bz = np.random.rand(pic.Bz.shape[0], pic.Bz.shape[1])
+    pic.Bz = np.indices(pic.Bz.shape)[0]
     pic.init_x_random() 
     pic.interpolate_b() 
     
     print("Average B field: {} Average B particle: {}".format(
         np.mean(pic.Bz), np.mean(pic.b_particle)))
+   
+    values = [[4, 1], [8, 2]]
+
+    pic.Bz[0][0] = values[0][0]
+    pic.Bz[0][1] = values[0][1]
+    pic.Bz[1][0] = values[1][0]
+    pic.Bz[1][1] = values[1][1]
+
+    for i in range(5):
+        offset = np.random.rand() / 2
+        dy, dx = pic.dx
+        pic.electron_x[0] = (1 + offset) * dx 
+        pic.electron_y[0] = (1 - offset) * dy 
+
+        short = 0.5 - offset
+        expected = (pic.Bz[0][0] * (1 - short) * short +\
+                    pic.Bz[0][1] * (1 - short) * (1 - short) +\
+                    pic.Bz[1][0] * short * short +\
+                    pic.Bz[1][1] * (1 - short) * short)
+        pic.interpolate_b()
     
+        print("Expected: {} Actual: {}".format(expected, pic.b_particle[0]))
+    return
 
 if __name__ == "__main__":
     # set up parameters 
@@ -151,5 +219,6 @@ if __name__ == "__main__":
     #test_update_B(pic)
     test_interpolate(pic)
     test_interpolate_b(pic) 
-    test_interpolate_e(pic) 
+    test_interpolate_ex(pic) 
+    test_interpolate_ey(pic) 
     plt.show()
