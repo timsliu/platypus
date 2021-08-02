@@ -206,7 +206,7 @@ class PIC_2D_EM(PIC_2D):
             # find the cell the particle is in
             cell_y = int(np.floor(y_n/self.dx[0]))
             cell_x = int(np.floor(x_n/self.dx[1]))
-            #print(cell_x, cell_y)
+            # print(cell_x, cell_y)
 
             # find four cell centers neighboring the particle
             cell_u, cell_d, y0, y1 = self.cell_neighbors(y_n, 0, cell_y)
@@ -231,10 +231,10 @@ class PIC_2D_EM(PIC_2D):
             #plt.scatter([x0, x0, x1, x1], [y0, y1, y0, y1])
             # indices of neighboring cells
             self.b_particle[i] = self.interpolate(
-                x_n, y_n, [x0, x1, y0, y1], [b_00, b_10, b_01, b_11])
+                x_n, y_n, [x0, x1, y0, y1], [b_00, b_01, b_10, b_11])
             
             #print(self.b_particle[i])
-            #break
+            break
         return
 
     def update_v(self):
