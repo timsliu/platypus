@@ -7,6 +7,19 @@ from py_platypus.models.pic_2d import PIC_2D as PIC_2D
 
 import matplotlib.pyplot as plt
 
+class charge_step:
+    """
+    Class representing a charge moving
+    """
+    def __init__(self, x0, y0, dx, dy):
+        self.x0 = x0
+        self.y0 = y0
+        self.x1 = x0 + dx
+        self.y1 = y0 + dy
+        self.dx = dx
+        self.dy = dy
+
+
 class PIC_2D_EM(PIC_2D):
     def __init__(self, params):
 
@@ -14,8 +27,8 @@ class PIC_2D_EM(PIC_2D):
 
         self.Bz = np.zeros(self.cells)    # magnetic field on cell centers
         self.delta_Bz = np.zeros(self.cells)   # value to update magnetic field each  half step
-        self.Jx = np.zeros([self.cells[0], self.nodes[1]])   # current density in x direction
-        self.Jy = np.zeros([self.nodes[1], self.cells[0]])   # current density in y direction
+        self.jx = np.zeros([self.cells[0], self.nodes[1]])   # current density in x direction
+        self.jy = np.zeros([self.nodes[1], self.cells[0]])   # current density in y direction
 
         self.Ex_edges = np.zeros([self.nodes[0], self.cells[1]])
         self.Ey_edges = np.zeros([self.cells[0], self.nodes[1]])
@@ -31,6 +44,8 @@ class PIC_2D_EM(PIC_2D):
     def update_e(self):
         '''calculates the B field update for a half step using Ampere's law:
         curl(B) = u(J + epsilon dE/dt)'''
+
+
     
 
     def calc_B_update(self):
@@ -62,9 +77,167 @@ class PIC_2D_EM(PIC_2D):
 
         return
 
-    def update_J(self):
+    def update_j(self):
         '''calculate the current density J using the current and last
         x position'''
+
+        # iterate through all particles and calculate which cell boundaries
+        # are crossed 
+        for i in range(self.n_particles):
+            
+            # initial and final particle position 
+            x0, y0 = self.electron_x_last[i], self.electron_y_last[i]
+            x1, y1 = self.electron_x[i], self.electron_y[i]
+            # change in position 
+            delta_x = x1 - x0
+            delta_y = y1 - y0
+            # grid size in x and y directions 
+            dx = self.dx[1]
+            dy = self.dy[0]
+
+            # list of boundaries touched at the starting and ending positions
+            hori_0, vert_0 = boundaries_touched(x0, y0)
+            hori_1, vert_1 = boundaries_touched(x1, y1)
+
+            # list of unique boundaries touched
+            hori_all = list(set(hori_0, hori_1))
+            vert_all = list(set(vert_0, vert_1))
+
+            # count unique boundaries touched at start and stop positions
+            boundaries_touched = len(hori_all) + len(vert_all)
+            
+            if boundaries_touched == 4:
+                # get the list of four boundary crossing motions
+                substeps = get_submotions_four(x0, y0, x1, y1)
+            elif boundaries_touched == 7:
+                # get the list of four boundary crossing motions
+                substeps = get_submotions_seven(x0, y0, x1, y1)
+            elif boundaries_touched == 8:
+                # touching 8 unique boundaries at start and stop positions
+                # corresponds to crossing 10 boundaries
+                substeps = get_submotions_ten(x0, y0, x1, y1)
+            else:
+                print("Warning! {} boundaries touched, expected 4, 7, or 8")
+
+            # iterate over the substeps
+            for step in substeps:
+                execute_four_bound(step)
+
+    def execute_four_bound(self, step):
+        '''
+        calculate the charge density contribution of add
+        '''
+
+
+    def get_submotions_four(self, x0, y0, x1, y1):
+        '''
+        returns a list of charge steps for the four boundary case
+        '''
+        delta_x = x1 - x0
+        delta_y = y1 - y0
+
+        return [charge_step(x0, y0, delta_x, delta_y)]
+    
+    def get_submotions_seven(self, x0, y0, x1, y1):
+        '''
+        returns a list of charge steps for the seven boundary case
+        '''
+        # determine the direction leading to two steps
+
+        delta_x = x1 - x0
+        delta_y = y1 - y0
+
+        # grid size in x and y directions 
+        dx = self.dx[1]
+        dy = self.dy[0]
+
+        if abs(dx) > abs(dy):
+            # four vertical boundaries, three horizontal boundaries
+            # sub motions dependent on x
+            delta_x0 = abs((x0 % dx) - dx/2) * np.sign(delta_x)
+            delta_y0 = delta_x0 * (delta_y/delta_x) 
+        
+        else:
+            # four horizontal boundaries, three vertical boundaries
+            # sub motions depdendent on y
+            delta_y0 = abs((y0 % dy) - dy/2) * np.sign(delta_y)
+            delta_x0 = delta_y1 * (delta_x/delta_y) 
+
+        delta_x1 = delta_x - delta_x0
+        delta_y1 = delta_y - delta_y0
+
+        c0 = charge_step(x0, y0, delta_x0, delta_y0)
+        c1 = charge_step(x0 + delta_x0, y0 + delta_y0, delta_x1, delta_y1)
+
+        return [c0, c1]
+    
+    def get_submotions_ten(self, x0, y0, x1, y1):
+        '''
+        returns a list of charge steps for the ten boundary case
+        '''
+        delta_x = x1 - x0
+        delta_y = y1 - y0
+
+        # grid size in x and y directions 
+        dx = self.dx[1]
+        dy = self.dy[0]
+
+        # fraction of the move to execute to get to the midpoint of a cell
+        # along either dimension
+        x_frac = dx/2 - (x0 % dx)/delta_x
+        y_frac = dy/2 - (y0 % dy)/delta_y
+
+        # shorter to get to the x midpoint - movement to x midpoint is first
+        if x_frac < y_frac:
+            delta_x0 = delta_x * x_frac
+            delta_y0 = delta_y * x_frac
+
+            delta_x1 = delta_x * y_frac - delta_x0
+            delta_y1 = delta_y * y_frac - delta_y0
+
+        # shorter to get to the y midpoint - movement to y midpoint is first
+        else:
+            delta_x0 = delta_x * y_frac
+            delta_y0 = delta_y * y_frac
+            
+            delta_x1 = delta_x * x_frac - delta_x0
+            delta_y1 = delta_y * x_frac - delta_y0
+
+        delta_x2 = delta_x - delta_x1 - delta_x0 
+        delta_y2 = delta_y - delta_y1 - delta_y0 
+
+        c0 = charge_step(x0, y0, delta_x0, delta_y0)
+        c1 = charge_step(c0.x1, c0.y1, delta_x1, delta_y1)
+        c2 = charge_step(c2.x1, c0.y1, delta_x2, delta_y2)
+
+        return [c0, c1, c2]
+
+    def execute_four_bound(self, charge_step):
+        ''' 
+        Calculates the charge density update from the motion of a charge
+        inputs: charge_step object representing the motion of a charge 
+        '''
+
+
+        return
+
+    def boundaries_touched(self, x0, y0):
+        '''
+        returns a list of boundaries touched
+        inputs: x, y - coordinates of the particle
+        returns: horizontal - list of indices of horizontal edges touched
+                 vertical - list of indices of vertical edges touched
+        '''
+        dx = self.dx[1]
+        dy = self.dy[0]
+        col_vert_idx = np.ceil((x - dx/2)/dx) # column index of the vertical boundary
+        row_hori_idx = np.ceil((y - dy/2)/dy) # row index of the horizontal boundary
+
+        horizontal = [[row_hori_indx, col_vert_idx - 1], [row_hori_idx, col_vert_idx]]
+        vertical   = [[row_hori_indx - 1, col_vert_idx], [row_hori_idx, col_vert_idx]]
+
+        horizontal, vertical
+
 
     def init_B(self):
         '''set up initial conditions for the magnetic field B'''
@@ -224,11 +397,7 @@ class PIC_2D_EM(PIC_2D):
             b_01 = self.Bz[cell_u][cell_r] 
             b_10 = self.Bz[cell_d][cell_l] 
             b_11 = self.Bz[cell_d][cell_r] 
-            #print((x0, y0), (x1, y0), (x0, y1), (x1, y1)) 
-            #print(b_00, b_01, b_10, b_11)
 
-            #plt.scatter([x_n], [y_n])
-            #plt.scatter([x0, x0, x1, x1], [y0, y1, y0, y1])
             # indices of neighboring cells
             self.b_particle[i] = self.interpolate(
                 x_n, y_n, [x0, x1, y0, y1], [b_00, b_01, b_10, b_11])
