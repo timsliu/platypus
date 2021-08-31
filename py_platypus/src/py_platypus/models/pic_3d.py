@@ -272,14 +272,14 @@ class PIC_3D:
             cell_z_0, cell_z_1, z0, z1 = self.cell_neighbors(z_n, 2, cell_z)
 
             # calculate area of each rectangular prism
-            vol_x0y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z0))
-            vol_x0y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z1))
-            vol_x0y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z0))
-            vol_x0y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z1))
-            vol_x1y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z0))
-            vol_x1y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z1))
-            vol_x1y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z0))
-            vol_x1y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z1))
+            vol_x0y0z0  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z0))
+            vol_x0y0z1  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z1))
+            vol_x0y1z0  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z0))
+            vol_x0y1z1  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z1))
+            vol_x1y0z0  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z0))
+            vol_x1y0z1  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z1))
+            vol_x1y1z0  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z0))
+            vol_x1y1z1  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z1))
 
             # total area of a cell
             total_volume = np.prod(self.dx)
@@ -411,14 +411,14 @@ class PIC_3D:
             z1 = node_z1 * self.dx[2]
 
             # calculate area of each rectangular prism
-            vol_x0y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z0))
-            vol_x0y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z1))
-            vol_x0y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z0))
-            vol_x0y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z1))
-            vol_x1y0z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z0))
-            vol_x1y0z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z1))
-            vol_x1y1z0  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z0))
-            vol_x1y1z1  = plat.utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z1))
+            vol_x0y0z0  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z0))
+            vol_x0y0z1  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x0, y0, z1))
+            vol_x0y1z0  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z0))
+            vol_x0y1z1  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x0, y1, z1))
+            vol_x1y0z0  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z0))
+            vol_x1y0z1  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x1, y0, z1))
+            vol_x1y1z0  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z0))
+            vol_x1y1z1  = plat.math_utils.points_to_volume((x_n, y_n, z_n), (x1, y1, z1))
 
             # total area of a cell
             total_volume = np.prod(self.dx)

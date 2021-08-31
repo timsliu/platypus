@@ -28,35 +28,35 @@ def run_simulation(pic, params):
         # save simulation information
         if step % params["save_every"] == 0 or step == steps - 1:
             if dims == 1: 
-                plat.utils.save_pickle("{}/step_{}_ev".format(
+                plat.io_utils.save_pickle("{}/step_{}_ev".format(
                     params.data_dir, step), pic.electron_v)
-                plat.utils.save_pickle("{}/step_{}_ex".format(
+                plat.io_utils.save_pickle("{}/step_{}_ex".format(
                     params.data_dir, step), pic.electron_x)
-                plat.utils.save_pickle("{}/step_{}_ef".format(
+                plat.io_utils.save_pickle("{}/step_{}_ef".format(
                     params.data_dir, step), pic.e)
             if dims == 2: 
-                plat.utils.save_pickle("{}/step_{}_evx".format(
+                plat.io_utils.save_pickle("{}/step_{}_evx".format(
                     params.data_dir, step), pic.electron_vx)
-                plat.utils.save_pickle("{}/step_{}_evy".format(
+                plat.io_utils.save_pickle("{}/step_{}_evy".format(
                     params.data_dir, step), pic.electron_vy)
-                plat.utils.save_pickle("{}/step_{}_ex".format(
+                plat.io_utils.save_pickle("{}/step_{}_ex".format(
                     params.data_dir, step), pic.electron_x)
-                plat.utils.save_pickle("{}/step_{}_ey".format(
+                plat.io_utils.save_pickle("{}/step_{}_ey".format(
                     params.data_dir, step), pic.electron_y)
-                plat.utils.save_pickle("{}/step_{}_efx".format(
+                plat.io_utils.save_pickle("{}/step_{}_efx".format(
                     params.data_dir, step), pic.ex)
-                plat.utils.save_pickle("{}/step_{}_efy".format(
+                plat.io_utils.save_pickle("{}/step_{}_efy".format(
                     params.data_dir, step), pic.ey)
 
-            plat.utils.save_pickle("{}/step_{}_ne".format(
+            plat.io_utils.save_pickle("{}/step_{}_ne".format(
                 params.data_dir, step), pic.ne)
     
     # get the saved quantities and save to pickle
     ee = pic.output["electrostatic_energy"]
     ke = pic.output["kinetic_energy"]
     
-    plat.utils.save_pickle("{}/ee".format(params.data_dir), ee)
-    plat.utils.save_pickle("{}/ke".format(params.data_dir), ke)
+    plat.io_utils.save_pickle("{}/ee".format(params.data_dir), ee)
+    plat.io_utils.save_pickle("{}/ke".format(params.data_dir), ke)
 
     return
 

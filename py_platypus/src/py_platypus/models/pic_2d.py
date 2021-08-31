@@ -7,7 +7,7 @@ import copy
 from scipy import fft, ifft
 import matplotlib.pyplot as plt
 
-import py_platypus as pla
+import py_platypus as plat
 
 MIN_J = 1e-8    # minimum value for index J when building k array
 
@@ -234,10 +234,10 @@ class PIC_2D:
             cell_l, cell_r, x0, x1 = self.cell_neighbors(x_n, 1, cell_x)
 
             # calculate area of each rectangle
-            area_upper_left  = pla.utils.points_to_area((x_n, y_n), (x0, y0))
-            area_upper_right = pla.utils.points_to_area((x_n, y_n), (x1, y0))
-            area_lower_left  = pla.utils.points_to_area((x_n, y_n), (x0, y1))
-            area_lower_right = pla.utils.points_to_area((x_n, y_n), (x1, y1))
+            area_upper_left  = plat.math_utils.points_to_area((x_n, y_n), (x0, y0))
+            area_upper_right = plat.math_utils.points_to_area((x_n, y_n), (x1, y0))
+            area_lower_left  = plat.math_utils.points_to_area((x_n, y_n), (x0, y1))
+            area_lower_right = plat.math_utils.points_to_area((x_n, y_n), (x1, y1))
 
             # total area of a cell
             total_area = self.dx[0] * self.dx[1]
@@ -337,10 +337,10 @@ class PIC_2D:
             y1 = node_down * self.dx[0]
 
             # area of each rectangle
-            area_upper_left  = pla.utils.points_to_area((x_n, y_n), (x0, y0))
-            area_upper_right = pla.utils.points_to_area((x_n, y_n), (x1, y0))
-            area_lower_left  = pla.utils.points_to_area((x_n, y_n), (x0, y1))
-            area_lower_right = pla.utils.points_to_area((x_n, y_n), (x1, y1))
+            area_upper_left  = plat.math_utils.points_to_area((x_n, y_n), (x0, y0))
+            area_upper_right = plat.math_utils.points_to_area((x_n, y_n), (x1, y0))
+            area_lower_left  = plat.math_utils.points_to_area((x_n, y_n), (x0, y1))
+            area_lower_right = plat.math_utils.points_to_area((x_n, y_n), (x1, y1))
 
             # total area of a cell
             total_area = self.dx[0] * self.dx[1]
