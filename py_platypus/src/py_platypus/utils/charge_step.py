@@ -2,7 +2,7 @@
 Helper classes for updating current density in 2D EM simulations
 """
 import numpy as np
-
+import py_platypus as plat
 
 class ChargeStep:
     """
@@ -15,6 +15,23 @@ class ChargeStep:
         self.y1 = y0 + dy
         self.dx = dx
         self.dy = dy
+    
+    def __eq__(self, c1):
+        '''
+        Equality operator
+        '''
+        if self.x0 == c1.x0 and self.y0 == c1.y0 and \
+           self.x1 == c1.x1 and self.y1 == c1.y1:
+            return True
+        return False
+
+    def __repr__(self):
+        '''
+        String representing the charge step
+        '''
+
+        return "Charge step ({}, {})->({}, {})".format(self.x0, self.y0, self.x1, self.y1)
+
 
 class ChargeStepDivider: 
     """
@@ -43,23 +60,28 @@ class ChargeStepDivider:
         hori_0, vert_0 = self.boundaries_touched(x0, y0)
         hori_1, vert_1 = self.boundaries_touched(x1, y1)
 
-        # list of unique boundaries touched
-        hori_all = list(set(hori_0, hori_1))
-        vert_all = list(set(vert_0, vert_1))
+        #print("Horizontal start/end: ", hori_0, hori_1)
+        #print("Vertical start/end: ", vert_0, vert_1)
 
+        # list of unique boundaries touched
+        hori_all = plat.math_utils.union_lists(hori_0, hori_1)
+        vert_all = plat.math_utils.union_lists(vert_0, vert_1)
+
+        #print("Horizontal: ", hori_all)
+        #print("Vertical: ", vert_all)
         # count unique boundaries touched at start and stop positions
         boundaries_touched = len(hori_all) + len(vert_all)
         
         if boundaries_touched == 4:
             # get the list of four boundary crossing motions
-            substeps = get_submotions_four(x0, y0, x1, y1)
+            substeps = self.get_submotions_four(x0, y0, x1, y1)
         elif boundaries_touched == 7:
             # get the list of four boundary crossing motions
-            substeps = get_submotions_seven(x0, y0, x1, y1)
+            substeps = self.get_submotions_seven(x0, y0, x1, y1)
         elif boundaries_touched == 8:
             # touching 8 unique boundaries at start and stop positions
             # corresponds to crossing 10 boundaries
-            substeps = get_submotions_ten(x0, y0, x1, y1)
+            substeps = self.get_submotions_ten(x0, y0, x1, y1)
         else:
             print("Warning! {} boundaries touched, expected 4, 7, or 8")
 
@@ -83,20 +105,19 @@ class ChargeStepDivider:
         delta_x = x1 - x0
         delta_y = y1 - y0
     
-        # grid size in x and y directions 
-        dx = self.dx[1]
-        dy = self.dy[0]
-    
-        if abs(dx) > abs(dy):
+        if abs(delta_x) > abs(delta_y):
             # four vertical boundaries, three horizontal boundaries
             # sub motions dependent on x
-            delta_x0 = abs((x0 % dx) - dx/2) * np.sign(delta_x)
+
+            # TODO need more logic here - the distance depends on if it's
+            # moving toward or away from the midpoint
+            delta_x0 = abs((x0 % self.dx) - self.dx/2) * np.sign(delta_x)
             delta_y0 = delta_x0 * (delta_y/delta_x) 
         
         else:
             # four horizontal boundaries, three vertical boundaries
             # sub motions depdendent on y
-            delta_y0 = abs((y0 % dy) - dy/2) * np.sign(delta_y)
+            delta_y0 = abs((y0 % self.dy) - self.dy/2) * np.sign(delta_y)
             delta_x0 = delta_y1 * (delta_x/delta_y) 
     
         delta_x1 = delta_x - delta_x0
@@ -114,14 +135,10 @@ class ChargeStepDivider:
         delta_x = x1 - x0
         delta_y = y1 - y0
     
-        # grid size in x and y directions 
-        dx = self.dx[1]
-        dy = self.dy[0]
-    
         # fraction of the move to execute to get to the midpoint of a cell
         # along either dimension
-        x_frac = dx/2 - (x0 % dx)/delta_x
-        y_frac = dy/2 - (y0 % dy)/delta_y
+        x_frac = self.dx/2 - (x0 % self.dx)/delta_x
+        y_frac = self.dy/2 - (y0 % self.dy)/delta_y
     
         # shorter to get to the x midpoint - movement to x midpoint is first
         if x_frac < y_frac:
@@ -144,7 +161,7 @@ class ChargeStepDivider:
     
         c0 = ChargeStep(x0, y0, delta_x0, delta_y0)
         c1 = ChargeStep(c0.x1, c0.y1, delta_x1, delta_y1)
-        c2 = ChargeStep(c2.x1, c0.y1, delta_x2, delta_y2)
+        c2 = ChargeStep(c1.x1, c1.y1, delta_x2, delta_y2)
     
         return [c0, c1, c2]
     
