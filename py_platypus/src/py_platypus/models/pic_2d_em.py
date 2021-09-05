@@ -4,8 +4,8 @@ import numpy as np
 
 import py_platypus as pla
 from py_platypus.models.pic_2d import PIC_2D as PIC_2D
-from py_platypus.utils.current_helpers import ChargeStep as ChargeStep
-from py_platypus.utils.current_helpers import ChargeStepDivider as ChargeStepDivider
+from py_platypus.utils.charge_step import ChargeStep as ChargeStep
+from py_platypus.utils.charge_step import ChargeStepDivider as ChargeStepDivider
 
 
 import matplotlib.pyplot as plt

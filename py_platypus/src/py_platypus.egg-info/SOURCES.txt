@@ -13,5 +13,6 @@ py_platypus/utils/params.py
 py_platypus/utils/run_sim.py
 py_platypus/utils/math_utils.py
 py_platypus/utils/io_utils.py
+py_platypus/utils/charge_step.py
 py_platypus/vis/plotter.py
 py_platypus/vis/vis_util.py
