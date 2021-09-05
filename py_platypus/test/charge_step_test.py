@@ -88,18 +88,41 @@ class ChargeStepTester(unittest.TestCase):
         # TODO
         dx = self.charge_divider.dx 
         dy = self.charge_divider.dy 
-       
-        # list of charge steps that only cross 4 boundaries and should
-        # not be broken up
+      
+        # list of charge steps crossing 7 boundaries
+        # note that some of these test cases violate the Courant condition
+        # but are still valid tests
         charge_steps = [
-            ChargeStep(0.75 * dx, 0.75 * dy, 1.5 * dx, 0.0 * dy),
+            ChargeStep(0.75 * dx, 0.75 * dy, 1.5 * dx, 0.0 * dy),  # right
+            ChargeStep(0.8 * dx, 0.75 * dy, 1.5 * dx, 0.15 * dy),  # right
+            ChargeStep(0.8 * dx, 0.75 * dy, 0.15 * dx, 1.5 * dy),  # down
+            ChargeStep(4.1 * dx, 0.75 * dy, -0.7 * dx, 0.35 * dy), # left
+            ChargeStep(3.5 * dx, 5.1 * dy, -0.2 * dx, -0.8 * dy),  # up
         ]
-        
+       
+        # lists of expected substeps that the charge_steps are divided
+        # into
         split_steps = [
             [
                 ChargeStep(0.75 * dx, 0.75 * dy, 0.75 * dx, 0.0 * dy),
                 ChargeStep(1.5 * dx, 0.75 * dy, 0.75 * dx, 0.0 * dy),
-            ]
+            ],
+            [
+                ChargeStep(0.8 * dx, 0.75 * dy, 0.7 * dx, 0.07 * dy),
+                ChargeStep(1.5 * dx, 0.82 * dy, 0.8 * dx, 0.08 * dy),
+            ],
+            [
+                ChargeStep(0.8 * dx, 0.75 * dy, 0.075 * dx, 0.75 * dy),
+                ChargeStep(0.875 * dx, 1.5 * dy, 0.075 * dx, 0.75 * dy),
+            ],
+            [
+                ChargeStep(4.1 * dx, 0.75 * dy, -0.6 * dx, 0.3 * dy),
+                ChargeStep(3.5 * dx, 1.05 * dy, -0.1 * dx, 0.05 * dy),
+            ],
+            [
+                ChargeStep(3.5 * dx, 5.1 * dy, -0.15 * dx, -0.6 * dy),
+                ChargeStep(3.35 * dx, 4.5 * dy, -0.05 * dx, -0.2 * dy),
+            ],
         ]
         
         # iterate through the test cases
