@@ -4,6 +4,50 @@ Helper classes for updating current density in 2D EM simulations
 import numpy as np
 import py_platypus as plat
 
+
+####################
+# Helper functions
+####################
+
+def delta_midpoint(x0, dx, delta_x):
+    '''
+    calculates displacement to get from x0 to the nearest midpoint of
+    the cell in the direction the particle is traveling. The arguments are
+    named for the x direction, but This method
+    can be used for motion in direction in any direction.
+    inputs: x0 - starting coordinate
+            dx - size of cell along this dimension
+            delta_x - total displacement for this step
+    '''
+
+    # wrap the coordinate so that it is inside a single cell
+    rel_x0 = x0 % dx 
+
+    # particle motion in the positive direction
+    if np.sign(delta_x) == 1:
+        # particle starts left half of the cells - nearest midpoint in cell 
+        if rel_x0 < dx/2: 
+            delta_x0 = 0.5 * dx - rel_x0
+        # particle starts right half of cell - nearest midpoint is next cell 
+        else:
+            delta_x0 = 1.5 * dx - rel_x0
+    # particle motion in the negative direction
+    else:
+        # particle starts in lower half of cell - nearest midpoint in
+        # previous cell
+        if rel_x0 < dx/2:
+            delta_x0 = -0.5 * dx - rel_x0
+        # particle starts in upper half of cell - nearest midpoint is in
+        # this cell
+        else:
+            delta_x0 = 0.5 * dx - rel_x0
+
+    return delta_x0
+
+####################
+# Class definitions
+####################
+
 class ChargeStep:
     """
     Class representing a charge moving
@@ -18,12 +62,13 @@ class ChargeStep:
     
     def __eq__(self, c1):
         '''
-        Equality operator
+        Equality operator, mostly used for testing.
         '''
-        if self.x0 == c1.x0 and self.y0 == c1.y0 and \
-           self.x1 == c1.x1 and self.y1 == c1.y1:
-            return True
-        return False
+        # returns whether all corresponding elements are close to each other
+        return np.logical_and.reduce(np.isclose(
+            [self.x0, self.y0, self.dx, self.dy], 
+            [c1.x0, c1.y0, c1.dx, c1.dy]
+        ))
 
     def __repr__(self):
         '''
@@ -109,16 +154,15 @@ class ChargeStepDivider:
             # four vertical boundaries, three horizontal boundaries
             # sub motions dependent on x
 
-            # TODO need more logic here - the distance depends on if it's
             # moving toward or away from the midpoint
-            delta_x0 = abs((x0 % self.dx) - self.dx/2) * np.sign(delta_x)
+            delta_x0 = delta_midpoint(x0, self.dx, delta_x) 
             delta_y0 = delta_x0 * (delta_y/delta_x) 
         
         else:
             # four horizontal boundaries, three vertical boundaries
             # sub motions depdendent on y
-            delta_y0 = abs((y0 % self.dy) - self.dy/2) * np.sign(delta_y)
-            delta_x0 = delta_y1 * (delta_x/delta_y) 
+            delta_y0 = delta_midpoint(y0, self.dy, delta_y) 
+            delta_x0 = delta_y0 * (delta_x/delta_y) 
     
         delta_x1 = delta_x - delta_x0
         delta_y1 = delta_y - delta_y0
@@ -127,7 +171,8 @@ class ChargeStepDivider:
         c1 = ChargeStep(x0 + delta_x0, y0 + delta_y0, delta_x1, delta_y1)
     
         return [c0, c1]
-    
+
+
     def get_submotions_ten(self, x0, y0, x1, y1):
         '''
         returns a list of charge steps for the ten boundary case
@@ -137,8 +182,8 @@ class ChargeStepDivider:
     
         # fraction of the move to execute to get to the midpoint of a cell
         # along either dimension
-        x_frac = self.dx/2 - (x0 % self.dx)/delta_x
-        y_frac = self.dy/2 - (y0 % self.dy)/delta_y
+        x_frac = delta_midpoint(x0, self.dx, delta_x)/delta_x
+        y_frac = delta_midpoint(y0, self.dy, delta_y)/delta_y
     
         # shorter to get to the x midpoint - movement to x midpoint is first
         if x_frac < y_frac:
