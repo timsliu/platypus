@@ -85,7 +85,6 @@ class ChargeStepTester(unittest.TestCase):
         """
         test the case where seven boundaries are crossed
         """
-        # TODO
         dx = self.charge_divider.dx 
         dy = self.charge_divider.dy 
       
@@ -136,9 +135,50 @@ class ChargeStepTester(unittest.TestCase):
         """
         test the case where ten boundaries are crossed
         """
-        # TODO
-        pass
-
+        dx = self.charge_divider.dx 
+        dy = self.charge_divider.dy 
+      
+        # list of charge steps crossing 10 boundaries
+        # note that some of these test cases violate the Courant condition
+        # but are still valid tests
+        charge_steps = [
+            ChargeStep(0.9 * dx, 0.9 * dy, 0.7 * dx, 0.8 * dy),   # lower right
+            ChargeStep(5.1 * dx, 4.1 * dy, -0.8 * dx, -0.7 * dy), # upper left
+            ChargeStep(5.1 * dx, 4.8 * dy, -0.8 * dx, 0.8 * dy),  # lower left
+            ChargeStep(2.9 * dx, 3.2 * dy, 0.8 * dx, -0.8 * dy),  # upper right
+        ]
+       
+        # lists of expected substeps that the charge_steps are divided
+        # into
+        split_steps = [
+            [
+                ChargeStep(0.9 * dx, 0.9 * dy, 0.525 * dx, 0.6 * dy),
+                ChargeStep(1.425 * dx, 1.5 * dy, 0.075 * dx, 0.075 * 8/7 * dy),
+                ChargeStep(1.5 * dx, (1.5 + 0.075 * 8/7) * dy, 0.1 * dx, (0.2 - 0.075 * 8/7) * dy),
+            ],
+            [
+                ChargeStep(5.1 * dx, 4.1 * dy, -0.6 * dx, -0.525 * dy),
+                ChargeStep(4.5 * dx, 3.575 * dy, -0.075 * 8/7 * dx, -0.075 * dy),
+                ChargeStep((4.5 - 0.075 * 8/7) * dx, 3.5 * dy, (-0.2 + 0.075 * 8/7)* dx, -0.1 * dy),
+            ],
+            [
+                ChargeStep(5.1 * dx, 4.8 * dy, -0.6 * dx, 0.6 * dy),
+                ChargeStep(4.5 * dx, 5.4 * dy, -0.1 * dx, 0.1 * dy),
+                ChargeStep(4.4 * dx, 5.5 * dy, -0.1 * dx, 0.1 * dy),
+            ],
+            [
+                ChargeStep(2.9 * dx, 3.2 * dy, 0.6 * dx, -0.6 * dy),
+                ChargeStep(3.5 * dx, 2.6 * dy, 0.1 * dx, -0.1 * dy),
+                ChargeStep(3.6 * dx, 2.5 * dy, 0.1 * dx, -0.1 * dy),
+            ]
+        ]
+        
+        # iterate through the test cases
+        for i, c in enumerate(charge_steps):
+            with self.subTest(i=i):
+                substeps = self.charge_divider.get_charge_steps(c.x0, c.y0, c.x1, c.y1) 
+                self.assertEqual(len(substeps), 3, "Exactly three substeps expected")
+                self.assertEqual(substeps, split_steps[i], "Substeps do not match expectation")
 
 
 if __name__ == "__main__":
