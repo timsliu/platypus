@@ -10,3 +10,5 @@ import py_platypus.vis.vis_util  as vis_util
 
 import os
 PLATYPUS_HOME = os.getenv("PLATYPUS_HOME")
+DIM_MAP = {"x": 1, "y": 0, "z": 2}
+
