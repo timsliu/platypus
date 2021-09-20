@@ -6,7 +6,7 @@ import py_platypus as pla
 from py_platypus.models.pic_2d import PIC_2D as PIC_2D
 from py_platypus.utils.charge_step import ChargeStep as ChargeStep
 from py_platypus.utils.charge_step import ChargeStepDivider as ChargeStepDivider
-
+from py_platypus.utils import math_utils
 
 import matplotlib.pyplot as plt
 
@@ -14,16 +14,17 @@ import matplotlib.pyplot as plt
 class PIC_2D_EM(PIC_2D):
     def __init__(self, params):
 
-        # TODO make the declaration explicit
-        super().__init__(params)
+        super(PIC_2D, self).__init__(params)
 
-        self.Bz = np.zeros(self.cells)    # magnetic field on cell centers
-        self.delta_Bz = np.zeros(self.cells)   # value to update magnetic field each  half step
-        self.jx = np.zeros([self.cells[0], self.nodes[1]])   # current density in x direction
-        self.jy = np.zeros([self.nodes[1], self.cells[0]])   # current density in y direction
+        self.bz = np.zeros(self.nodes)    # magnetic field on cell corners
+        self.delta_bz = np.zeros(self.cells)   # value to update magnetic field each  half step
+        self.jx = np.zeros([self.cells[0], self.nodes[1]])   # current density in positive x direction
+        self.jy = np.zeros([self.nodes[1], self.cells[0]])   # current density in positive y direction
 
-        self.Ex_edges = np.zeros([self.nodes[0], self.cells[1]])
-        self.Ey_edges = np.zeros([self.cells[0], self.nodes[1]])
+        # vertical cell boundaries holding Ex values
+        self.ex_edges = np.zeros([self.cells[0], self.nodes[1]])
+        # horizontal cell boundaries holding Ey values
+        self.ey_edges = np.zeros([self.nodes[0], self.cells[1]])
 
         # variables pointing to the current and previous electron positions
         self.electron_x_last = np.zeros(self.n_particles)
@@ -38,32 +39,44 @@ class PIC_2D_EM(PIC_2D):
         '''calculates the B field update for a half step using Ampere's law:
         curl(B) = u(J + epsilon dE/dt)'''
 
+        # iterate through electric field in ex direction
+        for i in range(self.nodes[0]):
+            for j in range(self.cells[1]):
+                #self.ex_edges[i, j] += 
+                pass
+
+        # iterate through electric field in ey_direction
+
     def calc_B_update(self):
         '''calculates the B field update for a half step using Faraday's law: 
         curl(E) = -dB/dt'''
 
         # TODO figure out the constants
-        # iterate through cells and calculate the B field at the center of 
-        # cells
-        for i in range(self.cells[0]):
-            for j in range(self.cells[1]):
-                dy = self.Ey_edges[i][j + 1] - self.Ey_edges[i][j]
-                dx = self.Ex_edges[i + 1][j] - self.Ex_edges[i][j]
+        # iterate through cells and calculate the B field update 
+        for i in range(self.bz.shape[0]):
+            for j in range(self.bz.shape[1]):
+                ex0 = math_utils.wrap_idx_2d(self.ex_edges, i - 1, j)
+                ex1 = math_utils.wrap_idx_2d(self.ex_edges, i, j) 
+                ey0 = math_utils.wrap_idx_2d(self.ey_edges, i, j - 1) 
+                ey1 = math_utils.wrap_idx_2d(self.ey_edges, i, j) 
+
+                dey = ey1 - ey0 
+                dex = ex1 - ex0 
                 delta_x = self.dx[1]
                 delta_y = self.dx[0]
                 
-                # curl in 2D is dy/dx - dx/dy
-                self.delta_Bz[i][j] = -(dy/delta_x - dx/delta_y) * self.dt 
+                # curl in 2D is dex/dy - dey/dx
+                self.delta_bz[i][j] = (dex/dy - dey/dx) * self.dt 
  
         # divide update in half to calculate B update at each half step
-        self.delta_Bz /= 2
+        self.delta_bz /= 2
         return
 
     def update_B_half(self):
         '''update magnetic field B using the values calculated by 
         calc_B_update'''
 
-        self.Bz += self.delta_Bz
+        self.bz += self.delta_bz
 
         return
 
@@ -87,20 +100,45 @@ class PIC_2D_EM(PIC_2D):
 
         return
 
-    def execute_four_bound(self, charge_step):
+    def execute_four_bound(self, cs):
         ''' 
         Calculates the charge density update from the motion of a charge
         inputs: ChargeStep object representing the motion of a charge 
         '''
-        # TODO
+        dx = self.dx[1]
+        dy = self.dx[0]
+
+        # get list of horizontal and vertical boundaries touched
+        # method guarantees the lower indexed boundary is listed fist
+        hori, vert = self.charge_divider.boundaries_touched(cs.x0, cs.y0)
+       
+        # coordinates of the grid point at the center of crossed boundaries
+        local_origin = dx * vert[0][1], dy * hori[0][0]
+
+        # starting particle coordinates relative to local origin
+        local_x0 = cs.x0 - local_origin[0]
+        local_y0 = cs.y0 - local_origin[1]
+
+        # (Villasenor and Buneman 1991)
+        # The signs for jy do not match b/c Villasenor and Buneman
+        # defined the positive y direction opposite to what it used here
+        jx1 = cs.dx * (0.5 - local_y0 - 0.5 * cs.dy)
+        jx2 = cs.dx * (0.5 + local_y0 + 0.5 * cs.dy)
+        jy1 = - cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
+        jy2 = - cs.dy * (0.5 + local_x0 + 0.5 cs.dx)
+
+        # update the current densities
+        self.jx[tuple(hori[0])] += jx2
+        self.jx[tuple(hori[1])] += jx1
+        self.jy[tuple(vert[0])] += jy1
+        self.jy[tuple(vert[1])] += jy2
 
         return
 
     def init_B(self):
         '''set up initial conditions for the magnetic field B'''
-
         # set initial magnetic field to be zero for now
-        self.Bz = np.zeros(self.cells)
+        self.bz = np.zeros(self.bz.shape)
 
         return
 
@@ -118,14 +156,14 @@ class PIC_2D_EM(PIC_2D):
         # Ex fields
         for i in range(self.nodes[0]):
             for j in range(self.cells[1]):
-                self.Ex_edges[i][j] = np.mean([
+                self.ex_edges[i][j] = np.mean([
                     self.ex[i][j], 
                     self.ex[(i - 1) % self.nodes[0]][j]])
 
         # Ey fields
         for i in range(self.cells[0]):
             for j in range(self.nodes[1]):
-                self.Ey_edges[i][j] = np.mean([
+                self.ey_edges[i][j] = np.mean([
                     self.ey[i][j], 
                     self.ey[i][(j - 1) % self.nodes[1]]])
         return
@@ -171,96 +209,63 @@ class PIC_2D_EM(PIC_2D):
             x_n = self.electron_x[i]
             y_n = self.electron_y[i]
 
-            # left right indices of neighboring vertical edges
-            edge_left  = int(np.floor(x_n/self.dx[1]))
-            edge_right = int(np.ceil(x_n/self.dx[1]))
-            
-            # up down indices of neighboring horizontal edges
-            edge_up  = int(np.floor(y_n/self.dx[0]))
-            edge_down = int(np.ceil(y_n/self.dx[0]))
-            
-            
             # ==== interpolate Ex field ====
-            cell_x = edge_left
-            
-            # column indices of the horizontal edges to use 
-            edge_hleft, edge_hright, x0, x1 = self.cell_neighbors(x_n, 0, cell_x)
-            
-            y0 = edge_up * self.dx[0]
-            y1 = edge_down * self.dx[0]
+            # Ex field lies on vertical edges, effectively on x nodes and on
+            # y cells
+            node_l, node_r, x0, x1 = self.node_neighbors(x_n, "x")
+            cell_u, cell_d, y0, y1 = self.cell_neighbors(y_n, "y")
 
-            # wrap the indices of the edges
-            edge_hleft = edge_hleft % self.Ex_edges.shape[1] 
-            edge_hright = edge_hright % self.Ex_edges.shape[1] 
-
-            # look up Ex field at the four corners
-            e_00 = self.Ex_edges[edge_up][edge_hleft] 
-            e_01 = self.Ex_edges[edge_up][edge_hright]
-            e_10 = self.Ex_edges[edge_down][edge_hleft]
-            e_11 = self.Ex_edges[edge_down][edge_hright]
+            # look up Ex field at the four corners around particle
+            # indexing is row, col (y, x)
+            e_00 = math_utils.wrap_idx_2d(self.ex_edges[cell_u][node_l]) 
+            e_01 = math_utils.wrap_idx_2d(self.ex_edges[cell_u][node_r])
+            e_10 = math_utils.wrap_idx_2d(self.ex_edges[cell_d][node_l])
+            e_11 = math_utils.wrap_idx_2d(self.ex_edges[cell_d][node_r])
             
             self.e_particle[i][0] = self.interpolate(
                 x_n, y_n, [x0, x1, y0, y1], [e_00, e_01, e_10, e_11])
 
             # ==== interpolate Ey field ====
-            cell_y = edge_up
-            edge_vup, edge_vdown, y0, y1 = self.cell_neighbors(y_n, 1, cell_y) 
-            
-            x0 = edge_left * self.dx[1]
-            x1 = edge_right * self.dx[1] 
-            
-            # wrap the indices of the edges
-            edge_vup = edge_vup % self.Ey_edges.shape[0]
-            edge_vdown = edge_vdown % self.Ey_edges.shape[0]
-           
+            # Ey field lies on horizontal edges, effectively on y nodes and on
+            # x cells
+            cell_l, cell_r, x0, x1 = self.cell_neighbors(x_n, "x")
+            node_u, node_d, y0, y1 = self.node_neighbors(y_n, "y")
+
             # look up Ey field at the four corners
-            e_00 = self.Ey_edges[edge_vup][edge_left] 
-            e_01 = self.Ey_edges[edge_vup][edge_right]
-            e_10 = self.Ey_edges[edge_vdown][edge_left]
-            e_11 = self.Ey_edges[edge_vdown][edge_right]
+            # indexing is row, col (y, x)
+            e_00 = math_utils.wrap_idx_2d(self.ey_edges[node_u][cell_l]) 
+            e_01 = math_utils.wrap_idx_2d(self.ey_edges[node_u][cell_r])
+            e_10 = math_utils.wrap_idx_2d(self.ey_edges[node_d][cell_l])
+            e_11 = math_utils.wrap_idx_2d(self.ey_edges[node_d][cell_r])
             
             self.e_particle[i][1] = self.interpolate(
                 x_n, y_n, [x0, x1, y0, y1], [e_00, e_01, e_10, e_11])
-
+            
         return
 
     def interpolate_b(self):
         '''interpolate the B field at each particle'''
-       
+      
         for i in range(self.n_particles):
 
             x_n = self.electron_x[i]
             y_n = self.electron_y[i]
-            #print(x_n, y_n)
 
-            # find the cell the particle is in
-            cell_y = int(np.floor(y_n/self.dx[0]))
-            cell_x = int(np.floor(x_n/self.dx[1]))
-            # print(cell_x, cell_y)
-
-            # find four cell centers neighboring the particle
-            cell_u, cell_d, y0, y1 = self.cell_neighbors(y_n, 0, cell_y)
-            cell_l, cell_r, x0, x1 = self.cell_neighbors(x_n, 1, cell_x)
+            # find indices of four nodes neighboring the particle
+            node_u, node_d, y0, y1 = self.node_neighbors(y_n, "y")
+            node_l, node_r, x0, x1 = self.node_neighbors(x_n, "x")
           
-            # wrap the cell indices to get actual cell index
-            cell_l = cell_l % self.cells[1]
-            cell_r = cell_r % self.cells[1]
-            cell_u = cell_u % self.cells[0]
-            cell_d = cell_d % self.cells[0]
-
             # B field at each corner
             # indexing is row, col (y, x)
-            b_00 = self.Bz[cell_u][cell_l] 
-            b_01 = self.Bz[cell_u][cell_r] 
-            b_10 = self.Bz[cell_d][cell_l] 
-            b_11 = self.Bz[cell_d][cell_r] 
+            b_00 = self.bz[node_u][node_l] 
+            b_01 = self.bz[node_u][node_r] 
+            b_10 = self.bz[node_d][node_l] 
+            b_11 = self.bz[node_d][node_r] 
 
             # indices of neighboring cells
             self.b_particle[i] = self.interpolate(
                 x_n, y_n, [x0, x1, y0, y1], [b_00, b_01, b_10, b_11])
             
-            #print(self.b_particle[i])
-            break
         return
 
     def update_v(self):

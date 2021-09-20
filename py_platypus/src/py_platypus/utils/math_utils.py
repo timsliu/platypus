@@ -37,3 +37,14 @@ def union_lists(l1, l2):
             union.append(element)
 
     return union
+
+def wrap_idx_2d(array, i, j):
+    '''
+    Wrap indices to fit along a 2d array and return value at that index
+    inputs: array - 2D numpy array
+            i - row index
+            j - column index
+    '''
+    i_wrapped = i % array.shape[0]
+    j_wrapped = j % array.shape[1]
+    return array[i_wrapped, j_wrapped]

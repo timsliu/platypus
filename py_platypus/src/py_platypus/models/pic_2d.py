@@ -171,7 +171,30 @@ class PIC_2D:
         self.update_n("electron") 
         return
 
-    def cell_neighbors(self, x, dim):
+    def node_neighbors(self, x, dim):
+        '''
+        calculates the indices of the two adjacent nodes and their
+        coordinates
+        inputs: x - position
+                dim - index of the dimension
+        '''
+
+        # look up size of dx and number of cells along this dimension
+        dx = self.dx[plat.DIM_MAP[dim]]
+        cells = self.cells[plat.DIM_MAP[dim]]
+
+        # index of lower and upper node neighbors
+        n0 = int(np.floor(x/dx)) 
+        n1 = int(np.ceil(x/dx)) 
+
+        # coordinates of lower and upper node neighbors
+        x0 = n0 * dx
+        x1 = n1 * dx
+
+        return n0, n1, x0, x1 
+
+
+    def cell_neighbors(self, x, dim, cell):
         '''calculates the indices of the two adjacent cells that a particle
         weight should be distributed between and the center of the cells. Note
         that the value returned may include "phantom cells" past the boundary
