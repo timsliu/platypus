@@ -14,10 +14,10 @@ import matplotlib.pyplot as plt
 class PIC_2D_EM(PIC_2D):
     def __init__(self, params):
 
-        super(PIC_2D, self).__init__(params)
+        super(PIC_2D_EM, self).__init__(params)
 
         self.bz = np.zeros(self.nodes)    # magnetic field on cell corners
-        self.delta_bz = np.zeros(self.cells)   # value to update magnetic field each  half step
+        self.delta_bz = np.zeros(self.nodes)   # value to update magnetic field each  half step
         self.jx = np.zeros([self.cells[0], self.nodes[1]])   # current density in positive x direction
         self.jy = np.zeros([self.nodes[1], self.cells[0]])   # current density in positive y direction
 
@@ -50,6 +50,8 @@ class PIC_2D_EM(PIC_2D):
     def calc_B_update(self):
         '''calculates the B field update for a half step using Faraday's law: 
         curl(E) = -dB/dt'''
+        delta_x = self.dx[1]
+        delta_y = self.dx[0]
 
         # TODO figure out the constants
         # iterate through cells and calculate the B field update 
@@ -62,11 +64,9 @@ class PIC_2D_EM(PIC_2D):
 
                 dey = ey1 - ey0 
                 dex = ex1 - ex0 
-                delta_x = self.dx[1]
-                delta_y = self.dx[0]
                 
                 # curl in 2D is dex/dy - dey/dx
-                self.delta_bz[i][j] = (dex/dy - dey/dx) * self.dt 
+                self.delta_bz[i][j] = (dex/delta_y - dey/delta_x) * self.dt 
  
         # divide update in half to calculate B update at each half step
         self.delta_bz /= 2
@@ -125,7 +125,7 @@ class PIC_2D_EM(PIC_2D):
         jx1 = cs.dx * (0.5 - local_y0 - 0.5 * cs.dy)
         jx2 = cs.dx * (0.5 + local_y0 + 0.5 * cs.dy)
         jy1 = - cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
-        jy2 = - cs.dy * (0.5 + local_x0 + 0.5 cs.dx)
+        jy2 = - cs.dy * (0.5 + local_x0 + 0.5 * cs.dx)
 
         # update the current densities
         self.jx[tuple(hori[0])] += jx2
@@ -150,22 +150,23 @@ class PIC_2D_EM(PIC_2D):
         super().update_ne()
         super().update_rho()
         super().update_phi()
-        super().update_e()   # electric field one the nodes (corners)
+        super().update_e()   # electric field on the nodes (corners)
 
         # convert electric field on the nodes to the edges of the Yee mesh
         # Ex fields
-        for i in range(self.nodes[0]):
-            for j in range(self.cells[1]):
+        for i in range(self.ex_edges.shape[0]):
+            for j in range(self.ex_edges.shape[1]):
                 self.ex_edges[i][j] = np.mean([
                     self.ex[i][j], 
-                    self.ex[(i - 1) % self.nodes[0]][j]])
+                    self.ex[i + 1][j]])
 
         # Ey fields
-        for i in range(self.cells[0]):
-            for j in range(self.nodes[1]):
+        for i in range(self.ey_edges.shape[0]):
+            for j in range(self.ey_edges.shape[1]):
                 self.ey_edges[i][j] = np.mean([
-                    self.ey[i][j], 
-                    self.ey[i][(j - 1) % self.nodes[1]]])
+                    self.ey[i][j],
+                    self.ey[i][j + 1]])
+        
         return
 
     def interpolate(self, x_n, y_n, corners, values):
@@ -181,10 +182,10 @@ class PIC_2D_EM(PIC_2D):
 
         x0, x1, y0, y1 = corners
 
-        area_upper_left  = pla.utils.points_to_area((x_n, y_n), (x0, y0))
-        area_upper_right = pla.utils.points_to_area((x_n, y_n), (x1, y0))
-        area_lower_left  = pla.utils.points_to_area((x_n, y_n), (x0, y1))
-        area_lower_right = pla.utils.points_to_area((x_n, y_n), (x1, y1))
+        area_upper_left  = math_utils.points_to_area((x_n, y_n), (x0, y0))
+        area_upper_right = math_utils.points_to_area((x_n, y_n), (x1, y0))
+        area_lower_left  = math_utils.points_to_area((x_n, y_n), (x0, y1))
+        area_lower_right = math_utils.points_to_area((x_n, y_n), (x1, y1))
 
         # total area of a cell
         total_area = self.dx[0] * self.dx[1]
@@ -217,10 +218,10 @@ class PIC_2D_EM(PIC_2D):
 
             # look up Ex field at the four corners around particle
             # indexing is row, col (y, x)
-            e_00 = math_utils.wrap_idx_2d(self.ex_edges[cell_u][node_l]) 
-            e_01 = math_utils.wrap_idx_2d(self.ex_edges[cell_u][node_r])
-            e_10 = math_utils.wrap_idx_2d(self.ex_edges[cell_d][node_l])
-            e_11 = math_utils.wrap_idx_2d(self.ex_edges[cell_d][node_r])
+            e_00 = math_utils.wrap_idx_2d(self.ex_edges, cell_u, node_l) 
+            e_01 = math_utils.wrap_idx_2d(self.ex_edges, cell_u, node_r)
+            e_10 = math_utils.wrap_idx_2d(self.ex_edges, cell_d, node_l)
+            e_11 = math_utils.wrap_idx_2d(self.ex_edges, cell_d, node_r)
             
             self.e_particle[i][0] = self.interpolate(
                 x_n, y_n, [x0, x1, y0, y1], [e_00, e_01, e_10, e_11])
@@ -233,10 +234,10 @@ class PIC_2D_EM(PIC_2D):
 
             # look up Ey field at the four corners
             # indexing is row, col (y, x)
-            e_00 = math_utils.wrap_idx_2d(self.ey_edges[node_u][cell_l]) 
-            e_01 = math_utils.wrap_idx_2d(self.ey_edges[node_u][cell_r])
-            e_10 = math_utils.wrap_idx_2d(self.ey_edges[node_d][cell_l])
-            e_11 = math_utils.wrap_idx_2d(self.ey_edges[node_d][cell_r])
+            e_00 = math_utils.wrap_idx_2d(self.ey_edges, node_u, cell_l) 
+            e_01 = math_utils.wrap_idx_2d(self.ey_edges, node_u, cell_r)
+            e_10 = math_utils.wrap_idx_2d(self.ey_edges, node_d, cell_l)
+            e_11 = math_utils.wrap_idx_2d(self.ey_edges, node_d, cell_r)
             
             self.e_particle[i][1] = self.interpolate(
                 x_n, y_n, [x0, x1, y0, y1], [e_00, e_01, e_10, e_11])

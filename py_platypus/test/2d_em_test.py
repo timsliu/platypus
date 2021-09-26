@@ -29,12 +29,12 @@ def test_init_E(pic):
     plt.colorbar()
     
     plt.figure(4)
-    plt.imshow(pic.Ex_edges)
+    plt.imshow(pic.ex_edges)
     plt.title("Ex field edges") 
     plt.colorbar()
 
     plt.figure(5) 
-    plt.imshow(pic.Ey_edges)
+    plt.imshow(pic.ey_edges)
     plt.title("Ey field edges") 
     plt.colorbar()
 
@@ -44,26 +44,26 @@ def test_update_B(pic):
     '''test calculating the curl of a 2D vector field'''
 
     # set up x vectors
-    rows, cols = pic.Ex_edges.shape
+    rows, cols = pic.ex_edges.shape
     for i in range(rows):
         for j in range(cols):
             x = i - rows/2
             y = j - cols/2
             
-            pic.Ex_edges[i][j] = y 
+            pic.ex_edges[i][j] = y 
    
     # set up y vectors
-    rows, cols = pic.Ey_edges.shape
+    rows, cols = pic.ey_edges.shape
     for i in range(rows):
         for j in range(cols):
             x = i - rows/2
             y = j - cols/2
             
-            pic.Ey_edges[i][j] = -x 
+            pic.ey_edges[i][j] = -x 
 
     pic.calc_B_update()
     plt.figure(6)
-    plt.imshow(pic.delta_Bz)
+    plt.imshow(pic.delta_bz)
     plt.title("B update for uniform curl")
 
 def test_interpolate(pic):
@@ -94,12 +94,12 @@ def test_interpolate_ex(pic):
     values'''
 
     print("==== Testing Interpolate Ex field ====")
-    pic.Ex_edges = np.random.rand(pic.Ex_edges.shape[0], pic.Ex_edges.shape[1])
+    pic.ex_edges = np.random.rand(pic.ex_edges.shape[0], pic.ex_edges.shape[1])
     pic.init_x_random() 
     pic.interpolate_e()
 
     print("Average Ex field: {} Average Ex particle: {}".format(
-        np.mean(pic.Ex_edges), np.mean(pic.e_particle[:, 0])))
+        np.mean(pic.ex_edges), np.mean(pic.e_particle[:, 0])))
   
     expected = np.zeros(NUM_TESTS)
     for i in range(NUM_TESTS):
@@ -109,10 +109,10 @@ def test_interpolate_ex(pic):
         pic.electron_y[i] = (1 - offset) * dy 
 
         short = 0.5 - offset
-        expected[i] = (pic.Ex_edges[0][0] * offset * short +\
-                       pic.Ex_edges[0][1] * (1 - short) * offset +\
-                       pic.Ex_edges[1][0] * (1 - offset) * short +\
-                       pic.Ex_edges[1][1] * (1 - offset) * (1 - short)) 
+        expected[i] = (pic.ex_edges[0][0] * offset * short +\
+                       pic.ex_edges[0][1] * (1 - short) * offset +\
+                       pic.ex_edges[1][0] * (1 - offset) * short +\
+                       pic.ex_edges[1][1] * (1 - offset) * (1 - short)) 
     pic.interpolate_e()
    
     for i in range(NUM_TESTS):
@@ -125,12 +125,12 @@ def test_interpolate_ey(pic):
     values'''
 
     print("==== Testing Interpolate Ey field ====")
-    pic.Ey_edges = np.indices(pic.Ey_edges.shape)[0]
+    pic.ey_edges = np.indices(pic.ey_edges.shape)[0]
     pic.init_x_random() 
     pic.interpolate_e()
 
     print("Average Ey field: {} Average Ey particle: {}".format(
-        np.mean(pic.Ey_edges), np.mean(pic.e_particle[:, 1])))
+        np.mean(pic.ey_edges), np.mean(pic.e_particle[:, 1])))
     
     expected = np.zeros(NUM_TESTS)
     for i in range(NUM_TESTS):
@@ -140,10 +140,10 @@ def test_interpolate_ey(pic):
         pic.electron_y[i] = (1 - offset) * dy 
 
         short = 0.5 - offset
-        expected[i] = (pic.Ex_edges[0][0] * offset * short +\
-                       pic.Ex_edges[0][1] * (1 - short) * offset +\
-                       pic.Ex_edges[1][0] * (1 - offset) * short +\
-                       pic.Ex_edges[1][1] * (1 - offset) * (1 - short)) 
+        expected[i] = (pic.ex_edges[0][0] * offset * short +\
+                       pic.ex_edges[0][1] * (1 - short) * offset +\
+                       pic.ex_edges[1][0] * (1 - offset) * short +\
+                       pic.ex_edges[1][1] * (1 - offset) * (1 - short)) 
     pic.interpolate_e()
    
     for i in range(NUM_TESTS):
@@ -156,19 +156,19 @@ def test_interpolate_b(pic):
     values'''
 
     print("==== Testing Interpolate B field ====")
-    pic.Bz = np.indices(pic.Bz.shape)[0]
+    pic.bz = np.indices(pic.bz.shape)[0]
     pic.init_x_random() 
     pic.interpolate_b() 
     
     print("Average B field: {} Average B particle: {}".format(
-        np.mean(pic.Bz), np.mean(pic.b_particle)))
+        np.mean(pic.bz), np.mean(pic.b_particle)))
    
     values = [[4, 1], [8, 2]]
 
-    pic.Bz[0][0] = values[0][0]
-    pic.Bz[0][1] = values[0][1]
-    pic.Bz[1][0] = values[1][0]
-    pic.Bz[1][1] = values[1][1]
+    pic.bz[0][0] = values[0][0]
+    pic.bz[0][1] = values[0][1]
+    pic.bz[1][0] = values[1][0]
+    pic.bz[1][1] = values[1][1]
 
     for i in range(5):
         offset = np.random.rand() / 2
@@ -177,10 +177,10 @@ def test_interpolate_b(pic):
         pic.electron_y[0] = (1 - offset) * dy 
 
         short = 0.5 - offset
-        expected = (pic.Bz[0][0] * (1 - short) * short +\
-                    pic.Bz[0][1] * (1 - short) * (1 - short) +\
-                    pic.Bz[1][0] * short * short +\
-                    pic.Bz[1][1] * (1 - short) * short)
+        expected = (pic.bz[0][0] * (1 - short) * short +\
+                    pic.bz[0][1] * (1 - short) * (1 - short) +\
+                    pic.bz[1][0] * short * short +\
+                    pic.bz[1][1] * (1 - short) * short)
         pic.interpolate_b()
     
         print("Expected: {} Actual: {}".format(expected, pic.b_particle[0]))
@@ -214,9 +214,9 @@ if __name__ == "__main__":
     sim_params.set_from_dict(params)
     pic = plat.pic_2d_em.PIC_2D_EM(sim_params)
 
-    #test_random_x(pic)
-    #test_init_E(pic)
-    #test_update_B(pic)
+    test_random_x(pic)
+    test_init_E(pic)
+    test_update_B(pic)
     test_interpolate(pic)
     test_interpolate_b(pic) 
     test_interpolate_ex(pic) 
