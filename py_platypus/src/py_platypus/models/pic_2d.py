@@ -170,7 +170,7 @@ class PIC_2D:
         self.update_n("electron") 
         return
 
-    def cell_neighbors(self, x, dim, cell):
+    def cell_neighbors(self, x, dim):
         '''calculates the indices of the two adjacent cells that a particle
         weight should be distributed between and the center of the cells. Note
         that the value returned may include "phantom cells" past the boundary
@@ -183,20 +183,21 @@ class PIC_2D:
                  cell_1 - index of upper cell
                  cell_0_center - center of cell_0 along specified dimension
                  cell_1_center - center of cell_1 along specified dimension'''
-        
-        dx = self.dx[dim]           # cell size along this dimension
-        cells = self.cells[dim]     # number of cells along this dimension
-
-        # particle is to the right of cell midpoint
-        if x > cell * dx + 0.5 * dx:
-            cell_0 = cell
-            cell_1 = cell + 1
-        # particle is to the left of cell midpoint
-        else:
-            cell_0 = cell - 1
-            cell_1 = cell
             
-        # center of left and right cells
+        dx = self.dx[plat.DIM_MAP[dim]]       # cell size along this dimension
+        cells = self.cells[plat.DIM_MAP[dim]] # number of cells along this dimension
+        cell_in = int(np.floor(x/dx))         # index of cell particle is in
+
+        # particle is beyond the cell midpoint
+        if x > cell_in * dx + 0.5 * dx:
+            cell_0 = cell_in 
+            cell_1 = cell_in + 1
+        # particle is not past the cell midpoint
+        else:
+            cell_0 = cell_in - 1
+            cell_1 = cell_in
+            
+        # center of neighboring cells with lower and greater indices
         cell_0_center = cell_0 * dx + 0.5 * dx
         cell_1_center = cell_1 * dx + 0.5 * dx
         
@@ -230,8 +231,8 @@ class PIC_2D:
             
             # find indices of cells to the left and right that the weight
             # will be distributed between
-            cell_u, cell_d, y0, y1 = self.cell_neighbors(y_n, 0, cell_y)
-            cell_l, cell_r, x0, x1 = self.cell_neighbors(x_n, 1, cell_x)
+            cell_u, cell_d, y0, y1 = self.cell_neighbors(y_n, "y")
+            cell_l, cell_r, x0, x1 = self.cell_neighbors(x_n, "x")
 
             # calculate area of each rectangle
             area_upper_left  = plat.math_utils.points_to_area((x_n, y_n), (x0, y0))
