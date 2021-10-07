@@ -1,70 +1,25 @@
+
+import unittest
 import py_platypus as plat
 import numpy as np
 import matplotlib.pyplot as plt
+import unit_test_helpers
 
-NUM_TESTS = 5
 
-def test_random_x(pic):
-    pic.init_x_random()
-    plt.figure(1)
-    plt.scatter(pic.electron_x, pic.electron_y, s=0.05)
 
-    return
-
-def test_init_E(pic):
-    '''test calculating the inital electric field'''
-
-    pic.init_v_maxwellian()
-    pic.density_perturbation()
-    pic.init_E()
-
-    plt.figure(2)
-    plt.imshow(pic.ex)
-    plt.title("Ex field") 
-    plt.colorbar()
-
-    plt.figure(3) 
-    plt.imshow(pic.ey)
-    plt.title("Ey field") 
-    plt.colorbar()
+class Pic2dEmValueTester(unittest.TestCase):
+    """
+    Unit tests for electromagnetic 2D PIC that test calculated values.
+    """
     
-    plt.figure(4)
-    plt.imshow(pic.ex_edges)
-    plt.title("Ex field edges") 
-    plt.colorbar()
+    def setUp(self):
+        """
+        set up function called before each test
+        """
 
-    plt.figure(5) 
-    plt.imshow(pic.ey_edges)
-    plt.title("Ey field edges") 
-    plt.colorbar()
+        self.pic = setup_2d_pic() 
 
-    return
 
-def test_update_B(pic):
-    '''test calculating the curl of a 2D vector field'''
-
-    # set up x vectors
-    rows, cols = pic.ex_edges.shape
-    for i in range(rows):
-        for j in range(cols):
-            x = i - rows/2
-            y = j - cols/2
-            
-            pic.ex_edges[i][j] = y 
-   
-    # set up y vectors
-    rows, cols = pic.ey_edges.shape
-    for i in range(rows):
-        for j in range(cols):
-            x = i - rows/2
-            y = j - cols/2
-            
-            pic.ey_edges[i][j] = -x 
-
-    pic.calc_B_update()
-    plt.figure(6)
-    plt.imshow(pic.delta_bz)
-    plt.title("B update for uniform curl")
 
 def test_interpolate(pic):
     '''test helper function for interpolating field properties at particles'''
@@ -187,38 +142,4 @@ def test_interpolate_b(pic):
     return
 
 if __name__ == "__main__":
-    # set up parameters 
-    params = {
-        "length": [2 * np.pi, 2 * np.pi],
-        "cells": [32, 32],
-        "dimensions": 2,
-        "nppc": 10,
-        "single_stream": {       # defaults for single stream instability
-            "stream_v": 3, 
-            "stream_frac": 0.8, 
-            "stream_width": 1
-        },
-        "landau": {              # defaults for Landau damping
-            "amplitude": 0.8,
-            "mode": 3
-        },
-        "two_stream": {          # defaults for two stream instability
-            "vpos": 2,
-            "vneg": -2,
-            "stream_frac": 1,
-            "stream_width": 0.8
-        },
-    }
-
-    sim_params = plat.params.Parameters(2)
-    sim_params.set_from_dict(params)
-    pic = plat.pic_2d_em.PIC_2D_EM(sim_params)
-
-    test_random_x(pic)
-    test_init_E(pic)
-    test_update_B(pic)
-    test_interpolate(pic)
-    test_interpolate_b(pic) 
-    test_interpolate_ex(pic) 
-    test_interpolate_ey(pic) 
-    plt.show()
+    unittest.main()
