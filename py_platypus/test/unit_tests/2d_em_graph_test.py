@@ -29,6 +29,7 @@ class Pic2dEmGraphTester(unittest.TestCase):
         """
         Tests initial random distribution of particles.
         """
+        print("==== Testing random x ====")
         self.pic.init_x_random()
         plt.figure(1)
         
@@ -45,8 +46,9 @@ class Pic2dEmGraphTester(unittest.TestCase):
         at initialization (from a Poisson solver) and interpolated to the
         edges.
         '''
-   
+        print("==== Test init E ====") 
         # create an initial density perturbation and calculate the electric field
+        self.pic.init_x_random()
         self.pic.init_v_maxwellian()
         self.pic.density_perturbation()
         self.pic.init_E()
@@ -87,7 +89,8 @@ class Pic2dEmGraphTester(unittest.TestCase):
         Tests calculating the magnetic field update based on the electric
         field.
         '''
-    
+   
+        print("==== Test update B ====")
         # set up x vectors
         rows, cols = self.pic.ex_edges.shape
         for i in range(rows):
