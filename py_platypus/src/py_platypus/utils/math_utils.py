@@ -48,3 +48,11 @@ def wrap_idx_2d(array, i, j):
     i_wrapped = i % array.shape[0]
     j_wrapped = j % array.shape[1]
     return array[i_wrapped, j_wrapped]
+
+def ev_to_vth(kev):
+    '''
+    Convert from temperature of particles (in electron volts) to thermal
+    velocity (in meters per second)
+    '''
+
+    raise NotImplemented("Function ev_to_vth not yet implemented")

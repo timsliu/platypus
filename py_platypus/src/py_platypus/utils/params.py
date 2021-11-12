@@ -23,6 +23,7 @@ class Parameters:
             "runtime": 30,
             "dimensions": dims,
             "nppc": 100,
+            "t_ev": 1000,            # plasma temperature in electron volts         
             "dx": None,              # cell size (derived)
             "steps": None,           # total steps (derived)
             "n_particles": None,     # total particles (derived)
