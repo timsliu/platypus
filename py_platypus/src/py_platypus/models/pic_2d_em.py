@@ -6,7 +6,7 @@ import py_platypus as pla
 from py_platypus.models.pic_2d import PIC_2D as PIC_2D
 from py_platypus.utils.charge_step import ChargeStep as ChargeStep
 from py_platypus.utils.charge_step import ChargeStepDivider as ChargeStepDivider
-from py_platypus.utils import math_utils
+from py_platypus.utils import math_utils, constants
 
 import matplotlib.pyplot as plt
 
@@ -35,25 +35,53 @@ class PIC_2D_EM(PIC_2D):
         self.b_particle = np.zeros(self.n_particles)
         self.charge_divider = ChargeStepDivider(self.dx, self.cells)
 
+        # additional properties for EM PIC
+        self.v_th = math_utils.ev_to_vth(params["t_ev"]) 
+
     def update_e(self):
-        '''calculates the B field update for a half step using Ampere's law:
-        curl(B) = u(J + epsilon dE/dt)'''
+        '''
+        calculates the E field update for a half step using Ampere's law:
+        curl(B) = u(J + epsilon dE/dt)
+        '''
+        dx = self.dx[1]
+        dy = self.dy[0]
 
         # iterate through electric field in ex direction
-        for i in range(self.nodes[0]):
-            for j in range(self.cells[1]):
-                #self.ex_edges[i, j] += 
-                pass
-
-        # iterate through electric field in ey_direction
+        for i in range(self.ex_edges.shape[0]):
+            for j in range(self.ex_edges.shape[1]):
+                # equation (32) Villasenor and Buneman w/ constants
+                # local curl of magnetic field
+                curl = 1/dx * (math_utils.wrap_idx_2d(self.Bz, i + 1, j) - 
+                             math_util.wrap_idx_2d(self.Bz, i, j)) -
+                # local current density 
+                j = math_utils.wrap_idx_2d(self.jx, i, j))
+                # dE = dt * (constants * curl(B) - Jx)
+                ex_update  = self.dt * (curl * constants.C ** 2/self.vth ** 2 - j) 
+                self.ex_edges[i, j] + ex_update
+        
+        # iterate through electric field in ey direction
+        for i in range(self.ey_edges.shape[0]):
+            for j in range(self.ey_edges.shape[1]):
+                # equation (33) Villasenor and Buneman
+                curl = -1/dx * (math_utils.wrap_idx_2d(self.Bz, i, j + 1) - 
+                             math_util.wrap_idx_2d(self.Bz, i, j))
+                # local current density 
+                j = math_utils.wrap_idx_2d(self.jy, i, j)
+                
+                # dE = dt * (constants * curl(B) - Jy)
+                ey_update  = self.dt * (curl * constants.C ** 2/self.vth ** 2 - j) 
+                self.ey_edges[i, j] + ey_update
 
     def calc_B_update(self):
-        '''calculates the B field update for a half step using Faraday's law: 
-        curl(E) = -dB/dt'''
-        delta_x = self.dx[1]
-        delta_y = self.dx[0]
+        '''
+        calculates the B field update for a half step using Faraday's law: 
+        curl(E) = -dB/dt
+        '''
+        
+        dx = self.dx[1]
+        dy = self.dx[0]
 
-        # TODO figure out the constants
+        # normalized Faraday's law doesn't require any constants
         # iterate through cells and calculate the B field update 
         for i in range(self.bz.shape[0]):
             for j in range(self.bz.shape[1]):
@@ -66,23 +94,27 @@ class PIC_2D_EM(PIC_2D):
                 dex = ex1 - ex0 
                 
                 # curl in 2D is dex/dy - dey/dx
-                self.delta_bz[i][j] = (dex/delta_y - dey/delta_x) * self.dt 
+                self.delta_bz[i][j] = (dex/dy - dey/dx) * self.dt 
  
         # divide update in half to calculate B update at each half step
         self.delta_bz /= 2
         return
 
     def update_B_half(self):
-        '''update magnetic field B using the values calculated by 
-        calc_B_update'''
+        '''
+        update magnetic field B by a half step using the values calculated by 
+        calc_B_update
+        '''
 
         self.bz += self.delta_bz
 
         return
 
     def update_j(self):
-        '''calculate the current density J using the current and last
-        x position'''
+        '''
+        calculate the normalized current density J using the current and last
+        x position of each particle
+        '''
 
         # iterate through all particles and calculate which cell boundaries
         # are crossed 
@@ -170,7 +202,8 @@ class PIC_2D_EM(PIC_2D):
         return
 
     def interpolate(self, x_n, y_n, corners, values):
-        '''interpolates the value of a field property to the position of
+        '''
+        interpolates the value of a field property to the position of
         a particle
         inputs - x_n - x coordinate of the particle
                  y_n - y coordinate of the particle
@@ -178,7 +211,9 @@ class PIC_2D_EM(PIC_2D):
                  values - (4, array) values of the field at the four corners
                           [upper left, upper right, lower left, lower right]
 
-        returns - interpolated value at the particle'''
+        returns - interpolated value at the particle
+        TODO make this a utility function 
+        '''
 
         x0, x1, y0, y1 = corners
 
@@ -245,7 +280,9 @@ class PIC_2D_EM(PIC_2D):
         return
 
     def interpolate_b(self):
-        '''interpolate the B field at each particle'''
+        '''
+        interpolate the B field at each particle
+        '''
       
         for i in range(self.n_particles):
 
@@ -270,11 +307,14 @@ class PIC_2D_EM(PIC_2D):
         return
 
     def update_v(self):
-        '''updates the velocity according to Lorentz's law 
-        dv/dt = q(e + v x B) and the Boris method. Overrides the method
-        in PIC_2D base class'''
+        '''
+        updates the velocity according to Lorentz's law 
+        dv/dt = (e + v x B) and the Boris method. Overrides the method
+        in PIC_2D base class
+        '''
 
-        # TODO need to work in constants
+        # using normalized B, this equation doesn't need constants
+        # added
         for i in range(self.n_particles):
             # 3D vector of electric field at the particle 
             e_i = np.concatenate([self.e_particle[i], [0]])

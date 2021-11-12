@@ -7,6 +7,7 @@ import py_platypus.utils.run_sim as run_sim
 import py_platypus.utils.io_utils  as io_utils
 import py_platypus.utils.math_utils  as math_utils
 import py_platypus.utils.charge_step  as charge_step
+import py_platypus.utils.constants  as constants
 import py_platypus.vis.plotter as plotter 
 import py_platypus.vis.vis_util  as vis_util
 
