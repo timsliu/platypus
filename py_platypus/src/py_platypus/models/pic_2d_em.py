@@ -16,10 +16,13 @@ class PIC_2D_EM(PIC_2D):
 
         super(PIC_2D_EM, self).__init__(params)
 
-        self.bz = np.zeros(self.nodes)    # magnetic field on cell corners
-        self.delta_bz = np.zeros(self.nodes)   # value to update magnetic field each  half step
-        self.jx = np.zeros([self.cells[0], self.nodes[1]])   # current density in positive x direction
-        self.jy = np.zeros([self.nodes[1], self.cells[0]])   # current density in positive y direction
+        self.bz = np.zeros(self.nodes)  # magnetic field on cell corners
+        self.delta_bz = np.zeros(
+            self.nodes)  # value to update magnetic field each  half step
+        self.jx = np.zeros([self.cells[0], self.nodes[1]
+                            ])  # current density in positive x direction
+        self.jy = np.zeros([self.nodes[1], self.cells[0]
+                            ])  # current density in positive y direction
 
         # vertical cell boundaries holding Ex values
         self.ex_edges = np.zeros([self.cells[0], self.nodes[1]])
@@ -29,14 +32,14 @@ class PIC_2D_EM(PIC_2D):
         # variables pointing to the current and previous electron positions
         self.electron_x_last = np.zeros(self.n_particles)
         self.electron_y_last = np.zeros(self.n_particles)
-       
+
         # electric and magnetic field interpolated to each particle
         self.e_particle = np.zeros((self.n_particles, self.dimensions))
         self.b_particle = np.zeros(self.n_particles)
         self.charge_divider = ChargeStepDivider(self.dx, self.cells)
 
         # additional properties for EM PIC
-        self.v_th = math_utils.ev_to_vth(params["t_ev"]) 
+        self.v_th = math_utils.ev_to_vth(params["t_ev"])
 
     def update_e(self):
         '''
@@ -51,59 +54,61 @@ class PIC_2D_EM(PIC_2D):
             for j in range(self.ex_edges.shape[1]):
                 # equation (32) Villasenor and Buneman w/ constants
                 # local curl of magnetic field
-                curl = 1/dx * (math_utils.wrap_idx_2d(self.Bz, i + 1, j) - 
-                             math_util.wrap_idx_2d(self.Bz, i, j)) -
-                # local current density 
-                j = math_utils.wrap_idx_2d(self.jx, i, j))
+                curl = 1 / dx * (math_utils.wrap_idx_2d(self.Bz, i + 1, j) -
+                                 math_util.wrap_idx_2d(self.Bz, i, j))
+                # local current density
+                j = math_utils.wrap_idx_2d(self.jx, i, j)
                 # dE = dt * (constants * curl(B) - Jx)
-                ex_update  = self.dt * (curl * constants.SPEED_OF_LIGHT ** 2/self.vth ** 2 - j) 
+                ex_update = self.dt * (
+                    curl * constants.SPEED_OF_LIGHT**2 / self.vth**2 - j)
                 self.ex_edges[i, j] + ex_update
-        
+
         # iterate through electric field in ey direction
         for i in range(self.ey_edges.shape[0]):
             for j in range(self.ey_edges.shape[1]):
                 # equation (33) Villasenor and Buneman
-                curl = -1/dx * (math_utils.wrap_idx_2d(self.Bz, i, j + 1) - 
-                             math_util.wrap_idx_2d(self.Bz, i, j))
-                # local current density 
+                curl = -1 / dx * (math_utils.wrap_idx_2d(self.Bz, i, j + 1) -
+                                  math_util.wrap_idx_2d(self.Bz, i, j))
+                # local current density
                 j = math_utils.wrap_idx_2d(self.jy, i, j)
-                
+
                 # dE = dt * (constants * curl(B) - Jy)
-                ey_update  = self.dt * (curl * constants.SPEED_OF_LIGHT ** 2/self.vth ** 2 - j) 
+                ey_update = self.dt * (
+                    curl * constants.SPEED_OF_LIGHT**2 / self.vth**2 - j)
                 self.ey_edges[i, j] + ey_update
 
-    def calc_B_update(self):
+    def calc_b_update(self):
         '''
         calculates the B field update for a half step using Faraday's law: 
         curl(E) = -dB/dt
         '''
-        
+
         dx = self.dx[1]
         dy = self.dx[0]
 
         # normalized Faraday's law doesn't require any constants
-        # iterate through cells and calculate the B field update 
+        # iterate through cells and calculate the B field update
         for i in range(self.bz.shape[0]):
             for j in range(self.bz.shape[1]):
                 ex0 = math_utils.wrap_idx_2d(self.ex_edges, i - 1, j)
-                ex1 = math_utils.wrap_idx_2d(self.ex_edges, i, j) 
-                ey0 = math_utils.wrap_idx_2d(self.ey_edges, i, j - 1) 
-                ey1 = math_utils.wrap_idx_2d(self.ey_edges, i, j) 
+                ex1 = math_utils.wrap_idx_2d(self.ex_edges, i, j)
+                ey0 = math_utils.wrap_idx_2d(self.ey_edges, i, j - 1)
+                ey1 = math_utils.wrap_idx_2d(self.ey_edges, i, j)
 
-                dey = ey1 - ey0 
-                dex = ex1 - ex0 
-                
+                dey = ey1 - ey0
+                dex = ex1 - ex0
+
                 # curl in 2D is dex/dy - dey/dx
-                self.delta_bz[i][j] = (dex/dy - dey/dx) * self.dt 
- 
+                self.delta_bz[i][j] = (dex / dy - dey / dx) * self.dt
+
         # divide update in half to calculate B update at each half step
         self.delta_bz /= 2
         return
 
-    def update_B_half(self):
+    def update_b_half(self):
         '''
         update magnetic field B by a half step using the values calculated by 
-        calc_B_update
+        calc_b_update
         '''
 
         self.bz += self.delta_bz
@@ -117,10 +122,10 @@ class PIC_2D_EM(PIC_2D):
         '''
 
         # iterate through all particles and calculate which cell boundaries
-        # are crossed 
+        # are crossed
         for i in range(self.n_particles):
-            
-            # initial and final particle position 
+
+            # initial and final particle position
             x0, y0 = self.electron_x_last[i], self.electron_y_last[i]
             x1, y1 = self.electron_x[i], self.electron_y[i]
 
@@ -143,7 +148,7 @@ class PIC_2D_EM(PIC_2D):
         # get list of horizontal and vertical boundaries touched
         # method guarantees the lower indexed boundary is listed fist
         hori, vert = self.charge_divider.boundaries_touched(cs.x0, cs.y0)
-       
+
         # coordinates of the grid point at the center of crossed boundaries
         local_origin = dx * vert[0][1], dy * hori[0][0]
 
@@ -156,8 +161,8 @@ class PIC_2D_EM(PIC_2D):
         # defined the positive y direction opposite to what it used here
         jx1 = cs.dx * (0.5 - local_y0 - 0.5 * cs.dy)
         jx2 = cs.dx * (0.5 + local_y0 + 0.5 * cs.dy)
-        jy1 = - cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
-        jy2 = - cs.dy * (0.5 + local_x0 + 0.5 * cs.dx)
+        jy1 = -cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
+        jy2 = -cs.dy * (0.5 + local_x0 + 0.5 * cs.dx)
 
         # update the current densities
         self.jx[tuple(hori[0])] += jx2
@@ -167,38 +172,36 @@ class PIC_2D_EM(PIC_2D):
 
         return
 
-    def init_B(self):
+    def init_b_uniform(self, value=0.0):
         '''set up initial conditions for the magnetic field B'''
         # set initial magnetic field to be zero for now
-        self.bz = np.zeros(self.bz.shape)
+        self.bz = np.fill(self.bz.shape, init_value)
 
         return
 
-    def init_E(self):
+    def init_e(self):
         '''set up initial conditions for the E field'''
-        
+
         # calculate the initial electric field from Poisson's law
         super().update_ni()
         super().update_ne()
         super().update_rho()
         super().update_phi()
-        super().update_e()   # electric field on the nodes (corners)
+        super().update_e()  # electric field on the nodes (corners)
 
         # convert electric field on the nodes to the edges of the Yee mesh
         # Ex fields
         for i in range(self.ex_edges.shape[0]):
             for j in range(self.ex_edges.shape[1]):
-                self.ex_edges[i][j] = np.mean([
-                    self.ex[i][j], 
-                    self.ex[i + 1][j]])
+                self.ex_edges[i][j] = np.mean(
+                    [self.ex[i][j], self.ex[i + 1][j]])
 
         # Ey fields
         for i in range(self.ey_edges.shape[0]):
             for j in range(self.ey_edges.shape[1]):
-                self.ey_edges[i][j] = np.mean([
-                    self.ey[i][j],
-                    self.ey[i][j + 1]])
-        
+                self.ey_edges[i][j] = np.mean(
+                    [self.ey[i][j], self.ey[i][j + 1]])
+
         return
 
     def interpolate(self, x_n, y_n, corners, values):
@@ -217,9 +220,9 @@ class PIC_2D_EM(PIC_2D):
 
         x0, x1, y0, y1 = corners
 
-        area_upper_left  = math_utils.points_to_area((x_n, y_n), (x0, y0))
+        area_upper_left = math_utils.points_to_area((x_n, y_n), (x0, y0))
         area_upper_right = math_utils.points_to_area((x_n, y_n), (x1, y0))
-        area_lower_left  = math_utils.points_to_area((x_n, y_n), (x0, y1))
+        area_lower_left = math_utils.points_to_area((x_n, y_n), (x0, y1))
         area_lower_right = math_utils.points_to_area((x_n, y_n), (x1, y1))
 
         # total area of a cell
@@ -227,10 +230,10 @@ class PIC_2D_EM(PIC_2D):
 
         # calculate weight to be distributed to each quadrant
         # indexing is row, col (y, x)
-        weight_00 = area_lower_right/total_area 
-        weight_01 = area_lower_left/total_area
-        weight_10 = area_upper_right/total_area 
-        weight_11 = area_upper_left/total_area
+        weight_00 = area_lower_right / total_area
+        weight_01 = area_lower_left / total_area
+        weight_10 = area_upper_right / total_area
+        weight_11 = area_upper_left / total_area
 
         # list of weights and list of electric fields
         weights = np.array([weight_00, weight_01, weight_10, weight_11])
@@ -239,9 +242,9 @@ class PIC_2D_EM(PIC_2D):
 
     def interpolate_e(self):
         '''interpolate the E field at each particle'''
-      
+
         # iterate through the particles
-        for i in range(self.n_particles): 
+        for i in range(self.n_particles):
             x_n = self.electron_x[i]
             y_n = self.electron_y[i]
 
@@ -253,13 +256,14 @@ class PIC_2D_EM(PIC_2D):
 
             # look up Ex field at the four corners around particle
             # indexing is row, col (y, x)
-            e_00 = math_utils.wrap_idx_2d(self.ex_edges, cell_u, node_l) 
+            e_00 = math_utils.wrap_idx_2d(self.ex_edges, cell_u, node_l)
             e_01 = math_utils.wrap_idx_2d(self.ex_edges, cell_u, node_r)
             e_10 = math_utils.wrap_idx_2d(self.ex_edges, cell_d, node_l)
             e_11 = math_utils.wrap_idx_2d(self.ex_edges, cell_d, node_r)
-            
-            self.e_particle[i][0] = self.interpolate(
-                x_n, y_n, [x0, x1, y0, y1], [e_00, e_01, e_10, e_11])
+
+            self.e_particle[i][0] = self.interpolate(x_n, y_n,
+                                                     [x0, x1, y0, y1],
+                                                     [e_00, e_01, e_10, e_11])
 
             # ==== interpolate Ey field ====
             # Ey field lies on horizontal edges, effectively on y nodes and on
@@ -269,21 +273,22 @@ class PIC_2D_EM(PIC_2D):
 
             # look up Ey field at the four corners
             # indexing is row, col (y, x)
-            e_00 = math_utils.wrap_idx_2d(self.ey_edges, node_u, cell_l) 
+            e_00 = math_utils.wrap_idx_2d(self.ey_edges, node_u, cell_l)
             e_01 = math_utils.wrap_idx_2d(self.ey_edges, node_u, cell_r)
             e_10 = math_utils.wrap_idx_2d(self.ey_edges, node_d, cell_l)
             e_11 = math_utils.wrap_idx_2d(self.ey_edges, node_d, cell_r)
-            
-            self.e_particle[i][1] = self.interpolate(
-                x_n, y_n, [x0, x1, y0, y1], [e_00, e_01, e_10, e_11])
-            
+
+            self.e_particle[i][1] = self.interpolate(x_n, y_n,
+                                                     [x0, x1, y0, y1],
+                                                     [e_00, e_01, e_10, e_11])
+
         return
 
     def interpolate_b(self):
         '''
         interpolate the B field at each particle
         '''
-      
+
         for i in range(self.n_particles):
 
             x_n = self.electron_x[i]
@@ -292,18 +297,18 @@ class PIC_2D_EM(PIC_2D):
             # find indices of four nodes neighboring the particle
             node_u, node_d, y0, y1 = self.node_neighbors(y_n, "y")
             node_l, node_r, x0, x1 = self.node_neighbors(x_n, "x")
-          
+
             # B field at each corner
             # indexing is row, col (y, x)
-            b_00 = self.bz[node_u][node_l] 
-            b_01 = self.bz[node_u][node_r] 
-            b_10 = self.bz[node_d][node_l] 
-            b_11 = self.bz[node_d][node_r] 
+            b_00 = self.bz[node_u][node_l]
+            b_01 = self.bz[node_u][node_r]
+            b_10 = self.bz[node_d][node_l]
+            b_11 = self.bz[node_d][node_r]
 
             # indices of neighboring cells
-            self.b_particle[i] = self.interpolate(
-                x_n, y_n, [x0, x1, y0, y1], [b_00, b_01, b_10, b_11])
-            
+            self.b_particle[i] = self.interpolate(x_n, y_n, [x0, x1, y0, y1],
+                                                  [b_00, b_01, b_10, b_11])
+
         return
 
     def update_v(self):
@@ -316,17 +321,17 @@ class PIC_2D_EM(PIC_2D):
         # using normalized B, this equation doesn't need constants
         # added
         for i in range(self.n_particles):
-            # 3D vector of electric field at the particle 
+            # 3D vector of electric field at the particle
             e_i = np.concatenate([self.e_particle[i], [0]])
-            v_i = np.array([self.electron_vx[i], self.electron_vy[i]]) 
+            v_i = np.array([self.electron_vx[i], self.electron_vy[i]])
 
             # Boris method for updating position
-            q_prime = self.dt/2
+            q_prime = self.dt / 2
             h = [0, 0, q_prime * self.b_particle[i]]
-            s = 2 * h/(1 + np.linalg.norm(h) ** 2)
+            s = 2 * h / (1 + np.linalg.norm(h)**2)
             u = v_i + q_prime * e_i
             u_prime = u + np.cross((u + np.cross(u, h)), s)
-           
+
             # calculate updated velocity (3D vector) and update
             v = u_prime + q_prime * e_i
             self.electron_vx[i] = v[0]
@@ -335,23 +340,20 @@ class PIC_2D_EM(PIC_2D):
         return
 
     def step(self):
-        '''run the simulation for a single step, updating all parameters;
+        '''
+        run the simulation for a single step, updating all parameters;
         methods for saving outputs must be called separately; overrides
-        step method for PIC_2D class'''
+        step method for PIC_2D class
+        '''
 
-        # initialize B and E fields on the first step
-        if self.step == 0:
-            self.init_B()
-            self.init_E()
-
-        self.calc_B_update()
-        self.update_B_half()
+        self.calc_b_update()
+        self.update_b_half()
         self.interpolate_e()
         self.interpolate_b()
         self.update_v()
         self.update_x()
         self.update_J()
-        self.update_B_half()
+        self.update_b_half()
         self.update_e()
         self.step += 1
 
