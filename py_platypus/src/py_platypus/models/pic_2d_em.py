@@ -56,7 +56,7 @@ class PIC_2D_EM(PIC_2D):
                 # local current density 
                 j = math_utils.wrap_idx_2d(self.jx, i, j))
                 # dE = dt * (constants * curl(B) - Jx)
-                ex_update  = self.dt * (curl * constants.C ** 2/self.vth ** 2 - j) 
+                ex_update  = self.dt * (curl * constants.SPEED_OF_LIGHT ** 2/self.vth ** 2 - j) 
                 self.ex_edges[i, j] + ex_update
         
         # iterate through electric field in ey direction
@@ -69,7 +69,7 @@ class PIC_2D_EM(PIC_2D):
                 j = math_utils.wrap_idx_2d(self.jy, i, j)
                 
                 # dE = dt * (constants * curl(B) - Jy)
-                ey_update  = self.dt * (curl * constants.C ** 2/self.vth ** 2 - j) 
+                ey_update  = self.dt * (curl * constants.SPEED_OF_LIGHT ** 2/self.vth ** 2 - j) 
                 self.ey_edges[i, j] + ey_update
 
     def calc_B_update(self):
