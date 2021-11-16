@@ -34,6 +34,7 @@ class PIC_2D_EM(PIC_2D):
         self.electron_y_last = np.zeros(self.n_particles)
 
         # electric and magnetic field interpolated to each particle
+        # (ex, ey)
         self.e_particle = np.zeros((self.n_particles, self.dimensions))
         self.b_particle = np.zeros(self.n_particles)
         self.charge_divider = ChargeStepDivider(self.dx, self.cells)
@@ -175,7 +176,7 @@ class PIC_2D_EM(PIC_2D):
     def init_b_uniform(self, value=0.0):
         '''set up initial conditions for the magnetic field B'''
         # set initial magnetic field to be zero for now
-        self.bz = np.fill(self.bz.shape, init_value)
+        self.bz = np.full(self.bz.shape, value)
 
         return
 
@@ -323,13 +324,14 @@ class PIC_2D_EM(PIC_2D):
         for i in range(self.n_particles):
             # 3D vector of electric field at the particle
             e_i = np.concatenate([self.e_particle[i], [0]])
-            v_i = np.array([self.electron_vx[i], self.electron_vy[i]])
+            v_i = np.array([self.electron_vx[i], self.electron_vy[i], 0])
 
             # Boris method for updating position
             q_prime = self.dt / 2
-            h = [0, 0, q_prime * self.b_particle[i]]
-            s = 2 * h / (1 + np.linalg.norm(h)**2)
+            h = np.array([0, 0, q_prime * self.b_particle[i]])
+            s = 2 / (1 + np.linalg.norm(h)**2) * h
             u = v_i + q_prime * e_i
+
             u_prime = u + np.cross((u + np.cross(u, h)), s)
 
             # calculate updated velocity (3D vector) and update
@@ -355,6 +357,5 @@ class PIC_2D_EM(PIC_2D):
         self.update_J()
         self.update_b_half()
         self.update_e()
-        self.step += 1
 
         return
