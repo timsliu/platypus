@@ -80,10 +80,10 @@ def get_subplot_config(subplots):
     return rows, cols
 
 
-def plot_lines(filename, data, x_axis, y_axis, title, 
+def plot_subplots(filename, data, x_axis, y_axis, title, 
                subplotter, log=False, legend=None, steps=None, 
                zero=False):
-    '''plot a single line chart with several lines
+    '''plot a single chart with multiple subplots
     inputs: filename - full path to output filename
             data - 2d array of data; dimension 0 is for each subplot, 
                    dimension 1 is for multiple lines on a subplot
