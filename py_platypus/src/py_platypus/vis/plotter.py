@@ -64,7 +64,7 @@ class Plotter:
         graph_file_name = os.path.join(self.out_dir, out_name)
         
         # plot the subplots
-        plat.vis_util.plot_lines(
+        plat.vis_util.plot_subplots(
             graph_file_name,
             values, 
             x_axis,
@@ -107,7 +107,7 @@ class Plotter:
         combined_file = os.path.join(self.out_dir, "energy.png")
 
         # plot kinetic and electrostatic energy on one chart
-        plat.vis_util.plot_lines(
+        plat.vis_util.plot_subplots(
             combined_file,
             [[ke, ee]], 
             "Time step", 
@@ -119,7 +119,7 @@ class Plotter:
         )
 
         # plot kinetic energy
-        plat.vis_util.plot_lines(
+        plat.vis_util.plot_subplots(
             ee_file, 
             [[ee]], 
             "Time step", 
@@ -130,7 +130,7 @@ class Plotter:
         )
         
         # plot potential energy
-        plat.vis_util.plot_lines(
+        plat.vis_util.plot_subplots(
             ke_file, 
             [[ke]], 
             "Time step", 
@@ -194,6 +194,18 @@ class Plotter:
         if self.params["dimensions"] == 2:
             self.plot_series(["vx", "vy"], "v.png", "Vx", 
                 "Vy", "Velocity", plat.vis_util.subplot_histogram_2d) 
+
+    def plot_position(self):
+       '''
+       plot the positions of the particles
+       '''
+       
+       print("Plotting particle positions")
+
+       if self.params["dimensions"] == 2:
+           self.plot_series(["ex", "ey"], "position.png", "Position (x)",
+               "Position (y)", "Position plot", plat.vis_util.subplot_scatter_2d)
+
 
     def plot_all(self):
         '''plot all default graphs'''
