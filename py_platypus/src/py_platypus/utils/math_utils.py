@@ -56,6 +56,23 @@ def wrap_idx_2d(array, i, j):
     return array[i_wrapped, j_wrapped]
 
 
+def update_wrapped_array(array, indices, value):
+    '''
+    Update the value in an array with periodic boundary conditions,
+    where the low indexed and high indexed cells along the same axis connect.
+    inputs: array - numpy array to update
+            indices - array like indices into the array
+            value - amount to increment the array element
+    '''
+    dims = np.shape(array)  # dimensions of the array
+    # wrap the indices
+    wrapped_indices = [
+        index % dims[dim] for dim, index in enumerate(list(indices))
+    ]
+
+    array[tuple(wrapped_indices)] += value
+
+
 def ev_to_vth(ev, mass=constants.ELECTRON_MASS):
     '''
     Convert from temperature of particles (in electron volts) to thermal
@@ -64,3 +81,32 @@ def ev_to_vth(ev, mass=constants.ELECTRON_MASS):
 
     joules = ev * constants.JOULES_PER_EV
     return np.sqrt(2 * joules / mass)
+
+
+
+def match_boundaries_vertical(array):
+    '''
+    Match the values of the left and right vertical boundaries of a 2D array
+    by setting the value to the sum of the two
+    '''
+
+    for i in range(array.shape[0]):
+        # sum the value at the left and right boundary for the row
+        boundary_sum = array[i][0] + array[i][-1]
+        array[i][0] = boundary_sum
+        array[i][-1] = boundary_sum
+
+def match_boundaries_horizontal(array):
+    '''
+    Match the values of the top and bottom horizontal boundaries of a 2D array
+    by setting the value to the sum of the two
+    '''
+
+    for j in range(array.shape[1]):
+        # sum the value at the left and right boundary for the row
+        boundary_sum = array[0][j] + array[-1][j]
+        array[0][j] = boundary_sum
+        array[-1][j] = boundary_sum
+
+
+

@@ -128,7 +128,7 @@ class ChargeStepDivider:
             # corresponds to crossing 10 boundaries
             substeps = self.get_submotions_ten(x0, y0, x1, y1)
         else:
-            print("Warning! {} boundaries touched, expected 4, 7, or 8")
+            raise ValueError("Warning! {} boundaries touched, expected 4, 7, or 8")
 
         return substeps
 
@@ -217,8 +217,8 @@ class ChargeStepDivider:
         returns: horizontal - list of indices of horizontal edges touched
                  vertical - list of indices of vertical edges touched
         '''
-        col_vert_idx = np.ceil((x - self.dx/2)/self.dx) # column index of the vertical boundary
-        row_hori_idx = np.ceil((y - self.dy/2)/self.dy) # row index of the horizontal boundary
+        col_vert_idx = int(np.ceil((x - self.dx/2)/self.dx)) # column index of the vertical boundary
+        row_hori_idx = int(np.ceil((y - self.dy/2)/self.dy)) # row index of the horizontal boundary
 
         horizontal = [[row_hori_idx, col_vert_idx - 1], [row_hori_idx, col_vert_idx]]
         vertical   = [[row_hori_idx - 1, col_vert_idx], [row_hori_idx, col_vert_idx]]

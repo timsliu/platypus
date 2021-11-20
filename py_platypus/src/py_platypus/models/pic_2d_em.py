@@ -48,35 +48,35 @@ class PIC_2D_EM(PIC_2D):
         curl(B) = u(J + epsilon dE/dt)
         '''
         dx = self.dx[1]
-        dy = self.dy[0]
+        dy = self.dx[0]
 
         # iterate through electric field in ex direction
         for i in range(self.ex_edges.shape[0]):
             for j in range(self.ex_edges.shape[1]):
                 # equation (32) Villasenor and Buneman w/ constants
                 # local curl of magnetic field
-                curl = 1 / dx * (math_utils.wrap_idx_2d(self.Bz, i + 1, j) -
-                                 math_util.wrap_idx_2d(self.Bz, i, j))
+                curl = 1 / dx * (math_utils.wrap_idx_2d(self.bz, i + 1, j) -
+                                 math_utils.wrap_idx_2d(self.bz, i, j))
                 # local current density
-                j = math_utils.wrap_idx_2d(self.jx, i, j)
+                j_cur = math_utils.wrap_idx_2d(self.jx, i, j)
                 # dE = dt * (constants * curl(B) - Jx)
                 ex_update = self.dt * (
-                    curl * constants.SPEED_OF_LIGHT**2 / self.vth**2 - j)
-                self.ex_edges[i, j] + ex_update
+                    curl * constants.SPEED_OF_LIGHT**2 / self.v_th**2 - j_cur)
+                self.ex_edges[i][j] + ex_update
 
         # iterate through electric field in ey direction
         for i in range(self.ey_edges.shape[0]):
             for j in range(self.ey_edges.shape[1]):
                 # equation (33) Villasenor and Buneman
-                curl = -1 / dx * (math_utils.wrap_idx_2d(self.Bz, i, j + 1) -
-                                  math_util.wrap_idx_2d(self.Bz, i, j))
+                curl = -1 / dx * (math_utils.wrap_idx_2d(self.bz, i, j + 1) -
+                                  math_utils.wrap_idx_2d(self.bz, i, j))
                 # local current density
-                j = math_utils.wrap_idx_2d(self.jy, i, j)
+                j_cur = math_utils.wrap_idx_2d(self.jy, i, j)
 
                 # dE = dt * (constants * curl(B) - Jy)
                 ey_update = self.dt * (
-                    curl * constants.SPEED_OF_LIGHT**2 / self.vth**2 - j)
-                self.ey_edges[i, j] + ey_update
+                    curl * constants.SPEED_OF_LIGHT**2 / self.v_th**2 - j_cur)
+                self.ey_edges[i][j] + ey_update
 
     def calc_b_update(self):
         '''
@@ -121,6 +121,8 @@ class PIC_2D_EM(PIC_2D):
         calculate the normalized current density J using the current and last
         x position of each particle
         '''
+        self.jx.fill(0.0)  # reset the current density to zero
+        self.jy.fill(0.0)
 
         # iterate through all particles and calculate which cell boundaries
         # are crossed
@@ -129,12 +131,19 @@ class PIC_2D_EM(PIC_2D):
             # initial and final particle position
             x0, y0 = self.electron_x_last[i], self.electron_y_last[i]
             x1, y1 = self.electron_x[i], self.electron_y[i]
+            print("\nParticle start: ", x0, y0)
 
-            substeps = self.charge_divider(x0, y0, x1, y1)
+            substeps = self.charge_divider.get_charge_steps(x0, y0, x1, y1)
 
             # iterate over the substeps
             for step in substeps:
-                execute_four_bound(step)
+                self.execute_four_bound(step)
+
+        # add the current density on the boundaries to the boundary on the
+        # opposite side since we are using a 2D periodic boundary and the
+        # nodes on either side are actually the same node
+        math_utils.match_boundaries_vertical(self.jx)
+        math_utils.match_boundaries_horizontal(self.jy)
 
         return
 
@@ -147,7 +156,8 @@ class PIC_2D_EM(PIC_2D):
         dy = self.dx[0]
 
         # get list of horizontal and vertical boundaries touched
-        # method guarantees the lower indexed boundary is listed fist
+        # method guarantees the lower indexed boundary is listed fist and 
+        # can return the indices of "ghost boundaries"
         hori, vert = self.charge_divider.boundaries_touched(cs.x0, cs.y0)
 
         # coordinates of the grid point at the center of crossed boundaries
@@ -157,19 +167,24 @@ class PIC_2D_EM(PIC_2D):
         local_x0 = cs.x0 - local_origin[0]
         local_y0 = cs.y0 - local_origin[1]
 
-        # (Villasenor and Buneman 1991)
-        # The signs for jy do not match b/c Villasenor and Buneman
-        # defined the positive y direction opposite to what it used here
+        # (Villasenor and Buneman 1991) equations (6)-(9)
         jx1 = cs.dx * (0.5 - local_y0 - 0.5 * cs.dy)
         jx2 = cs.dx * (0.5 + local_y0 + 0.5 * cs.dy)
-        jy1 = -cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
-        jy2 = -cs.dy * (0.5 + local_x0 + 0.5 * cs.dx)
+        jy1 = cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
+        jy2 = cs.dy * (0.5 + local_x0 + 0.5 * cs.dx)
 
-        # update the current densities
-        self.jx[tuple(hori[0])] += jx2
-        self.jx[tuple(hori[1])] += jx1
-        self.jy[tuple(vert[0])] += jy1
-        self.jy[tuple(vert[1])] += jy2
+        print("horizontal: ", hori)
+        print("vertical:   ", vert)
+        print("local origin:", local_origin)
+        print("Starting point: ", cs.x0, cs.y0)
+
+        # update the current densities; note that the y direction for this
+        # simulation does not match the y direction of Villasenor and Buneman
+        # but in both, the lower indexed boundary corresponds to j1
+        math_utils.update_wrapped_array(self.jx, vert[0], jx1) 
+        math_utils.update_wrapped_array(self.jx, vert[1], jx2)
+        math_utils.update_wrapped_array(self.jx, hori[0], jy1)
+        math_utils.update_wrapped_array(self.jx, hori[1], jy2)
 
         return
 
@@ -312,6 +327,15 @@ class PIC_2D_EM(PIC_2D):
 
         return
 
+    def save_x(self):
+        '''
+        save the current particle positions
+        '''
+        # note the np.copy is a deep copy for basic types but performs a
+        # shallow copy for python objects
+        self.electron_x_last = np.copy(self.electron_x)
+        self.electron_y_last = np.copy(self.electron_y)
+
     def update_v(self):
         '''
         updates the velocity according to Lorentz's law 
@@ -353,8 +377,9 @@ class PIC_2D_EM(PIC_2D):
         self.interpolate_e()
         self.interpolate_b()
         self.update_v()
+        self.save_x() 
         self.update_x()
-        self.update_J()
+        self.update_j()
         self.update_b_half()
         self.update_e()
 

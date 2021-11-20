@@ -61,6 +61,7 @@ class PIC_2D:
 
     def init_x_random(self):
         '''randomly initialize the positions of the macroparticles'''
+        print("initializing x") 
         self.electron_x = np.random.rand(self.n_particles) * self.xmax
         self.electron_y = np.random.rand(self.n_particles) * self.ymax
         
