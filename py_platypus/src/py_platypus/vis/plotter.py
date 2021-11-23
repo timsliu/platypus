@@ -133,7 +133,7 @@ class Plotter:
 
         plots = len(data)
         # call function to get upper and lower figure limits
-        lim_neg, lim_pos = vis_util.get_limits(data, zero, subplotter)
+        lim_neg, lim_pos = vis_util.get_ylimits(data, zero, subplotter)
 
         # create filename_{}.png from filename.png so that step can be added
         # to the name of each tile
@@ -203,7 +203,7 @@ class Plotter:
                                 squeeze=False)
 
         # call function to get upper and lower figure limits
-        lim_neg, lim_pos = vis_util.get_limits(data, zero, subplotter)
+        lim_neg, lim_pos = vis_util.get_ylimits(data, zero, subplotter)
 
         if legend is None:
             legend = subplots * [None]

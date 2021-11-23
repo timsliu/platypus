@@ -9,7 +9,7 @@ LIM_UP = 1 + LIM_FACTOR
 LIM_DN = 1 - LIM_FACTOR
 
 
-def get_limits(data, zero, subplotter):
+def get_ylimits(data, zero, subplotter):
     '''generate reasonable upper and lower axis limits for the data
     inputs: data - array of all data
             zero - bool for setting the lower limit to zero'''
