@@ -8,6 +8,7 @@ LIM_FACTOR = 0.05
 LIM_UP = 1 + LIM_FACTOR
 LIM_DN = 1 - LIM_FACTOR
 
+
 def get_limits(data, zero, subplotter):
     '''generate reasonable upper and lower axis limits for the data
     inputs: data - array of all data
@@ -34,7 +35,7 @@ def get_limits(data, zero, subplotter):
     if subplotter == subplot_scatter_2d:
         data_max = max([np.max(x[1]) for x in data])
         data_min = min([np.min(x[1]) for x in data])
-    
+
     if subplotter == subplot_scatter_3d:
         data_max = max([np.max(x[2]) for x in data])
         data_min = min([np.min(x[2]) for x in data])
@@ -44,7 +45,7 @@ def get_limits(data, zero, subplotter):
         lim_pos = LIM_UP * data_max
     else:
         lim_pos = 0.9 * data_max
-   
+
     # rules for getting min limit
     if zero:
         lim_neg = 0
@@ -54,6 +55,7 @@ def get_limits(data, zero, subplotter):
         lim_neg = LIM_DN * data_min
 
     return lim_neg, lim_pos
+
 
 def get_subplot_config(subplots):
     '''return an arrangement of subplots given the total number of subplots
@@ -66,7 +68,7 @@ def get_subplot_config(subplots):
 
     # start with square array large enough to fit subplots
     rows = int(np.ceil(np.sqrt(subplots)))
-    cols = rows 
+    cols = rows
 
     # reduce excess rows
     while (rows - 1) * cols >= subplots:
@@ -85,22 +87,23 @@ def subplot_lines(axs, data, legend, lims):
     inputs: axs - matplotlib axes object for a single subplot
             data - list of data to plot
             legend - list of labels in the same order as the lines
-            lims - tuple specifying upper and lower bounds''' 
-    
-    plot_lines = len(data)    # number of lines to plot
-  
+            lims - tuple specifying upper and lower bounds'''
+
+    plot_lines = len(data)  # number of lines to plot
+
     # iterate through the lines
     for j in range(plot_lines):
-        
-        # plot with or without lines 
+
+        # plot with or without lines
         if legend is not None:
-            axs.plot(data[j], label=legend[j])
+            plot_obj = axs.plot(data[j], label=legend[j])
         else:
-            axs.plot(data[j])
-            
+            plot_obj = axs.plot(data[j])
+
     axs.set_ylim(lims[0], lims[1])
 
-    return axs
+    return plot_obj
+
 
 def subplot_grid(axs, data, legend, lims):
     '''helper function for plotting values that lie on a 2-D grid.
@@ -110,9 +113,13 @@ def subplot_grid(axs, data, legend, lims):
 
     if len(data) > 1:
         raise ValueError("subplot_grid mishapened input")
-    axs.imshow(data[0], interpolation = 'none', vmin=lims[0], vmax=lims[1])
+    plot_obj = axs.imshow(data[0],
+                          interpolation='none',
+                          vmin=lims[0],
+                          vmax=lims[1])
 
-    return axs
+    return plot_obj
+
 
 def subplot_scatter_2d(axs, data, legend, lims):
     '''helper function for plotting a scatter plot of data with 2
@@ -122,17 +129,15 @@ def subplot_scatter_2d(axs, data, legend, lims):
                    [[x_vals0, y_vals0], [x_vals1, y_vals1]]
             legend - unused paramter'''
 
-  
-        
-    # plot with or without lines 
+    # plot with or without lines
     if legend is not None:
-        axs.scatter(data[0], data[1], label=legend, s=0.1)
+        plot_obj = axs.scatter(data[0], data[1], label=legend, s=0.1)
     else:
-        axs.scatter(data[0], data[1], s=0.1)
-    
+        plot_obj = axs.scatter(data[0], data[1], s=1)
+
     axs.set_ylim(lims[0], lims[1])
 
-    return axs
+    return plot_obj
 
 
 def subplot_scatter_3d(axs, data, legend, lims):
@@ -143,9 +148,15 @@ def subplot_scatter_3d(axs, data, legend, lims):
             data - list with 3 arrays [x_vals0, y_vals0, z_vals0]
             legend - unused paramter'''
 
-    axs.scatter(data[0], data[1], c=data[2], s=0.1, vmin=lims[0], vmax=lims[1])
+    plot_obj = axs.scatter(data[0],
+                           data[1],
+                           c=data[2],
+                           s=0.1,
+                           vmin=lims[0],
+                           vmax=lims[1])
 
-    return axs
+    return plot_obj
+
 
 def subplot_histogram(axs, data, legend, lims):
     '''helper function for plotting a histogram subplot
@@ -153,10 +164,11 @@ def subplot_histogram(axs, data, legend, lims):
             data - 1D array of data
             legend - unused paramter'''
 
-    axs.hist(data[0], bins=BINS)
+    plot_obj = axs.hist(data[0], bins=BINS)
     axs.set_ylim(0, lims[1])
 
-    return axs
+    return plot_obj
+
 
 def subplot_histogram_2d(axs, data, legend, lims):
     '''helper function for plotting 2D data as a histogram subplot
@@ -164,7 +176,10 @@ def subplot_histogram_2d(axs, data, legend, lims):
             data - array of data [x_values, y_values]
             legend - unused paramter'''
 
-    axs.hist2d(data[0], data[1], bins=BINS, vmin=lims[0], vmax=lims[1])
+    plot_obj = axs.hist2d(data[0],
+                          data[1],
+                          bins=BINS,
+                          vmin=lims[0],
+                          vmax=lims[1])
 
-    return axs
-
+    return plot_obj
