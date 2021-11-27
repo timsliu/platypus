@@ -56,6 +56,36 @@ def get_ylimits(data, zero, subplotter):
 
     return lim_neg, lim_pos
 
+def get_xlimits(data, zero, subplotter):
+    """
+    Generate reasonable upper and lower x-axis limits for a given
+    data set.
+    inputs: data - np array of data to plot
+            zero - whether the lower value should be fixed at zero
+            subplotter - function used for plotting
+    """
+    
+    if subplotter == subplot_scatter_3d or subplotter == subplot_scatter_2d:
+        data_max = max([np.max(x[0]) for x in data])
+        data_min = min([np.min(x[0]) for x in data])
+    else:
+        raise ValueError("Subplot type not supported by get_xlimits".format(subplotter))
+
+    # rules for getting max limit
+    if data_max > 0:
+        lim_pos = LIM_UP * data_max
+    else:
+        lim_pos = 0.9 * data_max
+
+    # rules for getting min limit
+    if zero:
+        lim_neg = 0
+    elif data_min < 0:
+        lim_neg = LIM_UP * data_min
+    else:
+        lim_neg = LIM_DN * data_min
+
+    return lim_neg, lim_pos
 
 def get_subplot_config(subplots):
     '''return an arrangement of subplots given the total number of subplots

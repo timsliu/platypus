@@ -9,7 +9,8 @@ import py_platypus.utils.math_utils  as math_utils
 import py_platypus.utils.charge_step  as charge_step
 import py_platypus.utils.constants  as constants
 import py_platypus.vis.plotter as plotter 
-import py_platypus.vis.vis_util  as vis_util
+import py_platypus.vis.vis_util as vis_util
+import py_platypus.vis.animator as animator
 
 import os
 PLATYPUS_HOME = os.getenv("PLATYPUS_HOME")

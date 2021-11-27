@@ -17,3 +17,4 @@ py_platypus/utils/charge_step.py
 py_platypus/utils/constants.py
 py_platypus/vis/plotter.py
 py_platypus/vis/vis_util.py
+py_platypus/vis/animator.py
