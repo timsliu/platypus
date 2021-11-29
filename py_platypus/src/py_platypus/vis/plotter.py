@@ -216,6 +216,7 @@ class Plotter:
             plt.savefig(os.path.join(self.out_dir,
                                      "{}_{}.png".format(filename, i)),
                         dpi=800)
+            plt.close("all")
 
         return
 
@@ -301,6 +302,7 @@ class Plotter:
         # save file
         plt.savefig(os.path.join(self.out_dir, "{}.png".format(filename)),
                     dpi=800)
+        plt.close("all")
 
         return
 
