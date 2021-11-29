@@ -56,6 +56,7 @@ def get_ylimits(data, zero, subplotter):
 
     return lim_neg, lim_pos
 
+
 def get_xlimits(data, zero, subplotter):
     """
     Generate reasonable upper and lower x-axis limits for a given
@@ -64,12 +65,19 @@ def get_xlimits(data, zero, subplotter):
             zero - whether the lower value should be fixed at zero
             subplotter - function used for plotting
     """
-    
+
     if subplotter == subplot_scatter_3d or subplotter == subplot_scatter_2d:
         data_max = max([np.max(x[0]) for x in data])
         data_min = min([np.min(x[0]) for x in data])
+
+    elif subplotter == subplot_grid:
+        data_max = np.array(data).shape[
+            2]  # data shape dimensions are time, rows, cols
+        data_min = 0
+
     else:
-        raise ValueError("Subplot type not supported by get_xlimits".format(subplotter))
+        raise ValueError(
+            "Subplot type {} not supported by get_xlimits".format(subplotter))
 
     # rules for getting max limit
     if data_max > 0:
@@ -86,6 +94,7 @@ def get_xlimits(data, zero, subplotter):
         lim_neg = LIM_DN * data_min
 
     return lim_neg, lim_pos
+
 
 def get_subplot_config(subplots):
     '''return an arrangement of subplots given the total number of subplots
