@@ -10,6 +10,7 @@ import py_platypus.utils.charge_step  as charge_step
 import py_platypus.utils.constants  as constants
 import py_platypus.vis.plotter as plotter 
 import py_platypus.vis.vis_util as vis_util
+import py_platypus.vis.subplotter as subplotter
 import py_platypus.vis.animator as animator
 
 import os
