@@ -18,3 +18,4 @@ py_platypus/utils/constants.py
 py_platypus/vis/plotter.py
 py_platypus/vis/vis_util.py
 py_platypus/vis/animator.py
+py_platypus/vis/subplotter.py

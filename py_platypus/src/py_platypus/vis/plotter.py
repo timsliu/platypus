@@ -111,12 +111,12 @@ class Plotter:
                     subplotter):
         """
         helper function to plot a data series across several time steps
-        inputs: suffixes - identifier at end of pickle files to parse
+        inputs: suffixes - list of identifier at end of pickle files to parse
                 out_name - name of output file(s) with no extension
                 x_label - x_label for charts
                 y_label - y_label for charts
                 title - title for each subplot
-                subplotter - function for plotting a subplot
+                subplotter - class for plotting a subplot
         """
 
         if len(self.output_types) == 0:
@@ -142,6 +142,8 @@ class Plotter:
                              "rb")))
             values.append(subplot_values)
 
+        subplotter.set_data(values)
+
         output_to_method = {
             PlotOutputs.SUBPLOTS: self.plot_subplots,
             PlotOutputs.ANIMATION: self.plot_animation,
@@ -152,7 +154,6 @@ class Plotter:
         for output in self.output_types:
             plot_method = output_to_method[output]
             plot_method(out_name,
-                        values,
                         x_label,
                         y_label,
                         title,
@@ -222,7 +223,6 @@ class Plotter:
 
     def plot_subplots(self,
                       filename,
-                      data,
                       x_label,
                       y_label,
                       title,
@@ -240,24 +240,19 @@ class Plotter:
                 x-axis - name of x-axis
                 y-axis - name of y-axis
                 title - figure title
+                subplotter - class for plotting a subplot
                 log - display y as log plot
                 legend - list of strings labeling the data
                 steps - list of time steps the data is from
         """
 
-        subplots = len(data)  # number of subplots
+        subplots = len(subplotter.data)  # number of subplots
         rows, cols, = vis_util.get_subplot_config(
             subplots)  # subplot arrangement
         fig, axs = plt.subplots(rows,
                                 cols,
                                 constrained_layout=True,
                                 squeeze=False)
-
-        # call function to get upper and lower figure limits
-        lim_neg, lim_pos = vis_util.get_ylimits(data, zero, subplotter)
-
-        if legend is None:
-            legend = subplots * [None]
 
         # iterate through subplots
         for i in range(rows * cols):
@@ -271,15 +266,14 @@ class Plotter:
                 continue
 
             # call function to plot the data
-            subplotter(axs[row, col], data[i], legend[i], (lim_neg, lim_pos))
+            subplotter.plot_axes(axs[row, col], i)
 
             # add subplot title if available
             if steps is not None:
                 axs[row, col].set_title("Step {}".format(steps[i]),
                                         fontsize=10)
-
             # add optional features
-            if legend[i] is not None:
+            if legend is not None:
                 axs[row, col].legend()
 
             if log:
@@ -411,11 +405,13 @@ class Plotter:
 
         # call helper for single dimension
         if self.params["dimensions"] == 1:
+            subplotter = plat.subplotter.SubplotLines(y_axis_zero=True, x_axis_zero=True)
             self.plot_series(["ne"], "ne", "Position (x)", "Density",
-                             "Electron density", plat.vis_util.subplot_lines)
+                             "Electron density", subplotter)
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
+            # TODO update for subplotter classes
             self.plot_series(["ne"], "ne", "Position (x)", "Position (y)",
                              "Electron density", plat.vis_util.subplot_grid)
 
@@ -428,11 +424,13 @@ class Plotter:
         print("Plotting phase space")
 
         if self.params["dimensions"] == 1:
+            # TODO update for subplotter classes
             self.plot_series(["x", "v"], "phase", "Position (x)",
                              "Velocity (v)", "Phase plot",
                              plat.vis_util.subplot_scatter_2d)
 
         if self.params["dimensions"] == 2:
+            # TODO update for subplotter classes
             self.plot_series(["ex", "ey", "evx"], "phase_vx", "Position (x)",
                              "Position (y)", "Phase plot (Vx)",
                              plat.vis_util.subplot_scatter_3d)
@@ -451,11 +449,13 @@ class Plotter:
 
         # call helper for single dimension
         if self.params["dimensions"] == 1:
+            # TODO update for subplotter classes
             self.plot_series("v", "v", "Position (x)", "Velocity", "Velocity",
                              plat.vis_util.subplot_histogram)
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
+            # TODO update for subplotter classes
             self.plot_series(["vx", "vy"], "v", "Vx", "Vy", "Velocity",
                              plat.vis_util.subplot_histogram_2d)
 
@@ -467,6 +467,7 @@ class Plotter:
         print("Plotting particle positions")
 
         if self.params["dimensions"] == 2:
+            # TODO update for subplotter classes
             self.plot_series(["ex", "ey"], "position", "Position (x)",
                              "Position (y)", "Position plot",
                              plat.vis_util.subplot_scatter_2d)
