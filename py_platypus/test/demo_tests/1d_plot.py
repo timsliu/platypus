@@ -10,9 +10,9 @@ if __name__ == "__main__":
     param_dict = {
         "name": "plot_1d_test",
         "print_every": 1,
-        "nppc": 1,
+        "nppc": 32,
         "cells": [32],
-        "runtime": 0.64,
+        "runtime": 1,
         "timestep": 0.04,
         "save_every": 1
     }
@@ -28,9 +28,9 @@ if __name__ == "__main__":
     plat.run_sim.run_simulation(pic, params)
     plotter = plat.plotter.Plotter("plot_1d_test", params)
     # eventually plot the particles instead
-    #plotter.add_animation()
+    plotter.add_animation()
     #plotter.add_all_plots()
-    plotter.add_subplots()
+    #plotter.add_subplots()
     #plotter.plot_position()
     #plotter.plot_phase()
     plotter.plot_density()
