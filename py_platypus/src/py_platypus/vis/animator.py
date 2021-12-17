@@ -11,35 +11,29 @@ from py_platypus.vis import vis_util as vis_util
 class Animator:
     def __init__(self,
                  save_path,
-                 data,
                  subplotter,
                  x_label=None,
                  y_label=None,
                  title=None,
-                 legend=None,
-                 zero=False,
-                 interval=20,
+                 interval=40,
                  blit=True,
                  dpi=800,
                  verbose=True):
 
         self.save_path = save_path  # path to save figure to
-        self.data = data  # list of data, each element for a single frame
         self.x_label = x_label  # label for x_axis
         self.y_label = y_label  # label for y_axis
         self.title = title  # plot title
-        self.subplotter = subplotter  # subplotting function
-        self.legend = legend  # label
-        self.zero = zero  # y scale starts at zero
+        self.subplotter = subplotter  # subplotting class
         self.interval = interval  # time between frames in miliseconds
         self.blit = blit  # only animate parts of frame that change
         self.verbose = verbose
 
         self.fig = plt.figure(dpi=dpi)
         self.ax = plt.axes()
-        self.xlim = vis_util.get_xlimits(data, zero, subplotter)
-        self.ylim = vis_util.get_ylimits(data, zero, subplotter)
-        self.frames = len(data)
+        self.xlim = subplotter.get_xlimits()
+        self.ylim = subplotter.get_ylimits()
+        self.frames = len(subplotter.data)
 
     def setup_axes(self):
         """
@@ -61,12 +55,10 @@ class Animator:
         """
         self.ax.clear()  # clear the data from the old frame
         self.setup_axes()
-        plot_obj = self.subplotter(self.ax, self.data[i], self.legend,
-                                   list(self.ylim))
+        plot_obj = self.subplotter.plot_axes(self.ax, i)
 
         if self.verbose and i % 50 == 0:
             print("Animating figure frame {} of {}".format(i, self.frames))
-
         return plot_obj,
 
     def create_animation(self):
@@ -76,7 +68,7 @@ class Animator:
         print("Starting animation...")
         anim = ani.FuncAnimation(self.fig,
                                  self.animate_frame,
-                                 frames=len(self.data),
+                                 frames=self.frames,
                                  interval=self.interval,
                                  blit=self.blit)
         anim.save(self.save_path, writer='ffmpeg')

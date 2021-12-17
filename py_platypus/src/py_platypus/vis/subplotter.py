@@ -11,20 +11,17 @@ class Subplotter:
     def __init__(self,
                  y_axis_zero,
                  x_axis_zero,
-                 legend=None,
                  lim_factor=0.05):
         """
         inputs: data - array like data to be plotted; each element is the data
                 for a single time series or line
                 y_axis_zero - y axis should start at zero
                 x_axis_zero - x axis should start at zero
-                legend - list of legends
                 lim_factor - proportion the axis should exceed the data
         """
         self.data = None
         self.y_axis_zero = y_axis_zero
         self.x_axis_zero = x_axis_zero
-        self.legend = legend
         self.lim_factor = lim_factor
         self.lim_up = 1 + self.lim_factor
         self.lim_dn = 1 - self.lim_factor
@@ -81,23 +78,28 @@ class SubplotLines(Subplotter):
     def __init__(self,
                  y_axis_zero,
                  x_axis_zero,
-                 legend=None,
                  lim_factor=0.05):
 
-        super().__init__(y_axis_zero, x_axis_zero, legend, lim_factor) 
+        super().__init__(y_axis_zero, x_axis_zero, lim_factor) 
+
+    def get_xlimits(self):
+       """
+       Find the x limits of the data
+       """
+
+       # find maximum length of a series across all time steps
+       lim_pos = max([max([len(series) for series in time_step]) for time_step in self.data])
+       lim_neg = 0
+       self.ylims = (lim_neg, lim_pos)
+       return lim_neg, lim_pos
+
 
     def plot_axes(self, axs, data_idx):
 
         # iterate through the lines for this time step
         for i in range(len(self.data[data_idx])):
-
-            # plot with or without lines
-            if self.legend is not None:
-                plot_obj = axs.plot(self.data[data_idx][i],
-                                    label=self.legend[data_idx][i])
-            else:
-                plot_obj = axs.plot(self.data[data_idx][i])
+            plot_obj = axs.plot(self.data[data_idx][i])
 
         axs.set_ylim(self.ylims[0], self.ylims[1])
 
-        return plot_obj
+        return plot_obj[0]

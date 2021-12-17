@@ -302,7 +302,6 @@ class Plotter:
 
     def plot_animation(self,
                        filename,
-                       data,
                        x_label,
                        y_label,
                        title,
@@ -327,13 +326,10 @@ class Plotter:
 
         save_path = os.path.join(self.out_dir, "{}.mp4".format(filename))
         anim = animator.Animator(save_path,
-                                 data,
                                  subplotter,
                                  x_label=x_label,
                                  y_label=y_label,
-                                 title=title,
-                                 legend=legend,
-                                 zero=zero)
+                                 title=title)
 
         anim.create_animation()
 
