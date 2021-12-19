@@ -186,7 +186,10 @@ def subplot_scatter_2d(axs, data, legend, lims):
 
 
 def subplot_scatter_3d(axs, data, legend, lims):
-    '''helper function for plotting a scatter plot of data with 3
+    '''
+    DEPRECATED
+
+    helper function for plotting a scatter plot of data with 3
     dimensions. The third dimension is illustrated with color. Only a single
     data series can be plotted per subplot
     inputs: axs - matplotlib axes object for a single subplot

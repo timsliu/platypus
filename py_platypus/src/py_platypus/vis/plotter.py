@@ -429,14 +429,14 @@ class Plotter:
                              subplotter)
 
         if self.params["dimensions"] == 2:
-            # TODO update for subplotter classes
+            subplotter = plat.subplotter.SubplotScatter3D()
             self.plot_series(["ex", "ey", "evx"], "phase_vx", "Position (x)",
                              "Position (y)", "Phase plot (Vx)",
-                             plat.vis_util.subplot_scatter_3d)
+                             subplotter)
 
             self.plot_series(["ex", "ey", "evy"], "phase_vy", "Position (x)",
                              "Position (y)", "Phase plot (Vy)",
-                             plat.vis_util.subplot_scatter_3d)
+                             subplotter)
 
         return
 
