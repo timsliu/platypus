@@ -420,10 +420,10 @@ class Plotter:
         print("Plotting phase space")
 
         if self.params["dimensions"] == 1:
-            # TODO update for subplotter classes
+            subplotter = plat.subplotter.SubplotScatter2D(y_axis_zero=False, x_axis_zero=True)
             self.plot_series(["x", "v"], "phase", "Position (x)",
                              "Velocity (v)", "Phase plot",
-                             plat.vis_util.subplot_scatter_2d)
+                             subplotter)
 
         if self.params["dimensions"] == 2:
             # TODO update for subplotter classes
@@ -445,9 +445,9 @@ class Plotter:
 
         # call helper for single dimension
         if self.params["dimensions"] == 1:
-            # TODO update for subplotter classes
-            self.plot_series("v", "v", "Position (x)", "Velocity", "Velocity",
-                             plat.vis_util.subplot_histogram)
+            subplotter = plat.subplotter.SubplotHistogram()
+            self.plot_series("v", "v", "Position", "Count", "Velocity",
+                             subplotter)
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
@@ -463,10 +463,10 @@ class Plotter:
         print("Plotting particle positions")
 
         if self.params["dimensions"] == 2:
-            # TODO update for subplotter classes
+            subplotter = plat.subplotter.SubplotScatter2D(y_axis_zero=True, x_axis_zero=True)
             self.plot_series(["ex", "ey"], "position", "Position (x)",
                              "Position (y)", "Position plot",
-                             plat.vis_util.subplot_scatter_2d)
+                             subplotter)
 
     def plot_all(self):
         '''plot all default graphs'''

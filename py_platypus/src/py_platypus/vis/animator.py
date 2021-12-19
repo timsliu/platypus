@@ -31,8 +31,8 @@ class Animator:
 
         self.fig = plt.figure(dpi=dpi)
         self.ax = plt.axes()
-        self.xlim = subplotter.get_xlimits()
-        self.ylim = subplotter.get_ylimits()
+        self.xlim = subplotter.get_x_limits()
+        self.ylim = subplotter.get_y_limits()
         self.frames = len(subplotter.data)
 
     def setup_axes(self):
