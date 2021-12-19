@@ -12,7 +12,7 @@ if __name__ == "__main__":
         "print_every": 1,
         "nppc": 32,
         "cells": [32],
-        "runtime": 1,
+        "runtime": 4,
         "timestep": 0.04,
         "save_every": 1
     }
@@ -24,6 +24,7 @@ if __name__ == "__main__":
     # instantiate the 1D PIC
     pic = plat.pic_1d.PIC_1D(params)
     pic.init_x_random()
+    pic.init_v_two_stream()
 
     plat.run_sim.run_simulation(pic, params)
     plotter = plat.plotter.Plotter("plot_1d_test", params)
@@ -33,5 +34,6 @@ if __name__ == "__main__":
     #plotter.add_subplots()
     #plotter.plot_position()
     #plotter.plot_phase()
-    plotter.plot_density()
+    #plotter.plot_density()
+    plotter.plot_velocity()
     #plotter.plot_energy()

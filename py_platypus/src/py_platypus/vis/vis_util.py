@@ -122,7 +122,9 @@ def get_subplot_config(subplots):
 
 
 def subplot_lines(axs, data, legend, lims):
-    '''helper function that plots multiple lines on a subplot
+    '''
+    DEPRECATED 
+    helper function that plots multiple lines on a subplot
     inputs: axs - matplotlib axes object for a single subplot
             data - list of data to plot
             legend - list of labels in the same order as the lines
@@ -198,7 +200,9 @@ def subplot_scatter_3d(axs, data, legend, lims):
 
 
 def subplot_histogram(axs, data, legend, lims):
-    '''helper function for plotting a histogram subplot
+    '''
+    DEPRECATED
+    helper function for plotting a histogram subplot
     inputs: axs - matplotlib axes object for a single subplot
             data - 1D array of data
             legend - unused paramter'''
