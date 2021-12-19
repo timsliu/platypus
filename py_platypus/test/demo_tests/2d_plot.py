@@ -12,7 +12,7 @@ if __name__ == "__main__":
         "print_every": 1,
         "nppc": 1,
         "cells": [32, 32],
-        "runtime": 0.16,
+        "runtime": 1,
         "timestep": 0.04,
         "save_every": 1
     }
@@ -24,14 +24,16 @@ if __name__ == "__main__":
     # instantiate the 2D PIC
     pic = plat.pic_2d.PIC_2D(params)
     pic.init_x_random()
+    pic.init_v_maxwellian()
 
-    #plat.run_sim.run_simulation(pic, params)
+    plat.run_sim.run_simulation(pic, params)
     plotter = plat.plotter.Plotter("plot_2d_test", params)
     # eventually plot the particles instead
     plotter.add_animation()
-    plotter.add_all_plots()
-    plotter.add_subplots()
-    plotter.plot_position()
-    plotter.plot_phase()
+    #plotter.add_all_plots()
+    #plotter.add_subplots()
+    #plotter.plot_position()
+    #plotter.plot_phase()
+    plotter.plot_electric_field()
     plotter.plot_density()
-    plotter.plot_energy()
+    #plotter.plot_energy()

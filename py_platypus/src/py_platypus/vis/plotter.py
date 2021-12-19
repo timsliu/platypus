@@ -342,16 +342,19 @@ class Plotter:
 
         # call helper for single dimension
         if self.params["dimensions"] == 1:
+            # TODO update with subplotter
             self.plot_series(["ef"], "ef", "Position (x)", "Electric field",
                              "E field", plat.vis_util.subplot_lines)
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
+            subplotter = plat.subplotter.Subplot2DGrid()
+
             self.plot_series(["efx"], "efx", "Position (x)", "Position (y)",
-                             "E field", plat.vis_util.subplot_grid)
+                             "Ex field", subplotter)
 
             self.plot_series(["efy"], "efy", "Position (x)", "Position (y)",
-                             "E field", plat.vis_util.subplot_grid)
+                             "Ey field", subplotter)
 
         return
 
@@ -407,9 +410,9 @@ class Plotter:
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
-            # TODO update for subplotter classes
+            subplotter = plat.subplotter.Subplot2DGrid()
             self.plot_series(["ne"], "ne", "Position (x)", "Position (y)",
-                             "Electron density", plat.vis_util.subplot_grid)
+                             "Electron density", subplotter)
 
         return
 

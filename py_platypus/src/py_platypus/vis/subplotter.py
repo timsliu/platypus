@@ -30,7 +30,7 @@ class Subplotter:
         """
         Set the data that will be used for the subplot
         """
-        self.data = data
+        self.data = np.array(data)
 
     def get_limits(self, data_min, data_max, axis_zero):
         """
@@ -206,3 +206,46 @@ class SubplotHistogram(Subplotter):
         vals, bins, bar_container = axs.hist(self.data[data_idx],
                                              bins=self.bin_edges)
         return bar_container.patches[0]
+
+
+class Subplot2DGrid(Subplotter):
+    """
+    Subplotter for a series of 2D grids
+    """
+    def __init__(self, x_axis_zero=True, y_axis_zero=True, lim_factor=0.0):
+        self.min_val = None
+        self.max_val = None
+        super().__init__(y_axis_zero, x_axis_zero, lim_factor)
+
+    def get_x_min_max(self):
+        """
+        Find the min and max x values of the data
+        """
+        x_min = 0
+        # x max is the number of cells along the x direction
+        # data shape dimensions are time, [rows, cols]
+        x_max = self.data.shape[3]
+
+        return x_min, x_max
+
+    def get_y_min_max(self):
+        """
+        Find the min and max y values of the data
+        """
+        # data shape dimensions are time, [rows, cols]
+        y_min = 0
+        y_max = self.data.shape[2]
+        return y_min, y_max
+
+    def plot_axes(self, axs, data_idx):
+        """
+        Plot a 2D grid
+        """
+        if self.min_val is None:
+            self.min_val = np.min(self.data)
+            self.max_val = np.max(self.data)
+        plot_obj = axs.imshow(self.data[data_idx][0],
+                              interpolation='none',
+                              vmin=self.min_val,
+                              vmax=self.max_val)
+        return plot_obj

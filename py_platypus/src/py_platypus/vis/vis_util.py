@@ -147,7 +147,9 @@ def subplot_lines(axs, data, legend, lims):
 
 
 def subplot_grid(axs, data, legend, lims):
-    '''helper function for plotting values that lie on a 2-D grid.
+    '''
+    DEPRECATED
+    helper function for plotting values that lie on a 2-D grid.
     inputs: axs - matplotlib axes object for a single subplot
             data - 2D array of data to plot
             legend - unused paramter'''
@@ -163,7 +165,9 @@ def subplot_grid(axs, data, legend, lims):
 
 
 def subplot_scatter_2d(axs, data, legend, lims):
-    '''helper function for plotting a scatter plot of data with 2
+    '''
+    DEPRECATED
+    helper function for plotting a scatter plot of data with 2
     dimensions.
     inputs: axs - matplotlib axes object for a single subplot
             data - list with each element containing 2 arrays 
