@@ -163,6 +163,57 @@ class SubplotScatter2D(Subplotter):
         return plot_obj
 
 
+class SubplotScatter3D(Subplotter):
+    """
+    Subplotter for a series of 3d scatter plots
+    """
+    def __init__(self, y_axis_zero=True, x_axis_zero=True, lim_factor=0.05):
+        self.z_min = None
+        self.z_max = None
+        super().__init__(y_axis_zero, x_axis_zero, lim_factor)
+
+    def get_x_min_max(self):
+        """
+        Find the min and max x values of the data
+        """
+
+        x_max = max([np.max(x[0]) for x in self.data])
+        x_min = min([np.min(x[0]) for x in self.data])
+        return x_min, x_max
+
+    def get_y_min_max(self):
+        """
+        Find the min and max y values of the data
+        """
+
+        y_max = max([np.max(x[1]) for x in self.data])
+        y_min = min([np.min(x[1]) for x in self.data])
+        return y_min, y_max
+
+    def get_z_min_max(self):
+        """
+        Find the min and max y values of the data
+        """
+
+        self.z_max = max([np.max(x[2]) for x in self.data])
+        self.z_min = min([np.min(x[2]) for x in self.data])
+        return self.z_min, self.z_max
+
+    def plot_axes(self, axs, data_idx):
+        """
+        Plot a 2D scatter plot with color as the third dimension
+        """
+        if self.z_min is None:
+            self.get_z_min_max()
+        plot_obj = axs.scatter(self.data[data_idx][0],
+                               self.data[data_idx][1],
+                               c=self.data[data_idx][2],
+                               s=0.1,
+                               vmin=self.z_min,
+                               vmax=self.z_max)
+        return plot_obj
+
+
 class SubplotHistogram(Subplotter):
     """
     Subplotter for a series of 1D histograms
@@ -213,8 +264,8 @@ class Subplot2DGrid(Subplotter):
     Subplotter for a series of 2D grids
     """
     def __init__(self, x_axis_zero=True, y_axis_zero=True, lim_factor=0.0):
-        self.min_val = None
-        self.max_val = None
+        self.z_min = None
+        self.z_max = None
         super().__init__(y_axis_zero, x_axis_zero, lim_factor)
 
     def get_x_min_max(self):
@@ -237,6 +288,12 @@ class Subplot2DGrid(Subplotter):
         y_max = self.data.shape[2]
         return y_min, y_max
 
+    def get_z_min_max(self):
+        self.z_min = np.min(self.data)
+        self.z_max = np.max(self.data)
+
+        return self.z_min, self.z_max
+
     def plot_axes(self, axs, data_idx):
         """
         Plot a 2D grid
@@ -246,6 +303,6 @@ class Subplot2DGrid(Subplotter):
             self.max_val = np.max(self.data)
         plot_obj = axs.imshow(self.data[data_idx][0],
                               interpolation='none',
-                              vmin=self.min_val,
-                              vmax=self.max_val)
+                              vmin=self.z_min,
+                              vmax=self.z_max)
         return plot_obj
