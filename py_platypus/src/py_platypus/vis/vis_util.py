@@ -221,7 +221,9 @@ def subplot_histogram(axs, data, legend, lims):
 
 
 def subplot_histogram_2d(axs, data, legend, lims):
-    '''helper function for plotting 2D data as a histogram subplot
+    '''
+    DEPRECATED
+    helper function for plotting 2D data as a histogram subplot
     inputs: axs - matplotlib axes object for a single subplot
             data - array of data [x_values, y_values]
             legend - unused paramter'''
