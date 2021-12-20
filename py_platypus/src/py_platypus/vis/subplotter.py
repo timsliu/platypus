@@ -214,6 +214,8 @@ class SubplotScatter3D(Subplotter):
         return plot_obj
 
 
+
+
 class SubplotHistogram(Subplotter):
     """
     Subplotter for a series of 1D histograms
@@ -257,6 +259,77 @@ class SubplotHistogram(Subplotter):
         vals, bins, bar_container = axs.hist(self.data[data_idx],
                                              bins=self.bin_edges)
         return bar_container.patches[0]
+
+class SubplotHistogram2D(Subplotter):
+    """
+    Subplotter for a series of 2D histograms
+    """
+    def __init__(self, x_axis_zero=False, y_axis_zero=False, lim_factor=0.05):
+        self.num_bins = 20
+        self.x_bin_edges = None
+        self.y_bin_edges = None
+        self.z_min = None
+        self.z_max = None
+        super().__init__(y_axis_zero, x_axis_zero, lim_factor)
+
+    def get_min_max(self):
+        # flatten the data across time series
+        x_values = self.data[:, 0].flatten()
+        y_values = self.data[:, 1].flatten()
+
+        _, self.x_bin_edges, self.y_bin_edges = np.histogram2d(
+            x_values, y_values, self.num_bins)
+
+    def get_x_min_max(self):
+        """
+        Find the min and max x values of the data
+        """
+        if self.x_bin_edges is None:
+            self.get_min_max()
+
+        return min(self.x_bin_edges), max(self.x_bin_edges)
+
+    def get_y_min_max(self):
+        """
+        Find the min and max y values of the data
+        """
+        if self.y_bin_edges is None:
+            self.get_min_max()
+
+        return min(self.y_bin_edges), max(self.y_bin_edges)
+
+    def get_z_min_max(self):
+        """
+        Find the min and max z values of the data
+        """
+        self.z_max = max([
+            np.max(
+                np.histogram2d(time_step[0], time_step[1],
+                               bins=self.num_bins)[0])
+            for time_step in self.data
+        ])
+
+        self.z_min = 0
+
+        return self.z_min, self.z_max
+
+    def plot_axes(self, axs, data_idx):
+        """
+        Plot a 2D histogram
+        """
+        if self.x_bin_edges is None:
+            self.get_min_max()
+        if self.z_min is None:
+            self.get_z_min_max()
+
+        _, _, _, quad_mesh = axs.hist2d(
+            self.data[data_idx][0],
+            self.data[data_idx][1],
+            bins=[self.x_bin_edges, self.y_bin_edges],
+            vmin=self.z_min,
+            vmax=self.z_max)
+        
+        return quad_mesh
 
 
 class Subplot2DGrid(Subplotter):

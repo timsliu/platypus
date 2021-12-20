@@ -26,14 +26,15 @@ if __name__ == "__main__":
     pic.init_x_random()
     pic.init_v_maxwellian()
 
-    plat.run_sim.run_simulation(pic, params)
+    #plat.run_sim.run_simulation(pic, params)
     plotter = plat.plotter.Plotter("plot_2d_test", params)
     # eventually plot the particles instead
     plotter.add_animation()
     #plotter.add_all_plots()
     #plotter.add_subplots()
-    plotter.plot_position()
-    plotter.plot_phase()
+    #plotter.plot_position()
+    #plotter.plot_phase()
+    plotter.plot_velocity() 
     #plotter.plot_electric_field()
     #plotter.plot_density()
     #plotter.plot_energy()

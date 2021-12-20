@@ -342,14 +342,13 @@ class Plotter:
 
         # call helper for single dimension
         if self.params["dimensions"] == 1:
-            # TODO update with subplotter
+            subplotter = plat.subplotter.SubplotLines(self.x_axis_zero=True, self.y_axis_zero=False 
             self.plot_series(["ef"], "ef", "Position (x)", "Electric field",
-                             "E field", plat.vis_util.subplot_lines)
+                             "E field", subplotter)
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
             subplotter = plat.subplotter.Subplot2DGrid()
-
             self.plot_series(["efx"], "efx", "Position (x)", "Position (y)",
                              "Ex field", subplotter)
 
@@ -454,9 +453,9 @@ class Plotter:
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
-            # TODO update for subplotter classes
+            subplotter = plat.subplotter.SubplotHistogram2D() 
             self.plot_series(["vx", "vy"], "v", "Vx", "Vy", "Velocity",
-                             plat.vis_util.subplot_histogram_2d)
+                             subplotter)
 
     def plot_position(self):
         '''
