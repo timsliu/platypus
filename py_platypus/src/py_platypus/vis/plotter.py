@@ -342,7 +342,7 @@ class Plotter:
 
         # call helper for single dimension
         if self.params["dimensions"] == 1:
-            subplotter = plat.subplotter.SubplotLines(self.x_axis_zero=True, self.y_axis_zero=False 
+            subplotter = plat.subplotter.SubplotLines(x_axis_zero=True, y_axis_zero=False) 
             self.plot_series(["ef"], "ef", "Position (x)", "Electric field",
                              "E field", subplotter)
 
@@ -365,33 +365,37 @@ class Plotter:
 
         ee = pickle.load(open(os.path.join(self.data_dir, "ee.p"), "rb"))
         ke = pickle.load(open(os.path.join(self.data_dir, "ke.p"), "rb"))
-        ee_file = os.path.join(self.out_dir, "ee")
-        ke_file = os.path.join(self.out_dir, "ke")
-        combined_file = os.path.join(self.out_dir, "energy")
+        #ee_file = os.path.join(self.out_dir, "ee")
+        #ke_file = os.path.join(self.out_dir, "ke")
+        #combined_file = os.path.join(self.out_dir, "energy")
 
         # plot kinetic and electrostatic energy on one chart
-        self.plot_subplots(combined_file, [[ke, ee]],
+        subplotter = plat.subplotter.SubplotLines(x_axis_zero=True, y_axis_zero=True)
+        subplotter.set_data([[ke, ee, np.array(ee) + np.array(ke)]]) 
+        self.plot_subplots("total_energy",
                            "Time step",
                            "Normalized energy",
                            "Energy",
-                           plat.vis_util.subplot_lines,
-                           legend=[["Kinetic energy", "Electrostatic energy"]],
-                           zero=True)
+                           subplotter,) 
+                           #legend=[["Kinetic energy", "Electrostatic energy"]],
+                           #zero=True)
 
         # plot kinetic energy
-        self.plot_subplots(ee_file, [[ee]],
+        subplotter.set_data([[ee]]) 
+        self.plot_subplots("electrostatic_energy",
                            "Time step",
                            "Normalized energy",
                            "Electrostatic energy",
-                           plat.vis_util.subplot_lines,
+                           subplotter, 
                            zero=True)
 
         # plot potential energy
-        self.plot_subplots(ke_file, [[ke]],
+        subplotter.set_data([[ke]]) 
+        self.plot_subplots("kinetic_energy",
                            "Time step",
                            "Normalized energy",
                            "Kinetic energy",
-                           plat.vis_util.subplot_lines,
+                           subplotter, 
                            zero=True)
 
         return

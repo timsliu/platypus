@@ -9,7 +9,7 @@ class Subplotter:
     Base class for a subplotter. Each subplotter has methods for plotting data
     and for determining consistent axes.
     """
-    def __init__(self, y_axis_zero, x_axis_zero, lim_factor=0.05):
+    def __init__(self, x_axis_zero, y_axis_zero, lim_factor=0.05):
         """
         inputs: data - array like data to be plotted; each element is the data
                 for a single time series or line
@@ -95,9 +95,9 @@ class SubplotLines(Subplotter):
     """
     Subplotter for a series of lines
     """
-    def __init__(self, y_axis_zero, x_axis_zero, lim_factor=0.05):
+    def __init__(self, x_axis_zero, y_axis_zero, lim_factor=0.05):
 
-        super().__init__(y_axis_zero, x_axis_zero, lim_factor)
+        super().__init__(x_axis_zero, y_axis_zero, lim_factor)
 
     def get_y_min_max(self):
         """
@@ -133,9 +133,9 @@ class SubplotScatter2D(Subplotter):
     """
     Subplotter for a series of 2d scatter plots
     """
-    def __init__(self, y_axis_zero, x_axis_zero, lim_factor=0.05):
+    def __init__(self, x_axis_zero, y_axis_zero, lim_factor=0.05):
 
-        super().__init__(y_axis_zero, x_axis_zero, lim_factor)
+        super().__init__(x_axis_zero, y_axis_zero, lim_factor)
 
     def get_x_min_max(self):
         """
@@ -167,10 +167,10 @@ class SubplotScatter3D(Subplotter):
     """
     Subplotter for a series of 3d scatter plots
     """
-    def __init__(self, y_axis_zero=True, x_axis_zero=True, lim_factor=0.05):
+    def __init__(self, x_axis_zero=True, y_axis_zero=True, lim_factor=0.05):
         self.z_min = None
         self.z_max = None
-        super().__init__(y_axis_zero, x_axis_zero, lim_factor)
+        super().__init__(x_axis_zero, y_axis_zero, lim_factor)
 
     def get_x_min_max(self):
         """
@@ -223,7 +223,7 @@ class SubplotHistogram(Subplotter):
     def __init__(self, x_axis_zero=False, y_axis_zero=True, lim_factor=0.05):
         self.num_bins = 20
         self.bin_edges = None
-        super().__init__(y_axis_zero, x_axis_zero, lim_factor)
+        super().__init__(x_axis_zero, y_axis_zero, lim_factor)
 
     def get_x_min_max(self):
         """
@@ -256,7 +256,7 @@ class SubplotHistogram(Subplotter):
         """
         if self.bin_edges is None:
             self.get_x_min_max()
-        vals, bins, bar_container = axs.hist(self.data[data_idx],
+        vals, bins, bar_container = axs.hist(self.data[data_idx][0],
                                              bins=self.bin_edges)
         return bar_container.patches[0]
 
@@ -270,7 +270,7 @@ class SubplotHistogram2D(Subplotter):
         self.y_bin_edges = None
         self.z_min = None
         self.z_max = None
-        super().__init__(y_axis_zero, x_axis_zero, lim_factor)
+        super().__init__(x_axis_zero, y_axis_zero, lim_factor)
 
     def get_min_max(self):
         # flatten the data across time series
@@ -339,7 +339,7 @@ class Subplot2DGrid(Subplotter):
     def __init__(self, x_axis_zero=True, y_axis_zero=True, lim_factor=0.0):
         self.z_min = None
         self.z_max = None
-        super().__init__(y_axis_zero, x_axis_zero, lim_factor)
+        super().__init__(x_axis_zero, y_axis_zero, lim_factor)
 
     def get_x_min_max(self):
         """
@@ -371,9 +371,8 @@ class Subplot2DGrid(Subplotter):
         """
         Plot a 2D grid
         """
-        if self.min_val is None:
-            self.min_val = np.min(self.data)
-            self.max_val = np.max(self.data)
+        if self.z_min is None:
+            self.get_z_min_max() 
         plot_obj = axs.imshow(self.data[data_idx][0],
                               interpolation='none',
                               vmin=self.z_min,
