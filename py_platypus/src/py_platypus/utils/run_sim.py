@@ -47,6 +47,9 @@ def run_simulation(pic, params):
                     params.data_dir, step), pic.ex)
                 plat.io_utils.save_pickle("{}/step_{}_efy".format(
                     params.data_dir, step), pic.ey)
+            if hasattr(pic, "bz"):
+                plat.io_utils.save_pickle("{}/step_{}_bz".format(
+                    params.data_dir, step), pic.bz)
 
             plat.io_utils.save_pickle("{}/step_{}_ne".format(
                 params.data_dir, step), pic.ne)

@@ -446,6 +446,16 @@ class Plotter:
             self.plot_series(["ex", "ey"], "position", "Position (x)",
                              "Position (y)", "Position plot", subplotter)
 
+    def plot_magnetic_field(self):
+        """
+        Plot the magnetic field
+        """
+        if self.params["dimensions"] == 2:
+            subplotter = plat.subplotter.Subplot2DGrid()
+            self.plot_series(["bz"], "bz", "Position (x)", "Position (y)",
+                             "Magnetic field", subplotter)
+
+
     def plot_all(self):
         '''plot all default graphs'''
 
