@@ -108,7 +108,7 @@ class Plotter:
         return target_files, steps
 
     def plot_series(self, suffixes, out_name, x_label, y_label, title,
-                    subplotter):
+                    subplotter, log=False, legend=None):
         """
         helper function to plot a data series across several time steps
         inputs: suffixes - list of identifier at end of pickle files to parse
@@ -117,6 +117,8 @@ class Plotter:
                 y_label - y_label for charts
                 title - title for each subplot
                 subplotter - class for plotting a subplot
+                log - plot the y_label as a log plot
+                legend - plot legends 
         """
 
         if len(self.output_types) == 0:
@@ -158,66 +160,44 @@ class Plotter:
                         y_label,
                         title,
                         subplotter,
+                        log=log
+                        legend=legend,
                         steps=steps)
 
     def plot_all_plots(self,
                        filename,
-                       data,
                        x_label,
                        y_label,
                        title,
                        subplotter,
                        log=False,
                        legend=None,
-                       steps=None,
-                       zero=False):
-        '''plot a single chart for each timestep
+                       steps=None):
+        """
+        Plot a single chart for each timestep.
         inputs: filename - full path to output filename
-                data - 2d array of data; dimension 0 is for each plot, 
-                       dimension 1 is for multiple data series on a plot
-                x-axis - name of x-axis
-                y-axis - name of y-axis
+                x_label - name of x-axis
+                y_label - name of y-axis
                 title - figure title
                 log - display y as log plot
                 legend - list of strings labeling the data
-                steps - list of time steps the data is from'''
-
-        plots = len(data)
-        # call function to get upper and lower figure limits
-        lim_neg, lim_pos = vis_util.get_ylimits(data, zero, subplotter)
-
-        if legend is None:
-            legend = plots * [None]
-
+                steps - list of time steps the data is from
+        """ 
+        plots = len(subplotter.data)
+        all_data = subplotter.data  # hold data across all subplots
+        
         for i in range(plots):
-            fig, axs = plt.subplots(1,
-                                    1,
-                                    constrained_layout=True,
-                                    squeeze=False)
-            subplotter(axs[0, 0], data[i], legend[i], (lim_neg, lim_pos))
-
-            # add optional features
-            if legend is not None:
-                axs[0, 0].legend()
-
-            if log:
-                axs[0, 0].yscale("log")
-
-            axs[0, 0].grid(True)
-
-            # set the axis labels
-            for ax in axs.flat:
-                ax.set_xlabel(x_label, fontsize=10)
-                ax.set_ylabel(y_label, fontsize=10)
-
-            # add figure title
-            fig.suptitle(title)
-
-            # save file
-            plt.savefig(os.path.join(self.out_dir,
-                                     "{}_{}.png".format(filename, i)),
-                        dpi=800)
-            plt.close("all")
+            # set data to the data from a single time step
+            subplotter.set_data([all_data[i]])
+            self.plot_subplots("{}_{}".format(filename, i),
+                          x_label,
+                          y_label,
+                          title,
+                          subplotter,
+                          log=log,
+                          legend=legend,
+                          steps=[steps[i]],
+                          zero=zero)
 
         return
 
@@ -229,26 +209,21 @@ class Plotter:
                       subplotter,
                       log=False,
                       legend=None,
-                      steps=None,
-                      zero=False):
+                      steps=None)
         """
-        TODO make this a separate class like animator
         plot a single chart with multiple subplots
         inputs: filename - full path to output filename
-                data - 2d array of data; dimension 0 is for each subplot, 
-                       dimension 1 is for multiple lines on a subplot
-                x-axis - name of x-axis
-                y-axis - name of y-axis
+                x_label - name of x-axis
+                y_label - name of y-axis
                 title - figure title
-                subplotter - class for plotting a subplot
                 log - display y as log plot
                 legend - list of strings labeling the data
                 steps - list of time steps the data is from
         """
 
         subplots = len(subplotter.data)  # number of subplots
-        rows, cols, = vis_util.get_subplot_config(
-            subplots)  # subplot arrangement
+        # subplot arrangement
+        rows, cols, = vis_util.get_subplot_config(subplots)
         fig, axs = plt.subplots(rows,
                                 cols,
                                 constrained_layout=True,
@@ -308,8 +283,7 @@ class Plotter:
                        subplotter,
                        log=False,
                        legend=None,
-                       steps=None,
-                       zero=False):
+                       steps=None)
         """
         Create an animation from the passed data. This method is a wrapper
         that uses the Animator class to create the animation.
@@ -342,7 +316,8 @@ class Plotter:
 
         # call helper for single dimension
         if self.params["dimensions"] == 1:
-            subplotter = plat.subplotter.SubplotLines(x_axis_zero=True, y_axis_zero=False) 
+            subplotter = plat.subplotter.SubplotLines(x_axis_zero=True,
+                                                      y_axis_zero=False)
             self.plot_series(["ef"], "ef", "Position (x)", "Electric field",
                              "E field", subplotter)
 
@@ -365,40 +340,37 @@ class Plotter:
 
         ee = pickle.load(open(os.path.join(self.data_dir, "ee.p"), "rb"))
         ke = pickle.load(open(os.path.join(self.data_dir, "ke.p"), "rb"))
-        #ee_file = os.path.join(self.out_dir, "ee")
-        #ke_file = os.path.join(self.out_dir, "ke")
-        #combined_file = os.path.join(self.out_dir, "energy")
 
         # plot kinetic and electrostatic energy on one chart
-        subplotter = plat.subplotter.SubplotLines(x_axis_zero=True, y_axis_zero=True)
-        subplotter.set_data([[ke, ee, np.array(ee) + np.array(ke)]]) 
-        self.plot_subplots("total_energy",
-                           "Time step",
-                           "Normalized energy",
-                           "Energy",
-                           subplotter,) 
-                           #legend=[["Kinetic energy", "Electrostatic energy"]],
-                           #zero=True)
+        subplotter = plat.subplotter.SubplotLines(x_axis_zero=True,
+                                                  y_axis_zero=True)
+        subplotter.set_data([[ke, ee, np.array(ee) + np.array(ke)]])
+        self.plot_subplots(
+            "total_energy",
+            "Time step",
+            "Normalized energy",
+            "Energy",
+            subplotter,
+        )
 
         # plot kinetic energy
-        subplotter.set_data([[ee]]) 
+        subplotter.set_data([[ee]])
         self.plot_subplots("electrostatic_energy",
                            "Time step",
                            "Normalized energy",
                            "Electrostatic energy",
-                           subplotter, 
+                           subplotter,
                            zero=True)
 
         # plot potential energy
-        subplotter.set_data([[ke]]) 
+        subplotter.set_data([[ke]])
         self.plot_subplots("kinetic_energy",
                            "Time step",
                            "Normalized energy",
                            "Kinetic energy",
-                           subplotter, 
+                           subplotter,
                            zero=True)
 
-        return
 
     def plot_density(self):
         '''plot the electron density at multiple timesteps'''
@@ -407,7 +379,8 @@ class Plotter:
 
         # call helper for single dimension
         if self.params["dimensions"] == 1:
-            subplotter = plat.subplotter.SubplotLines(y_axis_zero=True, x_axis_zero=True)
+            subplotter = plat.subplotter.SubplotLines(y_axis_zero=True,
+                                                      x_axis_zero=True)
             self.plot_series(["ne"], "ne", "Position (x)", "Density",
                              "Electron density", subplotter)
 
@@ -426,20 +399,18 @@ class Plotter:
         print("Plotting phase space")
 
         if self.params["dimensions"] == 1:
-            subplotter = plat.subplotter.SubplotScatter2D(y_axis_zero=False, x_axis_zero=True)
+            subplotter = plat.subplotter.SubplotScatter2D(y_axis_zero=False,
+                                                          x_axis_zero=True)
             self.plot_series(["x", "v"], "phase", "Position (x)",
-                             "Velocity (v)", "Phase plot",
-                             subplotter)
+                             "Velocity (v)", "Phase plot", subplotter)
 
         if self.params["dimensions"] == 2:
             subplotter = plat.subplotter.SubplotScatter3D()
             self.plot_series(["ex", "ey", "evx"], "phase_vx", "Position (x)",
-                             "Position (y)", "Phase plot (Vx)",
-                             subplotter)
+                             "Position (y)", "Phase plot (Vx)", subplotter)
 
             self.plot_series(["ex", "ey", "evy"], "phase_vy", "Position (x)",
-                             "Position (y)", "Phase plot (Vy)",
-                             subplotter)
+                             "Position (y)", "Phase plot (Vy)", subplotter)
 
         return
 
@@ -457,7 +428,7 @@ class Plotter:
 
         # call helper for two dimensions
         if self.params["dimensions"] == 2:
-            subplotter = plat.subplotter.SubplotHistogram2D() 
+            subplotter = plat.subplotter.SubplotHistogram2D()
             self.plot_series(["vx", "vy"], "v", "Vx", "Vy", "Velocity",
                              subplotter)
 
@@ -469,10 +440,10 @@ class Plotter:
         print("Plotting particle positions")
 
         if self.params["dimensions"] == 2:
-            subplotter = plat.subplotter.SubplotScatter2D(y_axis_zero=True, x_axis_zero=True)
+            subplotter = plat.subplotter.SubplotScatter2D(y_axis_zero=True,
+                                                          x_axis_zero=True)
             self.plot_series(["ex", "ey"], "position", "Position (x)",
-                             "Position (y)", "Position plot",
-                             subplotter)
+                             "Position (y)", "Position plot", subplotter)
 
     def plot_all(self):
         '''plot all default graphs'''
