@@ -18,19 +18,25 @@ class Subplotter:
                 lim_factor - proportion the axis should exceed the data
         """
         self.data = None
-        self.y_axis_zero = y_axis_zero
         self.x_axis_zero = x_axis_zero
+        self.y_axis_zero = y_axis_zero
         self.lim_factor = lim_factor
         self.lim_up = 1 + self.lim_factor
         self.lim_dn = 1 - self.lim_factor
         self.y_lims = None
         self.x_lims = None
 
-    def set_data(self, data):
+    def set_data(self, data, reset_lims=True):
         """
-        Set the data that will be used for the subplot
+        Set the data that will be used for the subplot; also reset the axis
+        limits since the data is new
         """
         self.data = np.array(data)
+        if reset_lims:
+            self.x_lims = None
+            self.y_lims = None
+        self.get_x_limits()
+        self.get_y_limits()
 
     def get_limits(self, data_min, data_max, axis_zero):
         """
@@ -49,7 +55,6 @@ class Subplotter:
             lower_lim = self.lim_up * data_min
         else:
             lower_lim = self.lim_dn * data_min
-
         return lower_lim, upper_lim
 
     def get_y_limits(self):
@@ -58,8 +63,7 @@ class Subplotter:
         data set
         """
         if self.y_lims is None:
-            self.y_lims = self.get_limits(*self.get_y_min_max(),
-                                          self.y_axis_zero)
+            self.y_lims = self.get_limits(*self.get_y_min_max(), self.y_axis_zero)
         return self.y_lims
 
     def get_x_limits(self):
@@ -67,8 +71,7 @@ class Subplotter:
         Get appropriate x limits for the plot given the data set
         """
         if self.x_lims is None:
-            self.x_lims = self.get_limits(*self.get_x_min_max(),
-                                          self.x_axis_zero)
+            self.x_lims = self.get_limits(*self.get_x_min_max(), self.x_axis_zero)
         return self.x_lims
 
     def get_y_min_max(self):
@@ -118,15 +121,17 @@ class SubplotLines(Subplotter):
             min([len(series) for series in time_step])
             for time_step in self.data
         ])
-        return x_min, x_max
+        # subtract 1 since dataset with length n has max value n - 1
+        return x_min, x_max - 1
 
     def plot_axes(self, axs, data_idx):
 
         # iterate through the lines for this time step
+        plot_objs = [] 
         for i in range(len(self.data[data_idx])):
             plot_obj = axs.plot(self.data[data_idx][i])
-
-        return plot_obj[0]
+            plot_objs.append(plot_obj[0])
+        return plot_objs
 
 
 class SubplotScatter2D(Subplotter):

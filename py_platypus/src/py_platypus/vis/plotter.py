@@ -151,7 +151,6 @@ class Plotter:
             PlotOutputs.ANIMATION: self.plot_animation,
             PlotOutputs.ALL_PLOTS: self.plot_all_plots
         }
-
         # loop through the output types and call methods to plot each output
         for output in self.output_types:
             plot_method = output_to_method[output]
@@ -160,7 +159,7 @@ class Plotter:
                         y_label,
                         title,
                         subplotter,
-                        log=log
+                        log=log,
                         legend=legend,
                         steps=steps)
 
@@ -182,24 +181,24 @@ class Plotter:
                 log - display y as log plot
                 legend - list of strings labeling the data
                 steps - list of time steps the data is from
-        """ 
+        """
         plots = len(subplotter.data)
         all_data = subplotter.data  # hold data across all subplots
-        
+
         for i in range(plots):
             # set data to the data from a single time step
-            subplotter.set_data([all_data[i]])
+            # but don't recalculate the limits
+            subplotter.set_data([all_data[i]], reset_lims=False)
             self.plot_subplots("{}_{}".format(filename, i),
-                          x_label,
-                          y_label,
-                          title,
-                          subplotter,
-                          log=log,
-                          legend=legend,
-                          steps=[steps[i]],
-                          zero=zero)
-
-        return
+                               x_label,
+                               y_label,
+                               title,
+                               subplotter,
+                               log=log,
+                               legend=legend,
+                               steps=[steps[i]])
+        # reset the subplotter to its original state
+        subplotter.set_data(all_data)
 
     def plot_subplots(self,
                       filename,
@@ -209,7 +208,7 @@ class Plotter:
                       subplotter,
                       log=False,
                       legend=None,
-                      steps=None)
+                      steps=None):
         """
         plot a single chart with multiple subplots
         inputs: filename - full path to output filename
@@ -220,7 +219,6 @@ class Plotter:
                 legend - list of strings labeling the data
                 steps - list of time steps the data is from
         """
-
         subplots = len(subplotter.data)  # number of subplots
         # subplot arrangement
         rows, cols, = vis_util.get_subplot_config(subplots)
@@ -234,27 +232,30 @@ class Plotter:
             # location in the subplot grid
             col = i % cols
             row = int(np.floor(i / cols))
+            subplot_axes = axs[row, col]
 
             # remove axis for unused subplots
             if i >= subplots:
-                axs[row, col].set_axis_off()
+                subplot_axes.set_axis_off()
                 continue
 
             # call function to plot the data
-            subplotter.plot_axes(axs[row, col], i)
+            plot_objs = subplotter.plot_axes(subplot_axes, i)
 
             # add subplot title if available
             if steps is not None:
-                axs[row, col].set_title("Step {}".format(steps[i]),
+                subplot_axes.set_title("Step {}".format(steps[i]),
                                         fontsize=10)
             # add optional features
             if legend is not None:
-                axs[row, col].legend()
+                subplot_axes.legend(plot_objs, legend)
 
             if log:
-                axs[row, col].yscale("log")
+                subplot_axes.yscale("log")
 
-            axs[row, col].grid(True)
+            subplot_axes.grid(True)
+            subplot_axes.set_xlim(subplotter.get_x_limits())
+            subplot_axes.set_ylim(subplotter.get_y_limits())
 
         # set the axis labels
         for ax in axs.flat:
@@ -283,7 +284,7 @@ class Plotter:
                        subplotter,
                        log=False,
                        legend=None,
-                       steps=None)
+                       steps=None):
         """
         Create an animation from the passed data. This method is a wrapper
         that uses the Animator class to create the animation.
@@ -351,16 +352,17 @@ class Plotter:
             "Normalized energy",
             "Energy",
             subplotter,
+            legend=["Kinetic", "Electrostatic", "Combined"]
         )
 
         # plot kinetic energy
         subplotter.set_data([[ee]])
+        subplotter.y_axis_zero = False
         self.plot_subplots("electrostatic_energy",
                            "Time step",
                            "Normalized energy",
                            "Electrostatic energy",
-                           subplotter,
-                           zero=True)
+                           subplotter)
 
         # plot potential energy
         subplotter.set_data([[ke]])
@@ -368,8 +370,7 @@ class Plotter:
                            "Time step",
                            "Normalized energy",
                            "Kinetic energy",
-                           subplotter,
-                           zero=True)
+                           subplotter)
 
 
     def plot_density(self):
@@ -423,7 +424,7 @@ class Plotter:
         # call helper for single dimension
         if self.params["dimensions"] == 1:
             subplotter = plat.subplotter.SubplotHistogram()
-            self.plot_series("v", "v", "Position", "Count", "Velocity",
+            self.plot_series("v", "v", "Velocity", "Count", "Velocity",
                              subplotter)
 
         # call helper for two dimensions

@@ -59,7 +59,13 @@ class Animator:
 
         if self.verbose and i % 50 == 0:
             print("Animating figure frame {} of {}".format(i, self.frames))
-        return plot_obj,
+
+        # plot_obj can be a single object or an iterable - ensure we return
+        # an iterable
+        if isinstance(plot_obj, list) or isinstance(plot_obj, tuple):
+            return plot_obj
+        else:
+            return plot_obj,
 
     def create_animation(self):
         """

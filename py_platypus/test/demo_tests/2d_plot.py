@@ -29,10 +29,10 @@ if __name__ == "__main__":
     plat.run_sim.run_simulation(pic, params)
     plotter = plat.plotter.Plotter("plot_2d_test", params)
     # eventually plot the particles instead
-    plotter.add_animation()
+    #plotter.add_animation()
     plotter.add_subplots()
+    plotter.add_all_plots()
     plotter.plot_all() 
-    #plotter.add_all_plots()
     #plotter.plot_position()
     #plotter.plot_phase()
     #plotter.plot_velocity() 
