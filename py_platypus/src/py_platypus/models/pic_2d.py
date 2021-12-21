@@ -141,7 +141,7 @@ class PIC_2D:
                 r = np.random.rand()
                 if r < fraction:
                     self.electron_vx[i] = v
-                    self.electron_vy[i] = 0
+                    self.electron_vy[i] = (np.random.rand() - 0.5)/1e4
         return
 
     def density_perturbation(self):

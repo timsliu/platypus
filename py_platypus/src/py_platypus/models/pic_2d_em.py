@@ -351,7 +351,7 @@ class PIC_2D_EM(PIC_2D):
             v_i = np.array([self.electron_vx[i], self.electron_vy[i], 0])
 
             # Boris method for updating position
-            q_prime = self.dt / 2
+            q_prime = -self.dt / 2  # negative charge b/c particle is electron
             h = np.array([0, 0, q_prime * self.b_particle[i]])
             s = 2 / (1 + np.linalg.norm(h)**2) * h
             u = v_i + q_prime * e_i
