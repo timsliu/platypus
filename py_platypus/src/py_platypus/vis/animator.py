@@ -17,7 +17,7 @@ class Animator:
                  title=None,
                  interval=40,
                  blit=True,
-                 dpi=800,
+                 dpi=400,
                  verbose=True):
 
         self.save_path = save_path  # path to save figure to
@@ -57,7 +57,7 @@ class Animator:
         self.setup_axes()
         plot_obj = self.subplotter.plot_axes(self.ax, i)
 
-        if self.verbose and i % 50 == 0:
+        if self.verbose and i % 50 == 0 and i > 0:
             print("Animating figure frame {} of {}".format(i, self.frames))
 
         # plot_obj can be a single object or an iterable - ensure we return
@@ -71,7 +71,7 @@ class Animator:
         """
         Create and save the animation.
         """
-        print("Starting animation...")
+        print("Starting animation: {} frames to animate".format(self.frames))
         anim = ani.FuncAnimation(self.fig,
                                  self.animate_frame,
                                  frames=self.frames,
