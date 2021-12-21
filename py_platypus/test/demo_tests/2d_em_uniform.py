@@ -10,10 +10,11 @@ if __name__ == "__main__":
     # override default simulation values
     param_dict = {
         "name": "cyclotron",
-        "print_every": 5,
-        "nppc": 1,
+        "print_every": 1,
+        "nppc": 0.01,
         "cells": [32, 32],
-        "runtime": 1,
+        "runtime": 50,
+        "timestep": 0.05,
         "save_every": 1
     }
 
@@ -26,8 +27,10 @@ if __name__ == "__main__":
     pic.init_b_uniform(value=1.0)
     pic.init_e()
     pic.init_x_random()
+    pic.init_v_maxwellian()
 
     plat.run_sim.run_simulation(pic, params)
-    plotter = Plotter("cyclotron")
-    # eventually plot the particles instead
-    plotter.plot_density()
+    plotter = plat.plotter.Plotter("cyclotron", params)
+    plotter.add_animation()
+    plotter.plot_position()
+    #plotter.plot_density()

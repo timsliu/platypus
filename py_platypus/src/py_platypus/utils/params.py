@@ -93,7 +93,7 @@ class Parameters:
         self.graph_dir = os.path.join(self.out_dir, "graph")
         self.set("dx", list(map(lambda a, b: a/b, self["length"], self["cells"])), refresh=False)
         self.set("steps", int(self["runtime"]/self["timestep"]), refresh=False)
-        self.set("n_particles", self["nppc"] * np.prod(self["cells"]), refresh=False)
+        self.set("n_particles", int(self["nppc"] * np.prod(self["cells"])), refresh=False)
 
         return
 

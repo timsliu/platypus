@@ -41,6 +41,7 @@ class Animator:
         """
         self.ax.set_xlim(self.xlim)
         self.ax.set_ylim(self.ylim)
+        self.ax.grid(True)
 
         if self.x_label is not None:
             self.ax.set_xlabel(self.x_label)

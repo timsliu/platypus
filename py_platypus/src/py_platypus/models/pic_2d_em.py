@@ -131,7 +131,7 @@ class PIC_2D_EM(PIC_2D):
             # initial and final particle position
             x0, y0 = self.electron_x_last[i], self.electron_y_last[i]
             x1, y1 = self.electron_x[i], self.electron_y[i]
-            print("\nParticle start: ", x0, y0)
+            #print("\nParticle start: ", x0, y0)
 
             substeps = self.charge_divider.get_charge_steps(x0, y0, x1, y1)
 
@@ -173,11 +173,11 @@ class PIC_2D_EM(PIC_2D):
         jy1 = cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
         jy2 = cs.dy * (0.5 + local_x0 + 0.5 * cs.dx)
 
-        print("horizontal: ", hori)
-        print("vertical:   ", vert)
-        print("local origin:", local_origin)
-        print("Starting point: ", cs.x0, cs.y0)
-
+#        print("horizontal: ", hori)
+#        print("vertical:   ", vert)
+#        print("local origin:", local_origin)
+#        print("Starting point: ", cs.x0, cs.y0)
+        
         # update the current densities; note that the y direction for this
         # simulation does not match the y direction of Villasenor and Buneman
         # but in both, the lower indexed boundary corresponds to j1
