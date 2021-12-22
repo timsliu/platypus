@@ -62,7 +62,7 @@ class PIC_2D_EM(PIC_2D):
                 # dE = dt * (constants * curl(B) - Jx)
                 ex_update = self.dt * (
                     curl * constants.SPEED_OF_LIGHT**2 / self.v_th**2 - j_cur)
-                self.ex_edges[i][j] + ex_update
+                self.ex_edges[i][j] += ex_update
 
         # iterate through electric field in ey direction
         for i in range(self.ey_edges.shape[0]):
@@ -76,7 +76,7 @@ class PIC_2D_EM(PIC_2D):
                 # dE = dt * (constants * curl(B) - Jy)
                 ey_update = self.dt * (
                     curl * constants.SPEED_OF_LIGHT**2 / self.v_th**2 - j_cur)
-                self.ey_edges[i][j] + ey_update
+                self.ey_edges[i][j] += ey_update
 
     def calc_b_update(self):
         '''
@@ -99,9 +99,10 @@ class PIC_2D_EM(PIC_2D):
                 dey = ey1 - ey0
                 dex = ex1 - ex0
 
+                print(dey, dex)
+
                 # curl in 2D is dex/dy - dey/dx
                 self.delta_bz[i][j] = (dex / dy - dey / dx) * self.dt
-
         # divide update in half to calculate B update at each half step
         self.delta_bz /= 2
         return
@@ -131,7 +132,6 @@ class PIC_2D_EM(PIC_2D):
             # initial and final particle position
             x0, y0 = self.electron_x_last[i], self.electron_y_last[i]
             x1, y1 = self.electron_x[i], self.electron_y[i]
-            #print("\nParticle start: ", x0, y0)
 
             substeps = self.charge_divider.get_charge_steps(x0, y0, x1, y1)
 
@@ -144,6 +144,9 @@ class PIC_2D_EM(PIC_2D):
         # nodes on either side are actually the same node
         math_utils.match_boundaries_vertical(self.jx)
         math_utils.match_boundaries_horizontal(self.jy)
+
+        print(self.jx)
+        print(self.jy)
 
         return
 
@@ -183,8 +186,8 @@ class PIC_2D_EM(PIC_2D):
         # but in both, the lower indexed boundary corresponds to j1
         math_utils.update_wrapped_array(self.jx, vert[0], jx1) 
         math_utils.update_wrapped_array(self.jx, vert[1], jx2)
-        math_utils.update_wrapped_array(self.jx, hori[0], jy1)
-        math_utils.update_wrapped_array(self.jx, hori[1], jy2)
+        math_utils.update_wrapped_array(self.jy, hori[0], jy1)
+        math_utils.update_wrapped_array(self.jy, hori[1], jy2)
 
         return
 
@@ -352,16 +355,16 @@ class PIC_2D_EM(PIC_2D):
 
             # Boris method for updating position
             q_prime = -self.dt / 2  # negative charge b/c particle is electron
-            h = np.array([0, 0, q_prime * self.b_particle[i]])
-            s = 2 / (1 + np.linalg.norm(h)**2) * h
-            u = v_i + q_prime * e_i
-
-            u_prime = u + np.cross((u + np.cross(u, h)), s)
+            t = np.array([0, 0, q_prime * self.b_particle[i]])
+            s = 2 / (1 + np.linalg.norm(t)**2) * t
+            v_neg = v_i + q_prime * e_i
+            v_prime = v_neg + np.cross(v_neg, t)
+            v_plus = v_neg + np.cross(v_prime, s)
 
             # calculate updated velocity (3D vector) and update
-            v = u_prime + q_prime * e_i
-            self.electron_vx[i] = v[0]
-            self.electron_vy[i] = v[1]
+            v_f = v_plus + q_prime * e_i
+            self.electron_vx[i] = v_f[0]
+            self.electron_vy[i] = v_f[1]
 
         return
 
@@ -382,5 +385,4 @@ class PIC_2D_EM(PIC_2D):
         self.update_j()
         self.update_b_half()
         self.update_e()
-
         return
