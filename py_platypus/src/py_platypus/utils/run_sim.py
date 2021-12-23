@@ -24,6 +24,8 @@ def run_simulation(pic, params):
         pic.step()                       # step the simulatioin
         pic.calc_electrostatic_energy()  # calc the total electrostatic energy
         pic.calc_kinetic_energy()        # calc the total kinetic energy
+        if hasattr(pic, "bz"): 
+            pic.calc_magnetic_energy()       # calc the total magnetic energy
         
         # save simulation information
         if step % params["save_every"] == 0 or step == steps - 1:
@@ -43,10 +45,16 @@ def run_simulation(pic, params):
                     params.data_dir, step), pic.electron_x)
                 plat.io_utils.save_pickle("{}/step_{}_ey".format(
                     params.data_dir, step), pic.electron_y)
-                plat.io_utils.save_pickle("{}/step_{}_efx".format(
-                    params.data_dir, step), pic.ex)
-                plat.io_utils.save_pickle("{}/step_{}_efy".format(
-                    params.data_dir, step), pic.ey)
+                if hasattr(pic, "ey_edges"):
+                    plat.io_utils.save_pickle("{}/step_{}_efx".format(
+                        params.data_dir, step), pic.ex_edges)
+                    plat.io_utils.save_pickle("{}/step_{}_efy".format(
+                        params.data_dir, step), pic.ey_edges)
+                else:
+                    plat.io_utils.save_pickle("{}/step_{}_efx".format(
+                        params.data_dir, step), pic.ex)
+                    plat.io_utils.save_pickle("{}/step_{}_efy".format(
+                        params.data_dir, step), pic.ey)
             if hasattr(pic, "bz"):
                 plat.io_utils.save_pickle("{}/step_{}_bz".format(
                     params.data_dir, step), pic.bz)
@@ -60,6 +68,10 @@ def run_simulation(pic, params):
     
     plat.io_utils.save_pickle("{}/ee".format(params.data_dir), ee)
     plat.io_utils.save_pickle("{}/ke".format(params.data_dir), ke)
+    
+    if hasattr(pic, "bz"):
+        me = pic.output["magnetic_energy"]
+        plat.io_utils.save_pickle("{}/me".format(params.data_dir), me)
 
     return
 

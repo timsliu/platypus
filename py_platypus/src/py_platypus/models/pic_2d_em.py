@@ -49,7 +49,6 @@ class PIC_2D_EM(PIC_2D):
         '''
         dx = self.dx[1]
         dy = self.dx[0]
-
         # iterate through electric field in ex direction
         for i in range(self.ex_edges.shape[0]):
             for j in range(self.ex_edges.shape[1]):
@@ -99,8 +98,6 @@ class PIC_2D_EM(PIC_2D):
                 dey = ey1 - ey0
                 dex = ex1 - ex0
 
-                print(dey, dex)
-
                 # curl in 2D is dex/dy - dey/dx
                 self.delta_bz[i][j] = (dex / dy - dey / dx) * self.dt
         # divide update in half to calculate B update at each half step
@@ -145,9 +142,6 @@ class PIC_2D_EM(PIC_2D):
         math_utils.match_boundaries_vertical(self.jx)
         math_utils.match_boundaries_horizontal(self.jy)
 
-        print(self.jx)
-        print(self.jy)
-
         return
 
     def execute_four_bound(self, cs):
@@ -159,7 +153,7 @@ class PIC_2D_EM(PIC_2D):
         dy = self.dx[0]
 
         # get list of horizontal and vertical boundaries touched
-        # method guarantees the lower indexed boundary is listed fist and 
+        # method guarantees the lower indexed boundary is listed fist and
         # can return the indices of "ghost boundaries"
         hori, vert = self.charge_divider.boundaries_touched(cs.x0, cs.y0)
 
@@ -176,15 +170,15 @@ class PIC_2D_EM(PIC_2D):
         jy1 = cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
         jy2 = cs.dy * (0.5 + local_x0 + 0.5 * cs.dx)
 
-#        print("horizontal: ", hori)
-#        print("vertical:   ", vert)
-#        print("local origin:", local_origin)
-#        print("Starting point: ", cs.x0, cs.y0)
-        
+        #        print("horizontal: ", hori)
+        #        print("vertical:   ", vert)
+        #        print("local origin:", local_origin)
+        #        print("Starting point: ", cs.x0, cs.y0)
+
         # update the current densities; note that the y direction for this
         # simulation does not match the y direction of Villasenor and Buneman
         # but in both, the lower indexed boundary corresponds to j1
-        math_utils.update_wrapped_array(self.jx, vert[0], jx1) 
+        math_utils.update_wrapped_array(self.jx, vert[0], jx1)
         math_utils.update_wrapped_array(self.jx, vert[1], jx2)
         math_utils.update_wrapped_array(self.jy, hori[0], jy1)
         math_utils.update_wrapped_array(self.jy, hori[1], jy2)
@@ -368,6 +362,44 @@ class PIC_2D_EM(PIC_2D):
 
         return
 
+    def calc_magnetic_energy(self):
+        """
+        Calculate the magnetic energy
+        """
+        magnetic_energy = 0
+
+        for i in range(self.cells[0]):
+            for j in range(self.cells[1]):
+                b_cell = np.mean([
+                    self.bz[i][j], self.bz[i][j + 1], self.bz[i + 1][j],
+                    self.bz[i + 1][j + 1]
+                ])
+                magnetic_energy += 0.5 * b_cell**2 * self.dx[0] * self.dx[1]
+
+        self.output["magnetic_energy"].append(magnetic_energy)
+
+    def calc_electrostatic_energy(self):
+        """
+        Override method for calculating electrostatic energy
+        """
+        electrostatic_energy = 0
+        for i in range(self.cells[0]):
+            for j in range(self.cells[1]):
+                ex0 = math_utils.wrap_idx_2d(self.ex_edges, i, j)
+                ex1 = math_utils.wrap_idx_2d(self.ex_edges, i, j + 1)
+                ey0 = math_utils.wrap_idx_2d(self.ey_edges, i, j)
+                ey1 = math_utils.wrap_idx_2d(self.ey_edges, i + 1, j)
+
+                ex_cell = (ex0 + ex1) / 2
+                ey_cell = (ey0 + ey1) / 2
+
+                # U = 0.5 * epsilon * area * E^2
+                electrostatic_energy += 0.5 * self.dx[0] * self.dx[1]\
+                    * (ex_cell ** 2 + ey_cell ** 2)
+
+        # save the value
+        self.output["electrostatic_energy"].append(electrostatic_energy)
+
     def step(self):
         '''
         run the simulation for a single step, updating all parameters;
@@ -380,7 +412,7 @@ class PIC_2D_EM(PIC_2D):
         self.interpolate_e()
         self.interpolate_b()
         self.update_v()
-        self.save_x() 
+        self.save_x()
         self.update_x()
         self.update_j()
         self.update_b_half()
