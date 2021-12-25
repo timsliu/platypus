@@ -1,6 +1,7 @@
 '''
 Tests for the ChargeStepDivider helper class
 '''
+import numpy as np
 
 import unittest
 import py_platypus as plat
@@ -180,6 +181,28 @@ class ChargeStepTester(unittest.TestCase):
                 self.assertEqual(len(substeps), 3, "Exactly three substeps expected")
                 self.assertEqual(substeps, split_steps[i], "Substeps do not match expectation")
 
+    def test_intermediate_correct(self):
+        """
+        Test to make sure that the start of the second charge step
+        is between the starting and ending position
+        """
+        
+        dx = [2 * np.pi/32, 2 * np.pi/32]         # size of the cells [y, x]
+        cells = [32, 32]        # number of cells rows, cols
+        charge_divider = ChargeStepDivider(dx, cells) 
+        
+        dx = charge_divider.dx 
+        dy = charge_divider.dy
+
+        x0 = 2.711
+        x1 = 2.714
+        y0 = 2.651
+        y1 = 2.649
+
+        substeps = charge_divider.get_charge_steps(x0, y0, x1, y1)
+        self.assertEqual(len(substeps), 2, "Exactly 2 substeps expected")
+        self.assertTrue(substeps[0].x1 > min([x0, x1]), "x1 too low")
+        self.assertTrue(substeps[0].x1 < max([x0, x1]), "x1 too high")
 
 if __name__ == "__main__":
     unittest.main()
