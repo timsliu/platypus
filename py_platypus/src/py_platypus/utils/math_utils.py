@@ -83,7 +83,6 @@ def ev_to_vth(ev, mass=constants.ELECTRON_MASS):
     return np.sqrt(2 * joules / mass)
 
 
-
 def match_boundaries_vertical(array):
     '''
     Match the values of the left and right vertical boundaries of a 2D array
@@ -95,6 +94,7 @@ def match_boundaries_vertical(array):
         boundary_sum = array[i][0] + array[i][-1]
         array[i][0] = boundary_sum
         array[i][-1] = boundary_sum
+
 
 def match_boundaries_horizontal(array):
     '''
@@ -109,4 +109,15 @@ def match_boundaries_horizontal(array):
         array[-1][j] = boundary_sum
 
 
+def is_between(val, bound_1, bound_2):
+    """
+    Return if a value falls between two boundary values
+    """
 
+    if val > max([bound_1, bound_2]):
+        print("not between!")
+        return False
+    if val < min([bound_1, bound_2]):
+        print("not between!")
+        return False
+    return True
