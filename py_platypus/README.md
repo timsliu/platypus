@@ -1,22 +1,37 @@
-# py-platypus
+# PyPlatypus
 
-py-platypus is a pure Python3 implementation of several particle in cell
-(PIC) plasma simulators. Currently, py-platypus includes 1D and 2D electrostatic
-simulators and a simple visualization suite. py-platypus is designed to be 
-a proving ground for PIC simulators before they ``graduate`` and are implemented
-in the main Platypus version. The performance of py-platypus is not optimized,
+PyPlatypus is a pure Python3 implementation of several particle in cell
+(PIC) plasma simulators. Currently, PyPlatypus includes 1D and 2D electrostatic
+simulators and a simple visualization suite. PyPlatypus is designed to be 
+a proving ground for PIC simulators before they graduate and are implemented
+in the main Platypus version. The performance of PyPlatypus is not optimized,
 and is written to be easy for new users to understand.
 
 ## Table of contents
-1. [Supported features](#supported-features)
-2. [Installation](#installation)
-3. [Running your first simulation](#running-first-sim)
-4. [Directory contents](#directory-contents)
-5. [Troubleshooting](#troubleshooting)
+1. [Directory contents](#directory-contents)
+2. [Supported features](#supported-features)
+3. [Installation](#installation)
+4. [Running your first simulation](#running-first-sim)
+5. [Directory contents](#directory-contents)
+6. [Troubleshooting](#troubleshooting)
 
+## [Directory contents](#directory-contents)
+```
+PyPlatypus
+|- out: outputs from running simulations
+|- simulations: example simulations using PyPlatypus
+|- src: actual PyPlatypus Python library and Python egg
+  |- py_platypus:
+    |- models: PIC simulators
+    |- utils: various utility functions used by the simulators
+    |- vis: visualization tools
+|- test: test scripts for PyPlatypus
+  |- unit_tests: unit tets for PyPlatypus
+  |- demo_tests: simulations for demonstrating and testing specific features
+```
 
 ## [Supported features](#supported-features)
-py-platypus currently includes two PIC simulators, ```pic_1d.py``` and
+PyPlatypus currently includes two PIC simulators, ```pic_1d.py``` and
 ```pic_2d.py```, which are 1D and 2D simulators respectively. Both are
 purely electrostatic, collisionless simulators with mobile electrons and
 immobile ions. The boundary conditions are periodic along all axes.
@@ -40,8 +55,39 @@ simulation, see the section [Customizable parameters](#parameters)
 
 ## [Installation](#installation)
 
-## [Running your first simulation](#running-first-sim)
-Simulations should be placed in the ```PLATYPUS_HOME/py-platypus/simulations```
+The installation instructions require the user to have some familiarity with
+using the terminal. Note that this information is duplicated from the main
+README page for Platypus. To install PyCli, first clone the repository using the
+terminal:
+
+```
+git clone https://github.com/timsliu/platypus.git
+```
+
+Next, navigate to the python source file and install the ```PyPlatypus```
+python library:
+
+```
+cd platypus/py_platypus/src/
+pip3 install -e .
+```
+
+Then, you will need to add the root of the platypus directory to your
+```~/.bashrc``` file as an environment variable:
+
+```
+export PLATYPUS_HOME=`/path/to/platypus`
+```
+
+Finally, source your ```~/.bashrc``` for the new environment variable
+to take effect:
+
+```
+source ~/.bashrc
+```
+
+## [Running your first simulation](#running-your-first-simulation)
+Simulations should be placed in the ```PLATYPUS_HOME/PyPlatypus/simulations```
 folder. Here you will also find several example simulations. This section 
 describes each part of the ```two_stream_1d.py``` simulation and how to write
 your own simulation.
@@ -49,11 +95,11 @@ your own simulation.
 To run the simulation, simply run the command:
 
 ```bash
-cd PLATYPUS_HOME/py-platypus/simulations
+cd PLATYPUS_HOME/py_platypus/simulations
 python3 two_stream_1d.py
 ```
 
-The program will great a new folder in the ```py-platypus/out``` directory
+The program will great a new folder in the ```py_platypus/out``` directory
 containing output data, graphs, and a json file of the simulation parameters.
 Below is a description of what each line of the program does.
 
@@ -64,8 +110,8 @@ import sys
 import os
 
 PLATYPUS_HOME = os.getenv("PLATYPUS_HOME")
-sys.path.append(os.path.join(PLATYPUS_HOME, "py-platypus"))
-sys.path.append(os.path.join(PLATYPUS_HOME, "py-platypus/vis"))
+sys.path.append(os.path.join(PLATYPUS_HOME, "py_platypus"))
+sys.path.append(os.path.join(PLATYPUS_HOME, "PyPlatypus/vis"))
 
 import run_sim
 from plotter import Plotter
@@ -102,11 +148,11 @@ parameters json, and loads them into an instance of the ```Parameters``` class.
 
 
 ```python
-    param_json = os.path.join(PLATYPUS_HOME, "py-platypus/out/two_stream_1d/params.json")
+    param_json = os.path.join(PLATYPUS_HOME, "py_platypus/out/two_stream_1d/params.json")
     params = Parameters(1, load_file=param_json)
 ```
 
-py-platypus includes a visualization suite for generating graphs. The next lines
+PyPlatypus includes a visualization suite for generating graphs. The next lines
 instantiate an instance of the ```Plotter``` class and generates several default
 graphs.
 
@@ -115,7 +161,7 @@ plotter = Plotter("two_stream_1d", params)
 plotter.plot_all() 
 ```
 
-These graphs are saved in the directory ```PLATYPUS_HOME/py-platypus/out/two_stream_1d/graphs```. The output of the simulation, including the density, electric
+These graphs are saved in the directory ```PLATYPUS_HOME/PyPlatypus/out/two_stream_1d/graphs```. The output of the simulation, including the density, electric
 field, and velocity and particle distribution at each step, is saved as pickle
 files. To make custom graphs, the user can directly load the data from the
 pickle files.
@@ -168,7 +214,7 @@ MUST be set by users or left at default
 
 The ```Plotter``` class can be used to create several default visualizations of
 simulation results. Users can also create their own visualizations by opening
-the pickle output files saved in the ```py-platypus/out/<simulation_name>/data```
+the pickle output files saved in the ```PyPlatypus/out/<simulation_name>/data```
 directory. For an example of using the ```Plotter``` class, please see the
 section [Running your first simulation](#running-first-sim).
 
