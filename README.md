@@ -25,11 +25,11 @@ CUDA GPU implementation of Platypus. Currently, basically everything interesting
 is located in the PyPlatypus directory.
 
 New features will first be added to PyPlatypus and tested 
-before they ``graduate`` and are implemented in C++. 
+before they graduate and are implemented in C++. 
 
 The following sections give a quick overview on how to install, 
 run simulations, and create visualizations with PyPlatypus. Check out
-the dedicated [README for PyPlatypus](https://github.com/timsliu/platypus/tree/main/PyPlatypus)
+the dedicated [README for PyPlatypus](https://github.com/timsliu/platypus/tree/main/py_platypus)
 for a lot more details. Since only the Python3 PyPlatypus version is currently,
 available, this README has some information duplicated from the dedicated
 PyPlatypus page.
@@ -78,7 +78,7 @@ Next, navigate to the python source file and install the PyPlatypus
 python library:
 
 ```
-cd platypus/PyPlatypus/src/
+cd platypus/py_platypus/src/
 pip3 install -e .
 ```
 
@@ -99,7 +99,7 @@ source ~/.bashrc
 ## [Running your first simulation](#running-your-first-simulation)
 PyPlatypus includes several example simulations that you can run without
 writing any lines of code. This section gives a quick overview of how to run
-a simulation, and be sure to checkout the dedicated [PyPlatypus README page](https://github.com/timsliu/platypus/tree/main/PyPlatypus#running-your-first-simulation) for more details.
+a simulation, and be sure to check out the dedicated [PyPlatypus README page](https://github.com/timsliu/platypus/tree/main/py_platypus#running-your-first-simulation) for more details.
 To view the example simulations, navigate to the
 ```simulations``` sub directory of PyPlatypus:
 
@@ -134,18 +134,18 @@ This section describes the organization of the Platypus repository.
 Output directory for binaries and object files.
 
 ### py-platypus
-Py-platypus is a Python based collection of PIC simulators. They are a
+PyPlatypus is a Python based collection of PIC simulators. They are a
 more lightweight, low performance version of the Platypus PIC simulators.
-Py-platypus is primarily meant for developing and testing the algorithms used
+PyPlatypus is primarily meant for developing and testing the algorithms used
 in the PIC simulators, and are also meant to be easier to understand than the
 optimized Platypus simulators. PyPlatypus has the following organization:
 
 ```
-PyPlatypus
+py_platypus
 |- out: outputs from running simulations
 |- simulations: example simulations using PyPlatypus
 |- src: actual PyPlatypus Python library and Python egg
-  |- PyPlatypus:
+  |- py_platypus:
     |- models: PIC simulators
     |- utils: various utility functions used by the simulators
     |- vis: visualization tools

@@ -1,19 +1,28 @@
 # PyPlatypus
 
 PyPlatypus is a pure Python3 implementation of several particle in cell
-(PIC) plasma simulators. Currently, PyPlatypus includes 1D and 2D electrostatic
-simulators and a simple visualization suite. PyPlatypus is designed to be 
-a proving ground for PIC simulators before they graduate and are implemented
-in the main Platypus version. The performance of PyPlatypus is not optimized,
-and is written to be easy for new users to understand.
+(PIC) plasma simulators. 
+
+PyPlatypus currently includes the following simulators:
+* 1-D electrostatic
+* 2-D electrostatic
+* 3-D electrostatic
+* 2-D electromagnetic (in development)
+
+
+along with example simulations, various tests, and a simple visualization suite.
+PyPlatypus is designed to be a proving ground for PIC simulators before they
+graduate and are implemented in the main Platypus version. The performance of 
+PyPlatypus is not optimized, and is written to be easy to understand.
+
 
 ## Table of contents
 1. [Directory contents](#directory-contents)
 2. [Supported features](#supported-features)
 3. [Installation](#installation)
 4. [Running your first simulation](#running-first-sim)
-5. [Directory contents](#directory-contents)
-6. [Troubleshooting](#troubleshooting)
+6. [Visualization](#visualization)
+7. [Troubleshooting](#troubleshooting)
 
 ## [Directory contents](#directory-contents)
 ```
@@ -31,17 +40,22 @@ PyPlatypus
 ```
 
 ## [Supported features](#supported-features)
-PyPlatypus currently includes two PIC simulators, ```pic_1d.py``` and
-```pic_2d.py```, which are 1D and 2D simulators respectively. Both are
-purely electrostatic, collisionless simulators with mobile electrons and
+PyPlatypus currently includes three PIC simulators, ```pic_1d.py```,
+```pic_2d.py```, ```pic_3d.py```, which are 1D, 2D, and 3D simulators respectively.
+All three are purely electrostatic, collisionless simulators with mobile electrons and
 immobile ions. The boundary conditions are periodic along all axes.
+
+You will also find a ```pic_2d_em.py```, which is a 2D electromagnetic simulator.
+This simulator can be used, but there are still some bugs being worked out. Use
+with caution! Since the EM PIC is still being developed, the documention below
+focuses on the more stable electrostatic simulators.
 
 There are several preset simulations that can be configured for either
 PIC simulator. These simulations create an initial velocity or position
-distribution that illustrate common plasma physics phenomena.
+distribution that illustrate common plasma physics phenomena:
 
-1. Landau damping - sinusoidal electron density. This illustrates the case
-where an electrostatic wave in a plasma is damped.
+1. Landau damping - initializes a sinusoidal electron density. This illustrates
+the case where an electrostatic wave in a plasma is damped.
 2. Two-stream instability - two streams of electrons traveling in opposite
 directions. This illustrates the two stream instability, where the electrostatic
 energy suddenly increases.
@@ -161,7 +175,8 @@ plotter = Plotter("two_stream_1d", params)
 plotter.plot_all() 
 ```
 
-These graphs are saved in the directory ```PLATYPUS_HOME/PyPlatypus/out/two_stream_1d/graphs```. The output of the simulation, including the density, electric
+These graphs are saved in the directory ```PLATYPUS_HOME/py_latypus/out/two_stream_1d/graphs```. 
+The output of the simulation, including the density, electric
 field, and velocity and particle distribution at each step, is saved as pickle
 files. To make custom graphs, the user can directly load the data from the
 pickle files.
