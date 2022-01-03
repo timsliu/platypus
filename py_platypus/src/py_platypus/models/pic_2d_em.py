@@ -16,18 +16,17 @@ class PIC_2D_EM(PIC_2D):
 
         super(PIC_2D_EM, self).__init__(params)
 
-        self.bz = np.zeros(self.nodes)  # magnetic field on cell corners
-        self.delta_bz = np.zeros(
-            self.nodes)  # value to update magnetic field each  half step
-        self.jx = np.zeros([self.cells[0], self.nodes[1]
-                            ])  # current density in positive x direction
-        self.jy = np.zeros([self.nodes[1], self.cells[0]
-                            ])  # current density in positive y direction
+        # magnetic field on cell corners
+        self.bz = np.zeros(self.cells)
+        # value to update magnetic field each  half step
+        self.delta_bz = np.zeros(self.cells)  
+        self.jx = np.zeros(self.cells) # current density in positive x direction
+        self.jy = np.zeros(self.cells)  # current density in positive y direction
 
         # vertical cell boundaries holding Ex values
-        self.ex_edges = np.zeros([self.cells[0], self.nodes[1]])
+        self.ex_edges = np.zeros(self.cells)
         # horizontal cell boundaries holding Ey values
-        self.ey_edges = np.zeros([self.nodes[0], self.cells[1]])
+        self.ey_edges = np.zeros(self.cells)
 
         # variables pointing to the current and previous electron positions
         self.electron_x_last = np.zeros(self.n_particles)
@@ -41,6 +40,7 @@ class PIC_2D_EM(PIC_2D):
 
         # additional properties for EM PIC
         self.v_th = math_utils.ev_to_vth(params["t_ev"])
+        self.v_th = 1
 
     def update_e(self):
         '''
@@ -49,16 +49,21 @@ class PIC_2D_EM(PIC_2D):
         '''
         dx = self.dx[1]
         dy = self.dx[0]
+        curls = []
+        print("Start ex update")
+        print(self.ex_edges)
+        print(self.ey_edges)
         # iterate through electric field in ex direction
         for i in range(self.ex_edges.shape[0]):
             for j in range(self.ex_edges.shape[1]):
                 # equation (32) Villasenor and Buneman w/ constants
                 # local curl of magnetic field
-                curl = 1 / dx * (math_utils.wrap_idx_2d(self.bz, i + 1, j) -
+                curl = 1 / dy * (math_utils.wrap_idx_2d(self.bz, i + 1, j) -
                                  math_utils.wrap_idx_2d(self.bz, i, j))
                 # local current density
                 j_cur = math_utils.wrap_idx_2d(self.jx, i, j)
                 # dE = dt * (constants * curl(B) - Jx)
+                print("curl, j_cur", curl, j_cur)
                 ex_update = self.dt * (
                     curl * constants.SPEED_OF_LIGHT**2 / self.v_th**2 - j_cur)
                 self.ex_edges[i][j] += ex_update
@@ -76,6 +81,9 @@ class PIC_2D_EM(PIC_2D):
                 ey_update = self.dt * (
                     curl * constants.SPEED_OF_LIGHT**2 / self.v_th**2 - j_cur)
                 self.ey_edges[i][j] += ey_update
+        print("End ex update")
+        print(self.ex_edges)
+        print(self.ey_edges)
 
     def calc_b_update(self):
         '''
@@ -88,6 +96,9 @@ class PIC_2D_EM(PIC_2D):
 
         # normalized Faraday's law doesn't require any constants
         # iterate through cells and calculate the B field update
+        print(self.ex_edges)
+        print(self.ey_edges)
+        print(self.dx)
         for i in range(self.bz.shape[0]):
             for j in range(self.bz.shape[1]):
                 ex0 = math_utils.wrap_idx_2d(self.ex_edges, i - 1, j)
@@ -97,7 +108,6 @@ class PIC_2D_EM(PIC_2D):
 
                 dey = ey1 - ey0
                 dex = ex1 - ex0
-
                 # curl in 2D is dex/dy - dey/dx
                 self.delta_bz[i][j] = (dex / dy - dey / dx) * self.dt
         # divide update in half to calculate B update at each half step
@@ -129,18 +139,19 @@ class PIC_2D_EM(PIC_2D):
             # initial and final particle position
             x0, y0 = self.electron_x_last[i], self.electron_y_last[i]
             x1, y1 = self.electron_x[i], self.electron_y[i]
-
             substeps = self.charge_divider.get_charge_steps(x0, y0, x1, y1)
 
             # iterate over the substeps
-            for step in substeps:
+            for i, step in enumerate(substeps):
                 self.execute_four_bound(step)
 
         # add the current density on the boundaries to the boundary on the
         # opposite side since we are using a 2D periodic boundary and the
         # nodes on either side are actually the same node
-        math_utils.match_boundaries_vertical(self.jx)
-        math_utils.match_boundaries_horizontal(self.jy)
+        # this should not be needed because there actually is just one node - 
+        # one side won't have a node
+        # math_utils.match_boundaries_vertical(self.jx)
+        # math_utils.match_boundaries_horizontal(self.jy)
 
         return
 
@@ -165,15 +176,11 @@ class PIC_2D_EM(PIC_2D):
         local_y0 = cs.y0 - local_origin[1]
 
         # (Villasenor and Buneman 1991) equations (6)-(9)
-        jx1 = cs.dx * (0.5 - local_y0 - 0.5 * cs.dy)
-        jx2 = cs.dx * (0.5 + local_y0 + 0.5 * cs.dy)
-        jy1 = cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
-        jy2 = cs.dy * (0.5 + local_x0 + 0.5 * cs.dx)
-
-        #        print("horizontal: ", hori)
-        #        print("vertical:   ", vert)
-        #        print("local origin:", local_origin)
-        #        print("Starting point: ", cs.x0, cs.y0)
+        # current densities are negative since the charges are electrons
+        jx1 = -cs.dx * (0.5 - local_y0 - 0.5 * cs.dy)
+        jx2 = -cs.dx * (0.5 + local_y0 + 0.5 * cs.dy)
+        jy1 = -cs.dy * (0.5 - local_x0 - 0.5 * cs.dx)
+        jy2 = -cs.dy * (0.5 + local_x0 + 0.5 * cs.dx)
 
         # update the current densities; note that the y direction for this
         # simulation does not match the y direction of Villasenor and Buneman
@@ -201,6 +208,10 @@ class PIC_2D_EM(PIC_2D):
         super().update_rho()
         super().update_phi()
         super().update_e()  # electric field on the nodes (corners)
+        print(self.ni) 
+        print(self.ne) 
+        print(self.rho) 
+        print(self.phi) 
 
         # convert electric field on the nodes to the edges of the Yee mesh
         # Ex fields
@@ -214,6 +225,11 @@ class PIC_2D_EM(PIC_2D):
             for j in range(self.ey_edges.shape[1]):
                 self.ey_edges[i][j] = np.mean(
                     [self.ey[i][j], self.ey[i][j + 1]])
+        
+        self.ex_edges = np.array([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
+        self.ey_edges = np.array([[0.0, 1.0, 1.0], [0.0, 1.0, 1.0], [0.0, 1.0, 1.0]])
+        print("Initializing ex edges") 
+        print(self.ex_edges)
 
         return
 
@@ -310,13 +326,13 @@ class PIC_2D_EM(PIC_2D):
             # find indices of four nodes neighboring the particle
             node_u, node_d, y0, y1 = self.node_neighbors(y_n, "y")
             node_l, node_r, x0, x1 = self.node_neighbors(x_n, "x")
-
+            
             # B field at each corner
             # indexing is row, col (y, x)
-            b_00 = self.bz[node_u][node_l]
-            b_01 = self.bz[node_u][node_r]
-            b_10 = self.bz[node_d][node_l]
-            b_11 = self.bz[node_d][node_r]
+            b_00 = math_utils.wrap_idx_2d(self.bz, node_u, node_l)
+            b_01 = math_utils.wrap_idx_2d(self.bz, node_u, node_r)
+            b_10 = math_utils.wrap_idx_2d(self.bz, node_d, node_l)
+            b_11 = math_utils.wrap_idx_2d(self.bz, node_d, node_r)
 
             # indices of neighboring cells
             self.b_particle[i] = self.interpolate(x_n, y_n, [x0, x1, y0, y1],
@@ -370,10 +386,11 @@ class PIC_2D_EM(PIC_2D):
 
         for i in range(self.cells[0]):
             for j in range(self.cells[1]):
-                b_cell = np.mean([
-                    self.bz[i][j], self.bz[i][j + 1], self.bz[i + 1][j],
-                    self.bz[i + 1][j + 1]
-                ])
+                b_00 = math_utils.wrap_idx_2d(self.bz, i, j)
+                b_01 = math_utils.wrap_idx_2d(self.bz, i, j + 1)
+                b_10 = math_utils.wrap_idx_2d(self.bz, i + 1, j)
+                b_11 = math_utils.wrap_idx_2d(self.bz, i + 1, j+ 1)
+                b_cell = np.mean([b_00, b_01, b_10, b_11])
                 magnetic_energy += 0.5 * b_cell**2 * self.dx[0] * self.dx[1]
 
         self.output["magnetic_energy"].append(magnetic_energy)
@@ -406,15 +423,21 @@ class PIC_2D_EM(PIC_2D):
         methods for saving outputs must be called separately; overrides
         step method for PIC_2D class
         '''
-
+        print("\n==Step==")
+        
+        print("Ex: ", self.ex_edges)
+        print("Ey: ", self.ey_edges)
+        print("Bz: ", self.bz)
+        self.update_e()
         self.calc_b_update()
         self.update_b_half()
-        self.interpolate_e()
-        self.interpolate_b()
-        self.update_v()
-        self.save_x()
-        self.update_x()
-        self.update_j()
+        #self.interpolate_e()
+        #self.interpolate_b()
+        #self.update_v()
+        #self.save_x()
+        #self.update_x()
+        #self.update_j()
         self.update_b_half()
-        self.update_e()
+        #self.update_e()
+        print(self.output["magnetic_energy"])
         return
