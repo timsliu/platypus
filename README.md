@@ -30,6 +30,10 @@ before they ``graduate`` and are implemented in C++.
 The following sections describe how to install, run simulations, and create
 visualizations with ```py_platypus```.
 
+![Alt text](images/two_stream_1d_trunc.png?raw=true "Evolution of a two
+stream instability in 1D")
+
+
 ## Table of contents
 1. [Environment](#environment)
 2. [Installation](#installation)
@@ -163,7 +167,7 @@ Python scripts for data analysis and creating visualizations.
 
 ## [Contributors and contact](#contributors-and-contact)
 Platypus is an open source project created and maintained by Timothy Liu.
-You can contact him at [timsliu.org/contact](timsliu.org/contact).
+You can contact him at [timsliu.org/contact](https://timsliu.org/contact/).
 
 ## [License](#license)
 Platypus is distributed under the MIT open source license. For the full
