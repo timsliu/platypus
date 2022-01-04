@@ -101,7 +101,7 @@ source ~/.bashrc
 ```
 
 ## [Running your first simulation](#running-your-first-simulation)
-Simulations should be placed in the ```PLATYPUS_HOME/PyPlatypus/simulations```
+Simulations should be placed in the ```PLATYPUS_HOME/py_platypus/simulations```
 folder. Here you will also find several example simulations. This section 
 describes each part of the ```two_stream_1d.py``` simulation and how to write
 your own simulation.
@@ -109,73 +109,94 @@ your own simulation.
 To run the simulation, simply run the command:
 
 ```bash
-cd PLATYPUS_HOME/py_platypus/simulations
+cd platypus/py_platypus/simulations
 python3 two_stream_1d.py
 ```
 
-The program will great a new folder in the ```py_platypus/out``` directory
+
+The program will generate a new folder in the ```py_platypus/out``` directory
 containing output data, graphs, and a json file of the simulation parameters.
 Below is a description of what each line of the program does.
 
 At the start of the simulation are several import statements:
 
 ```python
-import sys
 import os
 
-PLATYPUS_HOME = os.getenv("PLATYPUS_HOME")
-sys.path.append(os.path.join(PLATYPUS_HOME, "py_platypus"))
-sys.path.append(os.path.join(PLATYPUS_HOME, "PyPlatypus/vis"))
-
-import run_sim
-from plotter import Plotter
-from params import Parameters 
-
+import py_platypus as plat
+from py_platypus.utils.params import Parameters as Parameters
+from py_platypus.vis.plotter import Plotter as Plotter
 ```
 
-These lines tell the program where Platypus is installed and imports the
-needed data structures and functions. These lines should be included in all 
-simulations.
+These line import the ```os``` library followed by the ```py_platypus```
+library. The lines importing ```Parameters``` and ```Plotter``` allow these
+classes to be used without using their full names (```plat.params.Parameters```).
+
 
 ```python
-if __name__ == "__main__":
-    run_sim.two_stream("two_stream_1d", 1, param_dict={"runtime": 40})
+    # override default simulation parameters
+    param_dict = {
+        "runtime": 40,    # time to run simulation for
+        "timestep": 0.04, # size of each timestep
+        "save_every": 4,  # save outputs at every fourth step
+    }
+```
+PyPlatypus uses a ```Parameters``` object to set up the simulation. There
+are default values for all of the parameters, which can be overriden with
+a user defined dictionary. Here, the dictionary is overriding how long the
+simulation runs for, the size of each timestep, and how often to save the
+simulation outputs. For a full list of the parameters, see 
+[Customizable parameters](#customizable-parameters) 
+
+```python
+    # setup and run a 1D two stream simulation using the parameters
+    # specified in param_dict. This method takes care of initialization
+    # and runs the simulation
+    plat.run_sim.two_stream("two_stream_1d", 1, param_dict=param_dict)
   
 ```
 
-When the program is run, the ```two_stream``` method is called. This function
-creates an instance of the PIC simulator class and sets up a two-stream
+Next, the ```two_stream``` function from the ```run_sim``` module is called. 
+This function creates an instance of the 1-D PIC simulator class and sets up a two-stream
 instability. The arguments to this function are the name of the simulation
 (which is used for naming the output directory), and the number of dimensions
 for the simulation. These is also an optional argument ```param_dict``` which 
 is a dictionary of parameters for customizing the simulation. If this argument
 is not passed, then the default configuration for a two stream instability is
-used. See the section [Customizable parameters](#parameters) for info on
-how to customize the simulation. This single line instantiates and kicks off
-the simulation.
+used. This single line instantiates and kicks off the simulation.
 
-Simulations are set up and configured by a ```Parameters``` class. This
-class is created by the ```two_stream``` function in ```run_sim```. The full
-list of parameters used in a simulation is saved to a json file when a
+The full list of parameters used in a simulation is saved to a json file when a
 simulation starts running. The following two lines create the path to the
 parameters json, and loads them into an instance of the ```Parameters``` class.
 
 
 ```python
+    # load the full parameters object from a json
     param_json = os.path.join(PLATYPUS_HOME, "py_platypus/out/two_stream_1d/params.json")
     params = Parameters(1, load_file=param_json)
 ```
 
 PyPlatypus includes a visualization suite for generating graphs. The next lines
-instantiate an instance of the ```Plotter``` class and generates several default
-graphs.
+create an instance of the ```Plotter``` class. The ```add_animation``` method
+tells the ```Plotter``` instance to generate animations for each quantity that
+it is asked to plot.
 
 ```python
-plotter = Plotter("two_stream_1d", params)
-plotter.plot_all() 
+    # create instance of the Plotter class for generating charts
+    plotter = Plotter("two_stream_1d", params)
+    plotter.add_animation()   # outputs should be animations
 ```
 
-These graphs are saved in the directory ```PLATYPUS_HOME/py_latypus/out/two_stream_1d/graphs```. 
+Finally, there are four method calls that plot various quantities:
+
+```python
+    plotter.plot_velocity()   # plot the velocity distribution
+    plotter.plot_phase()      # plot the phase chart (velocity and position)
+    plotter.plot_density()    # plot electron density
+    plotter.plot_energy()     # plot energy
+```
+
+The graphs are saved in the directory ```platypus/py_platypus/out/two_stream_1d/graphs```. 
 The output of the simulation, including the density, electric
 field, and velocity and particle distribution at each step, is saved as pickle
 files. To make custom graphs, the user can directly load the data from the
