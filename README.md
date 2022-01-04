@@ -49,8 +49,9 @@ stream instability in 1D")
 
 ## [Environment](#environment)
 
-PyPlatypus has the following system requirements:
+Platypus has the following system requirements:
 
+Python
 ```
 python3.6+
 numpy
@@ -65,17 +66,16 @@ should run fine on any Unix based OS, but this has yet to be tested.
 
 ## [Installation](#installation)
 
-### PyPlatypus
 The installation instructions require the user to have some familiarity with
-using the terminal.To install PyCli, first clone the repository using the
+using the terminal.To install Platypus, first clone the repository using the
 terminal:
 
 ```
 git clone https://github.com/timsliu/platypus.git
 ```
 
-Next, navigate to the python source file and install the PyPlatypus
-python library:
+Next, navigate to the Python source file and install the PyPlatypus
+Python library:
 
 ```
 cd platypus/py_platypus/src/
@@ -104,7 +104,7 @@ To view the example simulations, navigate to the
 ```simulations``` sub directory of PyPlatypus:
 
 ```
-cd platypus/PyPlatypus/simulations
+cd platypus/py_platypus/simulations
 ls
 ```
 
@@ -150,7 +150,7 @@ py_platypus
     |- utils: various utility functions used by the simulators
     |- vis: visualization tools
 |- test: test scripts for PyPlatypus
-  |- unit_tests: unit tets for PyPlatypus
+  |- unit_tests: unit tests for PyPlatypus
   |- demo_tests: simulations for demonstrating and testing specific features
 ```
 

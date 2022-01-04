@@ -12,15 +12,16 @@ PyPlatypus currently includes the following simulators:
 
 along with example simulations, various tests, and a simple visualization suite.
 PyPlatypus is designed to be a proving ground for PIC simulators before they
-graduate and are implemented in the main Platypus version. The performance of 
-PyPlatypus is not optimized, and is written to be easy to understand.
+graduate and are implemented in the main Platypus version. PyPlatypus simulators
+are not optimized for performance, but they were intentionally designed
+to be easy to understand.
 
 
 ## Table of contents
 1. [Directory contents](#directory-contents)
 2. [Supported features](#supported-features)
 3. [Installation](#installation)
-4. [Running your first simulation](#running-first-sim)
+4. [Running your first simulation](#running-your-first-simulation)
 6. [Visualization](#visualization)
 7. [Troubleshooting](#troubleshooting)
 
@@ -35,7 +36,7 @@ PyPlatypus
     |- utils: various utility functions used by the simulators
     |- vis: visualization tools
 |- test: test scripts for PyPlatypus
-  |- unit_tests: unit tets for PyPlatypus
+  |- unit_tests: unit tests for PyPlatypus
   |- demo_tests: simulations for demonstrating and testing specific features
 ```
 
@@ -65,7 +66,7 @@ where a beam of particles is shot into a plasma to increasee its temperature.
 
 All simulations have multiple parameters such as the simulation resolution and
 run time that can be customized. For a description of how to customize a 
-simulation, see the section [Customizable parameters](#parameters)
+simulation, see the section [Customizable parameters](#customizable-parameters).
 
 ## [Installation](#installation)
 
@@ -103,8 +104,7 @@ source ~/.bashrc
 ## [Running your first simulation](#running-your-first-simulation)
 Simulations should be placed in the ```PLATYPUS_HOME/py_platypus/simulations```
 folder. Here you will also find several example simulations. This section 
-describes each part of the ```two_stream_1d.py``` simulation and how to write
-your own simulation.
+describes each part of the ```two_stream_1d.py``` simulation.
 
 To run the simulation, simply run the command:
 
@@ -146,7 +146,7 @@ are default values for all of the parameters, which can be overriden with
 a user defined dictionary. Here, the dictionary is overriding how long the
 simulation runs for, the size of each timestep, and how often to save the
 simulation outputs. For a full list of the parameters, see 
-[Customizable parameters](#customizable-parameters) 
+[Customizable parameters](#customizable-parameters). 
 
 ```python
     # setup and run a 1D two stream simulation using the parameters
@@ -202,7 +202,7 @@ field, and velocity and particle distribution at each step, is saved as pickle
 files. To make custom graphs, the user can directly load the data from the
 pickle files.
 
-## [Customizable parameters](#parameters)
+## [Customizable parameters](#customizable-parameters)
 The ```Parameters``` class specifies the parameters of a simulation. An instance
 of the ```Parameters``` class is created by the functions in ```run_sim``` and
 can be modified by the ```param_dict``` argument. The values of the class
