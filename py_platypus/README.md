@@ -101,6 +101,9 @@ to take effect:
 source ~/.bashrc
 ```
 
+Finally, make sure you have all the system requirements listed under
+[Environment](https://github.com/timsliu/platypus#environment) installed.
+
 ## [Running your first simulation](#running-your-first-simulation)
 Simulations should be placed in the ```PLATYPUS_HOME/py_platypus/simulations```
 folder. Here you will also find several example simulations. This section 

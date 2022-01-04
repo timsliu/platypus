@@ -50,7 +50,7 @@ https://user-images.githubusercontent.com/15353016/147994643-136879a7-7176-4732-
 
 ## [Environment](#environment)
 
-Platypus has the following system requirements:
+PyPlatypus has the following system requirements:
 
 Python
 ```
@@ -58,8 +58,18 @@ python3.6+
 numpy
 matplotlib
 scipy
+```
+
+Other
+```
 ffmpeg
 ```
+
+The Python dependencies can all be installed with ```pip```. You can check if
+```ffmpeg``` is installed by running ```which ffmpeg```. If nothing is 
+printed then it's not installed. If you are running macOS, install ```ffmpeg```
+with ```brew install ffmpeg``` or ```sudo apt install ffmpeg``` if you are
+using Ubuntu.
 
 Platypus was developed on macOS and is not guaranteed to run on Windows. It
 should run fine on any Unix based OS, but this has yet to be tested.
@@ -68,7 +78,7 @@ should run fine on any Unix based OS, but this has yet to be tested.
 ## [Installation](#installation)
 
 The installation instructions require the user to have some familiarity with
-using the terminal.To install Platypus, first clone the repository using the
+using the terminal. To install Platypus, first clone the repository using the
 terminal:
 
 ```
@@ -96,6 +106,9 @@ to take effect:
 ```
 source ~/.bashrc
 ```
+
+Make sure you have all the system requirements listed under
+[Environment](#environment) installed.
 
 ## [Running your first simulation](#running-your-first-simulation)
 PyPlatypus includes several example simulations that you can run without
