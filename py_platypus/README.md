@@ -252,7 +252,7 @@ The ```Plotter``` class can be used to create several default visualizations of
 simulation results. Users can also create their own visualizations by opening
 the pickle output files saved in the ```PyPlatypus/out/<simulation_name>/data```
 directory. For an example of using the ```Plotter``` class, please see the
-section [Running your first simulation](#running-first-sim).
+section [Running your first simulation](#running-your-first-simulation).
 
 The methods for generating plots are:
 
