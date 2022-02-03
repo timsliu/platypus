@@ -341,6 +341,7 @@ class Plotter:
 
         ee = pickle.load(open(os.path.join(self.data_dir, "ee.p"), "rb"))
         ke = pickle.load(open(os.path.join(self.data_dir, "ke.p"), "rb"))
+        #me = pickle.load(open(os.path.join(self.data_dir, "me.p"), "rb"))
 
         # plot kinetic and electrostatic energy on one chart
         subplotter = plat.subplotter.SubplotLines(x_axis_zero=True,
@@ -371,6 +372,14 @@ class Plotter:
                            "Normalized energy",
                            "Kinetic energy",
                            subplotter)
+        
+        # plot magnetic energy
+        #subplotter.set_data([[me]])
+        #self.plot_subplots("magnetic_energy",
+        #                   "Time step",
+        #                   "Normalized energy",
+        #                   "Magnetic energy",
+        #                   subplotter)
 
 
     def plot_density(self):
