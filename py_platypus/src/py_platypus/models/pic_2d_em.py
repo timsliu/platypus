@@ -50,9 +50,6 @@ class PIC_2D_EM(PIC_2D):
         dx = self.dx[1]
         dy = self.dx[0]
         curls = []
-        print("Start ex update")
-        print(self.ex_edges)
-        print(self.ey_edges)
         # iterate through electric field in ex direction
         for i in range(self.ex_edges.shape[0]):
             for j in range(self.ex_edges.shape[1]):
@@ -63,7 +60,6 @@ class PIC_2D_EM(PIC_2D):
                 # local current density
                 j_cur = math_utils.wrap_idx_2d(self.jx, i, j)
                 # dE = dt * (constants * curl(B) - Jx)
-                print("curl, j_cur", curl, j_cur)
                 ex_update = self.dt * (
                     curl * constants.SPEED_OF_LIGHT**2 / self.v_th**2 - j_cur)
                 self.ex_edges[i][j] += ex_update
@@ -81,9 +77,6 @@ class PIC_2D_EM(PIC_2D):
                 ey_update = self.dt * (
                     curl * constants.SPEED_OF_LIGHT**2 / self.v_th**2 - j_cur)
                 self.ey_edges[i][j] += ey_update
-        print("End ex update")
-        print(self.ex_edges)
-        print(self.ey_edges)
 
     def calc_b_update(self):
         '''
@@ -96,9 +89,6 @@ class PIC_2D_EM(PIC_2D):
 
         # normalized Faraday's law doesn't require any constants
         # iterate through cells and calculate the B field update
-        print(self.ex_edges)
-        print(self.ey_edges)
-        print(self.dx)
         for i in range(self.bz.shape[0]):
             for j in range(self.bz.shape[1]):
                 ex0 = math_utils.wrap_idx_2d(self.ex_edges, i - 1, j)
@@ -144,14 +134,6 @@ class PIC_2D_EM(PIC_2D):
             # iterate over the substeps
             for i, step in enumerate(substeps):
                 self.execute_four_bound(step)
-
-        # add the current density on the boundaries to the boundary on the
-        # opposite side since we are using a 2D periodic boundary and the
-        # nodes on either side are actually the same node
-        # this should not be needed because there actually is just one node - 
-        # one side won't have a node
-        # math_utils.match_boundaries_vertical(self.jx)
-        # math_utils.match_boundaries_horizontal(self.jy)
 
         return
 
@@ -208,10 +190,6 @@ class PIC_2D_EM(PIC_2D):
         super().update_rho()
         super().update_phi()
         super().update_e()  # electric field on the nodes (corners)
-        print(self.ni) 
-        print(self.ne) 
-        print(self.rho) 
-        print(self.phi) 
 
         # convert electric field on the nodes to the edges of the Yee mesh
         # Ex fields
@@ -226,11 +204,6 @@ class PIC_2D_EM(PIC_2D):
                 self.ey_edges[i][j] = np.mean(
                     [self.ey[i][j], self.ey[i][j + 1]])
         
-        self.ex_edges = np.array([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
-        self.ey_edges = np.array([[0.0, 1.0, 1.0], [0.0, 1.0, 1.0], [0.0, 1.0, 1.0]])
-        print("Initializing ex edges") 
-        print(self.ex_edges)
-
         return
 
     def interpolate(self, x_n, y_n, corners, values):
@@ -423,21 +396,15 @@ class PIC_2D_EM(PIC_2D):
         methods for saving outputs must be called separately; overrides
         step method for PIC_2D class
         '''
-        print("\n==Step==")
         
-        print("Ex: ", self.ex_edges)
-        print("Ey: ", self.ey_edges)
-        print("Bz: ", self.bz)
         self.update_e()
         self.calc_b_update()
         self.update_b_half()
-        #self.interpolate_e()
-        #self.interpolate_b()
-        #self.update_v()
-        #self.save_x()
-        #self.update_x()
-        #self.update_j()
+        self.interpolate_e()
+        self.interpolate_b()
+        self.update_v()
+        self.save_x()
+        self.update_x()
+        self.update_j()
         self.update_b_half()
-        #self.update_e()
-        print(self.output["magnetic_energy"])
         return
